@@ -1,0 +1,131 @@
+<div class="page-header">
+  <div><h1 class="page-title">ویرایش فرم: <%= template.name %></h1></div>
+  <a href="/form-builder" class="btn btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a>
+</div>
+
+<!-- Template Info -->
+<div class="card mb-3">
+  <div class="card-body">
+    <form action="/form-builder/<%= template.id %>" method="POST" class="d-flex gap-3 flex-wrap align-items-end">
+      <div class="flex-grow-1">
+        <label class="form-label">نام فرم</label>
+        <input type="text" name="name" class="form-control" value="<%= template.name %>" required>
+      </div>
+      <div style="width: 120px;">
+        <label class="form-label">مراحل</label>
+        <input type="number" name="total_steps" class="form-control" value="<%= template.total_steps %>" min="1" max="10">
+      </div>
+      <div>
+        <label class="form-label">وضعیت</label>
+        <div class="form-check form-switch">
+          <input type="checkbox" name="is_active" class="form-check-input" <%= template.is_active ? 'checked' : '' %>>
+        </div>
+      </div>
+      <input type="hidden" name="description" value="<%= template.description %>">
+      <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>ذخیره</button>
+    </form>
+  </div>
+</div>
+
+<!-- Steps -->
+<% for (let step = 1; step <= template.total_steps; step++) { %>
+<div class="card mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-list-check me-2"></i>مرحله <%= step %></span>
+    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addFieldModal_<%= step %>">
+      <i class="bi bi-plus me-1"></i>افزودن فیلد
+    </button>
+  </div>
+  <div class="card-body p-0">
+    <% const stepFields = typeof steps !== 'undefined' && steps[step] ? steps[step] : []; %>
+    <% if (stepFields.length > 0) { %>
+    <div class="table-container">
+      <table class="table mb-0">
+        <thead>
+          <tr><th>کلید</th><th>عنوان</th><th>نوع</th><th>اجباری</th><th>عملیات</th></tr>
+        </thead>
+        <tbody>
+          <% stepFields.forEach(f => { %>
+          <tr>
+            <td><code><%= f.field_key %></code></td>
+            <td><%= f.field_label %></td>
+            <td><span class="badge bg-info"><%= f.field_type %></span></td>
+            <td><%= f.is_required ? '<span class="badge bg-danger">بله</span>' : '<span class="badge bg-secondary">خیر</span>' %></td>
+            <td>
+              <form action="/form-builder/<%= template.id %>/fields/<%= f.id %>/delete" method="POST" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm="حذف شود؟"><i class="bi bi-trash"></i></button>
+              </form>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <% } else { %>
+    <div class="empty-state py-3"><p class="text-muted mb-0">فیلدی تعریف نشده</p></div>
+    <% } %>
+  </div>
+</div>
+
+<!-- Add Field Modal for this step -->
+<div class="modal fade" id="addFieldModal_<%= step %>" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/form-builder/<%= template.id %>/fields" method="POST">
+        <input type="hidden" name="step_number" value="<%= step %>">
+        <div class="modal-header">
+          <h5 class="modal-title">افزودن فیلد - مرحله <%= step %></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">کلید فیلد (انگلیسی) <span class="text-danger">*</span></label>
+            <input type="text" name="field_key" class="form-control" required placeholder="مثال: first_name" dir="ltr">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">عنوان نمایشی <span class="text-danger">*</span></label>
+            <input type="text" name="field_label" class="form-control" required placeholder="مثال: نام">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">نوع فیلد</label>
+            <select name="field_type" class="form-select">
+              <option value="text">متن</option>
+              <option value="textarea">متن بلند</option>
+              <option value="number">عدد</option>
+              <option value="email">ایمیل</option>
+              <option value="phone">تلفن</option>
+              <option value="date">تاریخ</option>
+              <option value="select">لیست کشویی</option>
+              <option value="radio">انتخابی</option>
+              <option value="checkbox">چندانتخابی</option>
+              <option value="file">فایل</option>
+              <option value="national_code">کد ملی</option>
+              <option value="salary">حقوق</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">گزینه‌ها (برای select/radio/checkbox، جدا شده با کاما)</label>
+            <input type="text" name="options" class="form-control" placeholder="مثال: گزینه ۱,گزینه ۲,گزینه ۳">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">متن راهنما</label>
+            <input type="text" name="placeholder" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">ترتیب نمایش</label>
+            <input type="number" name="order_num" class="form-control" value="0" min="0">
+          </div>
+          <div class="form-check">
+            <input type="checkbox" name="is_required" class="form-check-input" value="1">
+            <label class="form-check-label">اجباری</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+          <button type="submit" class="btn btn-primary">افزودن</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<% } %>

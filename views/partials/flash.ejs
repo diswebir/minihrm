@@ -1,0 +1,39 @@
+<% if (typeof success !== 'undefined' && success && success.length > 0) { %>
+  <% success.forEach(function(msg) { %>
+    <div class="alert alert-success alert-dismissible fade show alert-custom" role="alert">
+      <i class="bi bi-check-circle-fill alert-icon"></i>
+      <span><%= msg %></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  <% }); %>
+<% } %>
+
+<% if (typeof error !== 'undefined' && error && error.length > 0) { %>
+  <% error.forEach(function(msg) { %>
+    <div class="alert alert-danger alert-dismissible fade show alert-custom" role="alert">
+      <i class="bi bi-exclamation-triangle-fill alert-icon"></i>
+      <span><%= msg %></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  <% }); %>
+<% } %>
+
+<% if (typeof warning !== 'undefined' && warning && warning.length > 0) { %>
+  <% warning.forEach(function(msg) { %>
+    <div class="alert alert-warning alert-dismissible fade show alert-custom" role="alert">
+      <i class="bi bi-exclamation-circle-fill alert-icon"></i>
+      <span><%= msg %></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  <% }); %>
+<% } %>
+
+<% if (typeof info !== 'undefined' && info && info.length > 0) { %>
+  <% info.forEach(function(msg) { %>
+    <div class="alert alert-info alert-dismissible fade show alert-custom" role="alert">
+      <i class="bi bi-info-circle-fill alert-icon"></i>
+      <span><%= msg %></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  <% }); %>
+<% } %>

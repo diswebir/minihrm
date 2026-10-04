@@ -1,0 +1,146 @@
+<% if (typeof position !== 'undefined' && position) { %>
+<div class="text-center mb-3">
+  <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
+    <i class="bi bi-briefcase me-1"></i><%= position.title %>
+  </span>
+</div>
+<% } %>
+
+<!-- Step Indicator -->
+<div class="form-step-indicator">
+  <% for (let i = 1; i <= totalSteps; i++) { %>
+  <div class="step-dot <%= i === currentStep ? 'active' : (i < currentStep ? 'completed' : '') %>"></div>
+  <% } %>
+</div>
+
+<!-- Step Title -->
+<div class="text-center mb-3">
+  <span class="text-muted small">مرحله <%= currentStep %> از <%= totalSteps %></span>
+</div>
+
+<!-- Form -->
+<form action="/apply/form/submit" method="POST" enctype="multipart/form-data">
+  <input type="hidden" name="step" value="<%= currentStep %>">
+
+  <div class="form-section-title">
+    <% const stepTitles = {1:'اطلاعات فردی', 2:'اطلاعات تماس و آدرس', 3:'سوابق تحصیلی', 4:'سوابق کاری و مهارت‌ها'}; %>
+    <i class="bi bi-pencil-square me-2"></i><%= stepTitles[currentStep] || 'اطلاعات' %>
+  </div>
+
+  <% if (fields && fields.length > 0) { %>
+    <% fields.forEach(field => { %>
+    <div class="mb-3">
+      <label class="form-label">
+        <%= field.field_label %>
+        <% if (field.is_required) { %><span class="text-danger">*</span><% } %>
+      </label>
+
+      <% if (field.field_type === 'text' || field.field_type === 'national_code') { %>
+        <input type="text" name="<%= field.field_key %>" class="form-control"
+          value="<%= responseMap[field.field_key] || '' %>"
+          <%= field.is_required ? 'required' : '' %>
+          placeholder="<%= field.placeholder || '' %>"
+          <%= field.field_type === 'national_code' ? 'maxlength="10" pattern="[0-9]{10}"' : '' %>>
+
+      <% } else if (field.field_type === 'textarea') { %>
+        <textarea name="<%= field.field_key %>" class="form-control" rows="3"
+          <%= field.is_required ? 'required' : '' %>
+          placeholder="<%= field.placeholder || '' %>"><%= responseMap[field.field_key] || '' %></textarea>
+
+      <% } else if (field.field_type === 'number' || field.field_type === 'salary') { %>
+        <input type="number" name="<%= field.field_key %>" class="form-control"
+          value="<%= responseMap[field.field_key] || '' %>"
+          <%= field.is_required ? 'required' : '' %>
+          placeholder="<%= field.placeholder || '' %>">
+
+      <% } else if (field.field_type === 'email') { %>
+        <input type="email" name="<%= field.field_key %>" class="form-control"
+          value="<%= responseMap[field.field_key] || '' %>"
+          <%= field.is_required ? 'required' : '' %>
+          placeholder="<%= field.placeholder || '' %>">
+
+      <% } else if (field.field_type === 'phone') { %>
+        <input type="tel" name="<%= field.field_key %>" class="form-control" dir="ltr"
+          value="<%= responseMap[field.field_key] || '' %>"
+          <%= field.is_required ? 'required' : '' %>
+          placeholder="<%= field.placeholder || '' %>">
+
+      <% } else if (field.field_type === 'date') { %>
+        <input type="date" name="<%= field.field_key %>" class="form-control"
+          value="<%= responseMap[field.field_key] || '' %>"
+          <%= field.is_required ? 'required' : '' %>>
+
+      <% } else if (field.field_type === 'select' || field.field_type === 'dropdown') { %>
+        <select name="<%= field.field_key %>" class="form-select" <%= field.is_required ? 'required' : '' %>>
+          <option value="">انتخاب کنید</option>
+          <% if (field.options) { field.options.split(',').forEach(opt => { %>
+          <option value="<%= opt.trim() %>" <%= responseMap[field.field_key] === opt.trim() ? 'selected' : '' %>><%= opt.trim() %></option>
+          <% }); } %>
+        </select>
+
+      <% } else if (field.field_type === 'radio') { %>
+        <div class="d-flex gap-3">
+          <% if (field.options) { field.options.split(',').forEach(opt => { %>
+          <div class="form-check">
+            <input type="radio" name="<%= field.field_key %>" value="<%= opt.trim() %>" class="form-check-input"
+              id="<%= field.field_key %>_<%= opt.trim() %>"
+              <%= responseMap[field.field_key] === opt.trim() ? 'checked' : '' %>
+              <%= field.is_required ? 'required' : '' %>>
+            <label class="form-check-label" for="<%= field.field_key %>_<%= opt.trim() %>"><%= opt.trim() %></label>
+          </div>
+          <% }); } %>
+        </div>
+
+      <% } else if (field.field_type === 'checkbox') { %>
+        <div class="d-flex gap-3 flex-wrap">
+          <% if (field.options) { field.options.split(',').forEach(opt => { %>
+          <div class="form-check">
+            <input type="checkbox" name="<%= field.field_key %>" value="<%= opt.trim() %>" class="form-check-input"
+              id="<%= field.field_key %>_<%= opt.trim() %>">
+            <label class="form-check-label" for="<%= field.field_key %>_<%= opt.trim() %>"><%= opt.trim() %></label>
+          </div>
+          <% }); } %>
+        </div>
+
+      <% } else if (field.field_type === 'file') { %>
+        <input type="file" name="<%= field.field_key %>" class="form-control"
+          accept=".pdf,.doc,.docx,.jpg,.png"
+          <%= field.is_required ? 'required' : '' %>>
+        <small class="text-muted">فرمت‌های مجاز: PDF, DOC, JPG, PNG (حداکثر ۱۰ مگابایت)</small>
+        <% if (responseMap[field.field_key]) { %>
+          <div class="mt-1"><i class="bi bi-file-earmark-check text-success me-1"></i><small class="text-success">فایل قبلی: <%= responseMap[field.field_key] %></small></div>
+        <% } %>
+
+      <% } else { %>
+        <input type="text" name="<%= field.field_key %>" class="form-control"
+          value="<%= responseMap[field.field_key] || '' %>"
+          <%= field.is_required ? 'required' : '' %>
+          placeholder="<%= field.placeholder || '' %>">
+      <% } %>
+    </div>
+    <% }); %>
+  <% } else { %>
+    <div class="alert alert-info">فیلدی برای این مرحله تعریف نشده</div>
+  <% } %>
+
+  <!-- Navigation -->
+  <div class="form-navigation">
+    <% if (currentStep > 1) { %>
+    <button type="submit" name="action" value="prev" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-right me-1"></i>مرحله قبل
+    </button>
+    <% } else { %>
+    <div></div>
+    <% } %>
+
+    <% if (currentStep < totalSteps) { %>
+    <button type="submit" name="action" value="next" class="btn btn-primary">
+      مرحله بعد<i class="bi bi-arrow-left ms-1"></i>
+    </button>
+    <% } else { %>
+    <button type="submit" name="action" value="next" class="btn btn-success">
+      <i class="bi bi-check-lg me-1"></i>تکمیل و ارسال فرم
+    </button>
+    <% } %>
+  </div>
+</form>

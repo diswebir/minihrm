@@ -1,0 +1,61 @@
+<div class="page-header">
+  <div><h1 class="page-title">نتیجه MBTI - <%= candidate.first_name %> <%= candidate.last_name %></h1></div>
+  <div class="d-flex gap-2">
+    <a href="/recruitment/<%= candidate.id %>" class="btn btn-outline-info"><i class="bi bi-person me-1"></i>پروفایل</a>
+    <a href="/mbti" class="btn btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Type Badge -->
+  <div class="col-md-4 mb-3">
+    <div class="card text-center">
+      <div class="card-body py-4">
+        <div class="mbti-type-badge mx-auto mb-3" style="width:80px;height:80px;font-size:1.8rem;"><%= candidate.mbti_type %></div>
+        <h4 class="fw-bold"><%= candidate.mbti_type %></h4>
+        <p class="text-muted mb-0">نوع شخصیت</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dimension Bars -->
+  <div class="col-md-8 mb-3">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-bar-chart me-2"></i>ابعاد شخصیتی</div>
+      <div class="card-body">
+        <% const dims = [
+          {key:'EI', left:'E', right:'I', leftLabel:'برون‌گرایی', rightLabel:'درون‌گرایی'},
+          {key:'SN', left:'S', right:'N', leftLabel:'حسی', rightLabel:'شهودی'},
+          {key:'TF', left:'T', right:'F', leftLabel:'فکری', rightLabel:'احساسی'},
+          {key:'JP', left:'J', right:'P', leftLabel:'قضاوتی', rightLabel:'ادراکی'},
+        ]; %>
+        <% dims.forEach(d => { %>
+        <% const leftScore = scores[d.left] || 0; const rightScore = scores[d.right] || 0; const total = leftScore + rightScore; const leftPercent = total > 0 ? Math.round((leftScore / total) * 100) : 50; %>
+        <div class="mb-3">
+          <div class="d-flex justify-content-between mb-1">
+            <small class="fw-bold"><%= d.leftLabel %> (<%= d.left %>)</small>
+            <small class="fw-bold"><%= d.rightLabel %> (<%= d.right %>)</small>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary"><%= leftScore %></span>
+            <div class="flex-grow-1">
+              <div class="progress" style="height: 10px; direction: ltr;">
+                <div class="progress-bar" style="width: <%= leftPercent %>%; background: linear-gradient(to left, var(--primary), var(--primary-light));"></div>
+              </div>
+            </div>
+            <span class="badge bg-info"><%= rightScore %></span>
+          </div>
+        </div>
+        <% }); %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Analysis -->
+<div class="card">
+  <div class="card-header"><i class="bi bi-clipboard-data me-2"></i>تحلیل شخصیت</div>
+  <div class="card-body">
+    <pre style="white-space: pre-wrap; direction: rtl; font-family: 'Vazirmatn', sans-serif; font-size: 0.95rem; line-height: 2;"><%= analysis %></pre>
+  </div>
+</div>

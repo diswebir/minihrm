@@ -1,0 +1,53 @@
+<div class="page-header">
+  <div><h1 class="page-title">QR Code - <%= position.title %></h1></div>
+  <div class="d-flex gap-2">
+    <button onclick="printQR()" class="btn btn-outline-primary"><i class="bi bi-printer me-1"></i>چاپ</button>
+    <a href="/positions" class="btn btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body text-center" id="qrPrintArea">
+    <div style="max-width: 450px; margin: 0 auto;">
+      <div class="mb-4">
+        <h4 class="fw-bold"><i class="bi bi-building me-2"></i>MiniHRM</h4>
+        <p class="text-muted">سامانه استخدام</p>
+      </div>
+
+      <div class="mb-4 p-4 bg-white d-inline-block rounded-3 shadow-sm">
+        <img src="<%= qr.qrDataUrl %>" alt="QR Code" style="width: 300px; height: 300px;">
+      </div>
+
+      <h5 class="fw-bold mb-2"><%= position.title %></h5>
+      <% if (position.department_id) { %>
+        <p class="text-muted mb-3"><i class="bi bi-building me-1"></i><%= position.department_name || '' %></p>
+      <% } %>
+
+      <div class="alert alert-info text-start">
+        <h6><i class="bi bi-info-circle me-2"></i>راهنمای استفاده:</h6>
+        <ol class="mb-0">
+          <li>این QR Code را چاپ کنید</li>
+          <li>متقاضی با اسکن کد، وارد فرم استخدام می‌شود</li>
+          <li>پس از تأیید شماره موبایل، فرم را پر می‌کند</li>
+          <li>آزمون شخصیت‌شناسی (MBTI) را انجام می‌دهد</li>
+        </ol>
+      </div>
+
+      <div class="mt-3">
+        <p class="text-muted small">لینک مستقیم:</p>
+        <div class="input-group">
+          <input type="text" class="form-control" value="<%= qr.url %>" readonly id="qrUrl">
+          <button class="btn btn-outline-primary" data-copy="<%= qr.url %>"><i class="bi bi-clipboard"></i> کپی</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  @media print {
+    body * { visibility: hidden; }
+    #qrPrintArea, #qrPrintArea * { visibility: visible; }
+    #qrPrintArea { position: absolute; left: 0; top: 0; width: 100%; }
+  }
+</style>

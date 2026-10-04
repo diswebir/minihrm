@@ -1,0 +1,336 @@
+/* ═══════════════════════════════════════════════════════════
+   MiniHRM - Dashboard Specific Styles
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── Stats Grid ──────────────────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ─── Chart Section ───────────────────────────────────── */
+.chart-section {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 991.98px) {
+  .chart-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Recent Activity ─────────────────────────────────── */
+.activity-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary);
+  margin-top: 0.4rem;
+  flex-shrink: 0;
+}
+
+.activity-dot.login { background: var(--success); }
+.activity-dot.create { background: var(--primary); }
+.activity-dot.update { background: var(--warning); }
+.activity-dot.delete { background: var(--danger); }
+.activity-dot.status_change { background: var(--info); }
+
+.activity-text {
+  flex: 1;
+  font-size: 0.85rem;
+}
+
+.activity-time {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  margin-top: 0.15rem;
+}
+
+/* ─── Quick Actions ───────────────────────────────────── */
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.quick-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.25rem 0.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.quick-action:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.quick-action i {
+  font-size: 1.8rem;
+  color: var(--primary);
+}
+
+.quick-action span {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* ─── Funnel Chart ────────────────────────────────────── */
+.funnel-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.funnel-step {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.funnel-bar-container {
+  flex: 1;
+  height: 32px;
+  background: var(--bg-body);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.funnel-bar {
+  height: 100%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  padding-right: 0.75rem;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 500;
+  min-width: 40px;
+  transition: width 0.5s ease;
+}
+
+.funnel-label {
+  width: 100px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-align: left;
+}
+
+.funnel-count {
+  width: 40px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* ─── Status Distribution (Simple) ────────────────────── */
+.status-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.status-bar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.status-bar-label {
+  width: 80px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-align: left;
+}
+
+.status-bar-track {
+  flex: 1;
+  height: 24px;
+  background: var(--bg-body);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.status-bar-fill {
+  height: 100%;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: white;
+  font-weight: 500;
+  min-width: 30px;
+  transition: width 0.5s ease;
+}
+
+/* ─── Candidate Profile ──────────────────────────────── */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 2rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.profile-info h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+}
+
+.profile-meta {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.profile-meta i {
+  margin-left: 0.3rem;
+}
+
+/* ─── Steps Progress ──────────────────────────────────── */
+.form-steps-nav {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+}
+
+.step-tab {
+  flex: 1;
+  text-align: center;
+  padding: 0.75rem 1rem;
+  background: var(--bg-body);
+  border-bottom: 3px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.step-tab.active {
+  background: rgba(79,70,229,0.05);
+  border-bottom-color: var(--primary);
+  color: var(--primary);
+}
+
+.step-tab.completed {
+  color: var(--success);
+  border-bottom-color: var(--success);
+}
+
+/* ─── MBTI Results ────────────────────────────────────── */
+.mbti-type-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.mbti-dimension {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.mbti-dimension-label {
+  width: 30px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.mbti-bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-body);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.mbti-bar-fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.mbti-bar-fill.left {
+  right: 50%;
+  background: var(--primary);
+}
+
+.mbti-bar-fill.right {
+  left: 50%;
+  background: var(--secondary);
+}
+
+.mbti-dimension-values {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}

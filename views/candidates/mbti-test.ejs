@@ -1,0 +1,71 @@
+<div class="text-center mb-4">
+  <div style="width: 70px; height: 70px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+    <i class="bi bi-puzzle" style="font-size: 2rem; color: white;"></i>
+  </div>
+  <h5>آزمون شخصیت‌شناسی</h5>
+  <p class="text-muted small">به ۶۰ سؤال زیر پاسخ دهید. هیچ پاسخ درست یا غلطی وجود ندارد.</p>
+  <div class="progress" style="height: 6px;">
+    <div class="progress-bar bg-primary" id="mbtiProgress" style="width: 0%"></div>
+  </div>
+  <small class="text-muted mt-1 d-block" id="mbtiCounter">۰ از ۶۰ پاسخ داده شده</small>
+</div>
+
+<form action="/apply/mbti/submit" method="POST" id="mbtiForm">
+  <% if (typeof questions !== 'undefined' && questions.length > 0) { %>
+    <% questions.forEach((q, index) => { %>
+    <div class="mbti-question-card" data-question="<%= q.id %>">
+      <div class="mbti-question-number"><%= q.question_number %></div>
+      <div class="mbti-question-text"><%= q.question_text %></div>
+      <div class="mbti-options">
+        <label class="mbti-option <%= typeof responseMap !== 'undefined' && responseMap[q.id] === 'A' ? 'selected' : '' %>">
+          <input type="radio" name="q_<%= q.id %>" value="A" <%= typeof responseMap !== 'undefined' && responseMap[q.id] === 'A' ? 'checked' : '' %>>
+          <span><%= q.option_a_text %></span>
+        </label>
+        <label class="mbti-option <%= typeof responseMap !== 'undefined' && responseMap[q.id] === 'B' ? 'selected' : '' %>">
+          <input type="radio" name="q_<%= q.id %>" value="B" <%= typeof responseMap !== 'undefined' && responseMap[q.id] === 'B' ? 'checked' : '' %>>
+          <span><%= q.option_b_text %></span>
+        </label>
+      </div>
+    </div>
+    <% }); %>
+  <% } %>
+
+  <div class="form-navigation">
+    <a href="/apply/form" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-right me-1"></i>بازگشت به فرم
+    </a>
+    <button type="submit" class="btn btn-success btn-lg" id="mbtiSubmit" disabled>
+      <i class="bi bi-check-lg me-1"></i>ارسال آزمون
+    </button>
+  </div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const totalQuestions = document.querySelectorAll('.mbti-question-card').length;
+  const progress = document.getElementById('mbtiProgress');
+  const counter = document.getElementById('mbtiCounter');
+  const submitBtn = document.getElementById('mbtiSubmit');
+
+  function updateProgress() {
+    const answered = document.querySelectorAll('.mbti-option input:checked').length;
+    const percent = Math.round((answered / totalQuestions) * 100);
+    progress.style.width = percent + '%';
+    counter.textContent = `${answered} از ${totalQuestions} پاسخ داده شده`;
+    submitBtn.disabled = answered < totalQuestions;
+  }
+
+  document.querySelectorAll('.mbti-option').forEach(opt => {
+    opt.addEventListener('click', function() {
+      const name = this.querySelector('input').name;
+      // Remove selected from sibling
+      this.closest('.mbti-options').querySelectorAll('.mbti-option').forEach(o => o.classList.remove('selected'));
+      this.classList.add('selected');
+      this.querySelector('input').checked = true;
+      updateProgress();
+    });
+  });
+
+  updateProgress();
+});
+</script>

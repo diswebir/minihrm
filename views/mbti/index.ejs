@@ -1,0 +1,61 @@
+<div class="page-header">
+  <div><h1 class="page-title">آزمون MBTI</h1><p class="page-subtitle">نتایج آزمون شخصیت‌شناسی متقاضیان</p></div>
+</div>
+
+<!-- Type Distribution -->
+<% if (typeDistribution && typeDistribution.length > 0) { %>
+<div class="card mb-3">
+  <div class="card-header"><i class="bi bi-bar-chart me-2"></i>توزیع انواع شخصیت</div>
+  <div class="card-body">
+    <div class="row">
+      <% typeDistribution.forEach(t => { %>
+      <div class="col-md-3 col-6 mb-2">
+        <div class="d-flex align-items-center gap-2 p-2 rounded bg-light">
+          <div class="mbti-type-badge" style="width:40px;height:40px;font-size:0.9rem;"><%= t.mbti_type %></div>
+          <div>
+            <strong><%= t.count %></strong>
+            <small class="text-muted d-block">نفر</small>
+          </div>
+        </div>
+      </div>
+      <% }); %>
+    </div>
+  </div>
+</div>
+<% } %>
+
+<!-- Results Table -->
+<div class="card">
+  <div class="card-body p-0">
+    <% if (results && results.length > 0) { %>
+    <div class="table-container">
+      <table class="table">
+        <thead>
+          <tr><th>نام</th><th>موقعیت شغلی</th><th>نوع شخصیت</th><th>وضعیت</th><th>عملیات</th></tr>
+        </thead>
+        <tbody>
+          <% results.forEach(r => { %>
+          <tr>
+            <td class="fw-bold"><%= r.first_name || '' %> <%= r.last_name || '' %></td>
+            <td><%= r.position_title || '-' %></td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="mbti-type-badge" style="width:36px;height:36px;font-size:0.8rem;"><%= r.mbti_type %></div>
+                <strong><%= r.mbti_type %></strong>
+              </div>
+            </td>
+            <td><span class="badge-status badge-<%= r.status %>"><%= r.status %></span></td>
+            <td>
+              <a href="/mbti/result/<%= r.id %>" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye me-1"></i>جزئیات</a>
+              <a href="/recruitment/<%= r.id %>" class="btn btn-sm btn-outline-info"><i class="bi bi-person"></i></a>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <% } else { %>
+    <div class="empty-state"><i class="bi bi-puzzle"></i><h5>هنوز آزمونی انجام نشده</h5></div>
+    <% } %>
+  </div>
+</div>

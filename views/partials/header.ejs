@@ -1,0 +1,86 @@
+<header class="top-header">
+  <div class="header-right">
+    <!-- Mobile Menu Toggle -->
+    <button class="btn btn-link sidebar-toggle" id="sidebarToggle">
+      <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="d-none d-md-block">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house"></i></a></li>
+        <li class="breadcrumb-item active"><%= title %></li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="header-left">
+    <!-- User Dropdown -->
+    <div class="dropdown">
+      <button class="btn btn-link user-dropdown" data-bs-toggle="dropdown">
+        <div class="user-avatar">
+          <% if (user && user.avatar) { %>
+            <img src="/uploads/avatars/<%= user.avatar %>" alt="<%= user.firstName %>">
+          <% } else { %>
+            <i class="bi bi-person-circle"></i>
+          <% } %>
+        </div>
+        <div class="user-info d-none d-md-block">
+          <span class="user-name"><%= user ? user.firstName + ' ' + user.lastName : '' %></span>
+          <span class="user-role">
+            <% if (user) { %>
+              <% const roleLabels = {super_admin: 'مدیر سیستم', hr_manager: 'مدیر HR', hr_employee: 'کارمند HR', employee: 'کارمند'}; %>
+              <%= roleLabels[user.role] || user.role %>
+            <% } %>
+          </span>
+        </div>
+        <i class="bi bi-chevron-down"></i>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li>
+          <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+            <i class="bi bi-key me-2"></i>تغییر رمز عبور
+          </a>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <a class="dropdown-item text-danger" href="/logout">
+            <i class="bi bi-box-arrow-right me-2"></i>خروج
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/change-password" method="POST">
+        <div class="modal-header">
+          <h5 class="modal-title">تغییر رمز عبور</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">رمز عبور فعلی</label>
+            <input type="password" name="current_password" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">رمز عبور جدید</label>
+            <input type="password" name="new_password" class="form-control" required minlength="6">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">تکرار رمز عبور جدید</label>
+            <input type="password" name="confirm_password" class="form-control" required minlength="6">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+          <button type="submit" class="btn btn-primary">ذخیره</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

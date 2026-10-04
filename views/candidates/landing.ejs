@@ -1,0 +1,69 @@
+<div class="text-center mb-4">
+  <h3 style="font-size: 1.2rem; color: var(--text-secondary);"><%= companyName %></h3>
+  <p class="text-muted">برای شروع فرآیند استخدام، لطفاً اطلاعات زیر را وارد کنید</p>
+</div>
+
+<form action="/apply/verify-phone" method="POST">
+  <input type="hidden" name="qr_code" value="<%= typeof qrCode !== 'undefined' && qrCode ? qrCode.code : '' %>">
+
+  <!-- Position Selection -->
+  <% if (typeof position !== 'undefined' && position) { %>
+  <div class="mb-4 p-3 rounded-3 bg-primary bg-opacity-10 border border-primary border-opacity-25">
+    <div class="d-flex align-items-center gap-2">
+      <i class="bi bi-briefcase-fill text-primary"></i>
+      <div>
+        <strong><%= position.title %></strong>
+        <% if (position.department_name) { %>
+          <span class="text-muted">- <%= position.department_name %></span>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  <input type="hidden" name="job_position_id" value="<%= position.id %>">
+  <% } else { %>
+  <div class="mb-4">
+    <label class="form-label fw-bold">
+      <i class="bi bi-briefcase me-1"></i>موقعیت شغلی مورد نظر <span class="text-danger">*</span>
+    </label>
+    <div class="position-cards">
+      <% if (typeof positions !== 'undefined' && positions.length > 0) { %>
+        <% positions.forEach((p, index) => { %>
+        <label class="position-card">
+          <input type="radio" name="job_position_id" value="<%= p.id %>" <%= index === 0 ? 'checked' : '' %>>
+          <div class="position-info">
+            <h4><%= p.title %></h4>
+            <% if (p.department_name) { %><p><i class="bi bi-building me-1"></i><%= p.department_name %></p><% } %>
+          </div>
+          <% const types = {full_time:'تمام‌وقت', part_time:'پاره‌وقت', contract:'قراردادی', internship:'کارآموزی'}; %>
+          <span class="position-badge"><%= types[p.employment_type] || '' %></span>
+        </label>
+        <% }); %>
+      <% } else { %>
+        <div class="alert alert-warning">در حال حاضر موقعیت شغلی فعالی وجود ندارد</div>
+      <% } %>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- Phone Input -->
+  <div class="mb-4">
+    <label class="form-label fw-bold">
+      <i class="bi bi-phone me-1"></i>شماره موبایل
+    </label>
+    <input type="tel" name="phone" class="form-control form-control-lg text-center" dir="ltr"
+      required placeholder="09123456789" pattern="09[0-9]{9}" maxlength="11"
+      style="font-size: 1.2rem; letter-spacing: 3px;">
+    <small class="text-muted d-block mt-2">کد تأیید به این شماره ارسال خواهد شد</small>
+  </div>
+
+  <button type="submit" class="btn btn-primary btn-lg w-100">
+    <i class="bi bi-send me-2"></i>دریافت کد تأیید
+  </button>
+</form>
+
+<div class="text-center mt-4">
+  <small class="text-muted">
+    <i class="bi bi-shield-check me-1"></i>
+    اطلاعات شما محرمانه بوده و فقط توسط واحد منابع انسانی مشاهده می‌شود
+  </small>
+</div>

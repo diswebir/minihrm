@@ -1,0 +1,44 @@
+<div class="page-header">
+  <div><h1 class="page-title">مدیریت بخش‌ها</h1></div>
+  <a href="/departments/new" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>بخش جدید</a>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <% if (departments && departments.length > 0) { %>
+    <div class="table-container">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>نام بخش</th>
+            <th>مدیر</th>
+            <th>تعداد کارمند</th>
+            <th>وضعیت</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% departments.forEach(d => { %>
+          <tr>
+            <td class="fw-bold"><i class="bi bi-building text-primary me-2"></i><%= d.name %></td>
+            <td><%= d.manager_name || '-' %></td>
+            <td><span class="badge bg-light text-dark"><%= d.employee_count || 0 %></span></td>
+            <td><span class="badge bg-<%= d.is_active ? 'success' : 'danger' %>"><%= d.is_active ? 'فعال' : 'غیرفعال' %></span></td>
+            <td>
+              <div class="d-flex gap-1">
+                <a href="/departments/<%= d.id %>/edit" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                <form action="/departments/<%= d.id %>/delete" method="POST" class="d-inline">
+                  <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm="آیا از حذف این بخش مطمئن هستید؟"><i class="bi bi-trash"></i></button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <% } else { %>
+    <div class="empty-state"><i class="bi bi-building"></i><h5>بخشی تعریف نشده</h5></div>
+    <% } %>
+  </div>
+</div>

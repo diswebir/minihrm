@@ -1,0 +1,92 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">مدیریت کاربران</h1>
+  </div>
+  <a href="/users/new" class="btn btn-primary">
+    <i class="bi bi-plus-lg me-1"></i>کاربر جدید
+  </a>
+</div>
+
+<!-- Filters -->
+<div class="filter-bar">
+  <form method="GET" class="d-flex gap-2 flex-wrap align-items-end w-100">
+    <div>
+      <input type="text" name="search" class="form-control" placeholder="جستجو..." value="<%= typeof filters !== 'undefined' && filters.search ? filters.search : '' %>">
+    </div>
+    <div>
+      <select name="role" class="form-select">
+        <option value="">همه نقش‌ها</option>
+        <option value="super_admin" <%= typeof filters !== 'undefined' && filters.role === 'super_admin' ? 'selected' : '' %>>مدیر سیستم</option>
+        <option value="hr_manager" <%= typeof filters !== 'undefined' && filters.role === 'hr_manager' ? 'selected' : '' %>>مدیر HR</option>
+        <option value="hr_employee" <%= typeof filters !== 'undefined' && filters.role === 'hr_employee' ? 'selected' : '' %>>کارمند HR</option>
+        <option value="employee" <%= typeof filters !== 'undefined' && filters.role === 'employee' ? 'selected' : '' %>>کارمند</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-outline-primary">
+      <i class="bi bi-search"></i>
+    </button>
+  </form>
+</div>
+
+<!-- Users Table -->
+<div class="card">
+  <div class="card-body p-0">
+    <% if (users && users.length > 0) { %>
+    <div class="table-container">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>نام کامل</th>
+            <th>نام کاربری</th>
+            <th>نقش</th>
+            <th>موبایل</th>
+            <th>وضعیت</th>
+            <th>آخرین ورود</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% users.forEach(u => { %>
+          <tr>
+            <td class="fw-bold"><%= u.first_name %> <%= u.last_name %></td>
+            <td><code><%= u.username %></code></td>
+            <td>
+              <% const roleLabels = {super_admin:'مدیر سیستم', hr_manager:'مدیر HR', hr_employee:'کارمند HR', employee:'کارمند'}; %>
+              <span class="badge-role badge-<%= u.role %>"><%= roleLabels[u.role] || u.role %></span>
+            </td>
+            <td><%= u.phone || '-' %></td>
+            <td>
+              <% if (u.is_active) { %>
+                <span class="badge bg-success">فعال</span>
+              <% } else { %>
+                <span class="badge bg-danger">غیرفعال</span>
+              <% } %>
+            </td>
+            <td class="text-muted"><%= u.last_login ? new Date(u.last_login).toLocaleDateString('fa-IR') : 'هرگز' %></td>
+            <td>
+              <div class="d-flex gap-1">
+                <a href="/users/<%= u.id %>/edit" class="btn btn-sm btn-outline-primary" title="ویرایش">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <% if (u.id !== user.id) { %>
+                <form action="/users/<%= u.id %>/toggle" method="POST" class="d-inline">
+                  <button type="submit" class="btn btn-sm btn-outline-<%= u.is_active ? 'warning' : 'success' %>" title="<%= u.is_active ? 'غیرفعال' : 'فعال' %>">
+                    <i class="bi bi-<%= u.is_active ? 'pause' : 'play' %>"></i>
+                  </button>
+                </form>
+                <% } %>
+              </div>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <% } else { %>
+    <div class="empty-state">
+      <i class="bi bi-people"></i>
+      <h5>کاربری یافت نشد</h5>
+    </div>
+    <% } %>
+  </div>
+</div>

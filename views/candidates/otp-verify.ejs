@@ -1,0 +1,75 @@
+<div class="text-center mb-4">
+  <div style="width: 70px; height: 70px; background: linear-gradient(135deg, var(--success), #34D399); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+    <i class="bi bi-phone" style="font-size: 2rem; color: white;"></i>
+  </div>
+  <h5>کد تأیید ارسال شد</h5>
+  <p class="text-muted">کد ۵ رقمی ارسال شده به شماره <strong><%= phone %></strong> را وارد کنید</p>
+</div>
+
+<form action="/apply/verify-otp" method="POST">
+  <div class="otp-input-group">
+    <input type="text" class="otp-input" maxlength="1" data-index="0" inputmode="numeric" autofocus>
+    <input type="text" class="otp-input" maxlength="1" data-index="1" inputmode="numeric">
+    <input type="text" class="otp-input" maxlength="1" data-index="2" inputmode="numeric">
+    <input type="text" class="otp-input" maxlength="1" data-index="3" inputmode="numeric">
+    <input type="text" class="otp-input" maxlength="1" data-index="4" inputmode="numeric">
+  </div>
+  <input type="hidden" name="otp" id="otpHidden">
+
+  <div class="text-center mb-4">
+    <small class="text-muted">کد تا <strong>۳ دقیقه</strong> معتبر است</small>
+  </div>
+
+  <button type="submit" class="btn btn-primary btn-lg w-100" id="verifyBtn" disabled>
+    <i class="bi bi-check-lg me-2"></i>تأیید کد
+  </button>
+</form>
+
+<div class="text-center mt-3">
+  <form action="/apply/verify-phone" method="POST" class="d-inline">
+    <input type="hidden" name="phone" value="<%= phone %>">
+    <button type="submit" class="btn btn-link text-muted">
+      <i class="bi bi-arrow-repeat me-1"></i>ارسال مجدد کد
+    </button>
+  </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const inputs = document.querySelectorAll('.otp-input');
+  const hiddenInput = document.getElementById('otpHidden');
+  const verifyBtn = document.getElementById('verifyBtn');
+
+  inputs.forEach((input, index) => {
+    input.addEventListener('input', function(e) {
+      const value = e.target.value;
+      if (value && index < inputs.length - 1) {
+        inputs[index + 1].focus();
+      }
+      updateOTP();
+    });
+
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Backspace' && !e.target.value && index > 0) {
+        inputs[index - 1].focus();
+      }
+    });
+
+    input.addEventListener('paste', function(e) {
+      e.preventDefault();
+      const paste = (e.clipboardData || window.clipboardData).getData('text').trim();
+      if (/^\d{5}$/.test(paste)) {
+        inputs.forEach((inp, i) => inp.value = paste[i] || '');
+        updateOTP();
+      }
+    });
+  });
+
+  function updateOTP() {
+    let otp = '';
+    inputs.forEach(inp => otp += inp.value);
+    hiddenInput.value = otp;
+    verifyBtn.disabled = otp.length < 5;
+  }
+});
+</script>

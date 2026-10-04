@@ -1,0 +1,60 @@
+<div class="page-header">
+  <div><h1 class="page-title">تنظیمات سامانه</h1></div>
+</div>
+
+<form action="/settings" method="POST">
+  <!-- Modules Toggle -->
+  <div class="card mb-3">
+    <div class="card-header"><i class="bi bi-grid me-2"></i>ماژول‌ها</div>
+    <div class="card-body">
+      <div class="row">
+        <% if (typeof modules !== 'undefined') { modules.forEach(m => { %>
+        <div class="col-md-4 col-6 mb-3">
+          <div class="d-flex align-items-center justify-content-between p-3 rounded bg-light">
+            <div>
+              <i class="<%= m.icon %> me-2 text-primary"></i>
+              <strong><%= m.name %></strong>
+            </div>
+            <div class="form-check form-switch mb-0">
+              <input type="checkbox" name="module_<%= m.slug %>" class="form-check-input module-toggle" data-module="<%= m.slug %>" <%= m.is_enabled ? 'checked' : '' %>>
+            </div>
+          </div>
+        </div>
+        <% }); } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Groups -->
+  <% if (typeof grouped !== 'undefined') { Object.keys(grouped).forEach(group => { %>
+  <div class="card mb-3">
+    <div class="card-header">
+      <i class="bi bi-gear me-2"></i><%= typeof groupLabels !== 'undefined' && groupLabels[group] ? groupLabels[group] : group %>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <% grouped[group].forEach(s => { %>
+        <div class="col-md-6 mb-3">
+          <label class="form-label"><%= s.label || s.setting_key %></label>
+          <% if (s.field_type === 'textarea') { %>
+            <textarea name="<%= s.setting_key %>" class="form-control" rows="2"><%= s.setting_value %></textarea>
+          <% } else if (s.field_type === 'toggle') { %>
+            <div class="form-check form-switch">
+              <input type="checkbox" name="<%= s.setting_key %>" class="form-check-input" value="1" <%= s.setting_value === '1' ? 'checked' : '' %>>
+            </div>
+          <% } else if (s.field_type === 'number') { %>
+            <input type="number" name="<%= s.setting_key %>" class="form-control" value="<%= s.setting_value %>">
+          <% } else { %>
+            <input type="<%= s.setting_key.includes('password') || s.setting_key.includes('key') ? 'password' : 'text' %>" name="<%= s.setting_key %>" class="form-control" value="<%= s.setting_value %>" dir="ltr">
+          <% } %>
+        </div>
+        <% }); %>
+      </div>
+    </div>
+  </div>
+  <% }); } %>
+
+  <button type="submit" class="btn btn-primary btn-lg">
+    <i class="bi bi-check-lg me-2"></i>ذخیره تنظیمات
+  </button>
+</form>

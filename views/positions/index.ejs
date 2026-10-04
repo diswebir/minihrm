@@ -1,0 +1,52 @@
+<div class="page-header">
+  <div><h1 class="page-title">موقعیت‌های شغلی</h1></div>
+  <a href="/positions/new" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>موقعیت جدید</a>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <% if (positions && positions.length > 0) { %>
+    <div class="table-container">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>عنوان شغلی</th>
+            <th>بخش</th>
+            <th>نوع استخدام</th>
+            <th>متقاضیان</th>
+            <th>وضعیت</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% positions.forEach(p => { %>
+          <tr>
+            <td class="fw-bold"><i class="bi bi-briefcase text-primary me-2"></i><%= p.title %></td>
+            <td><%= p.department_name || '-' %></td>
+            <td>
+              <% const types = {full_time:'تمام‌وقت', part_time:'پاره‌وقت', contract:'قراردادی', internship:'کارآموزی'}; %>
+              <span class="badge bg-info"><%= types[p.employment_type] || p.employment_type %></span>
+            </td>
+            <td><span class="badge bg-light text-dark"><%= p.candidate_count || 0 %></span></td>
+            <td><span class="badge bg-<%= p.is_active ? 'success' : 'secondary' %>"><%= p.is_active ? 'فعال' : 'غیرفعال' %></span></td>
+            <td>
+              <div class="d-flex gap-1">
+                <a href="/positions/<%= p.id %>/edit" class="btn btn-sm btn-outline-primary" title="ویرایش"><i class="bi bi-pencil"></i></a>
+                <form action="/positions/<%= p.id %>/qr" method="POST" class="d-inline">
+                  <button type="submit" class="btn btn-sm btn-outline-info" title="QR Code"><i class="bi bi-qr-code"></i></button>
+                </form>
+                <form action="/positions/<%= p.id %>/toggle" method="POST" class="d-inline">
+                  <button type="submit" class="btn btn-sm btn-outline-<%= p.is_active ? 'warning' : 'success' %>" title="<%= p.is_active ? 'غیرفعال' : 'فعال' %>"><i class="bi bi-<%= p.is_active ? 'pause' : 'play' %>"></i></button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <% } else { %>
+    <div class="empty-state"><i class="bi bi-briefcase"></i><h5>موقعیت شغلی تعریف نشده</h5><p class="text-muted">از دکمه بالا برای ایجاد موقعیت شغلی جدید استفاده کنید</p></div>
+    <% } %>
+  </div>
+</div>

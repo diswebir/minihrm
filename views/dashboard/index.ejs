@@ -1,0 +1,156 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">داشبورد</h1>
+    <p class="page-subtitle">خوش آمدید، <%= user.firstName %> <%= user.lastName %></p>
+  </div>
+  <div class="d-flex gap-2">
+    <% if (['super_admin', 'hr_manager'].includes(userRole)) { %>
+      <a href="/recruitment" class="btn btn-primary">
+        <i class="bi bi-person-plus me-1"></i>متقاضیان
+      </a>
+    <% } %>
+  </div>
+</div>
+
+<% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
+<!-- Stats Cards -->
+<div class="stats-grid fade-in">
+  <div class="stat-card">
+    <div class="stat-icon primary"><i class="bi bi-people"></i></div>
+    <div class="stat-info">
+      <h3><%= stats.totalCandidates || 0 %></h3>
+      <p>کل متقاضیان</p>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon info"><i class="bi bi-person-plus"></i></div>
+    <div class="stat-info">
+      <h3><%= stats.newCandidates || 0 %></h3>
+      <p>جدید</p>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon warning"><i class="bi bi-hourglass-split"></i></div>
+    <div class="stat-info">
+      <h3><%= stats.underReview || 0 %></h3>
+      <p>در حال بررسی</p>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon success"><i class="bi bi-check-circle"></i></div>
+    <div class="stat-info">
+      <h3><%= stats.approved || 0 %></h3>
+      <p>تأیید شده</p>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon danger"><i class="bi bi-x-circle"></i></div>
+    <div class="stat-info">
+      <h3><%= stats.rejected || 0 %></h3>
+      <p>رد شده</p>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon secondary"><i class="bi bi-briefcase"></i></div>
+    <div class="stat-info">
+      <h3><%= stats.activePositions || 0 %></h3>
+      <p>موقعیت فعال</p>
+    </div>
+  </div>
+</div>
+
+<!-- Charts & Activity -->
+<div class="chart-section">
+  <!-- Recent Candidates -->
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span><i class="bi bi-clock-history me-2"></i>آخرین متقاضیان</span>
+      <a href="/recruitment" class="btn btn-sm btn-outline-primary">مشاهده همه</a>
+    </div>
+    <div class="card-body p-0">
+      <% if (recentCandidates && recentCandidates.length > 0) { %>
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>نام</th>
+              <th>موقعیت شغلی</th>
+              <th>وضعیت</th>
+              <th>تاریخ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% recentCandidates.forEach(c => { %>
+            <tr>
+              <td>
+                <a href="/recruitment/<%= c.id %>" class="no-text-decoration text-primary fw-bold">
+                  <%= c.first_name || 'بدون‌نام' %> <%= c.last_name || '' %>
+                </a>
+              </td>
+              <td><%= c.position_title || '-' %></td>
+              <td><span class="badge-status badge-<%= c.status %>"><%= c.status %></span></td>
+              <td class="text-muted"><%= new Date(c.created_at).toLocaleDateString('fa-IR') %></td>
+            </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+      <% } else { %>
+      <div class="empty-state">
+        <i class="bi bi-inbox"></i>
+        <p>هنوز متقاضی ثبت‌نام نکرده است</p>
+      </div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="card">
+    <div class="card-header">
+      <i class="bi bi-activity me-2"></i>فعالیت‌های اخیر
+    </div>
+    <div class="card-body">
+      <% if (recentActivities && recentActivities.length > 0) { %>
+      <ul class="activity-list">
+        <% recentActivities.slice(0, 10).forEach(a => { %>
+        <li class="activity-item">
+          <div class="activity-dot <%= a.action %>"></div>
+          <div>
+            <div class="activity-text">
+              <strong><%= a.first_name || '' %> <%= a.last_name || '' %></strong>
+              <%= a.description || a.action %>
+            </div>
+            <div class="activity-time"><%= new Date(a.created_at).toLocaleDateString('fa-IR') %> <%= new Date(a.created_at).toLocaleTimeString('fa-IR', {hour:'2-digit', minute:'2-digit'}) %></div>
+          </div>
+        </li>
+        <% }); %>
+      </ul>
+      <% } else { %>
+      <div class="empty-state">
+        <i class="bi bi-activity"></i>
+        <p>هنوز فعالیتی ثبت نشده</p>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<% } else if (userRole === 'employee') { %>
+<!-- Employee Dashboard -->
+<div class="stats-grid fade-in">
+  <div class="stat-card">
+    <div class="stat-icon primary"><i class="bi bi-person"></i></div>
+    <div class="stat-info">
+      <h3><%= user.firstName %> <%= user.lastName %></h3>
+      <p>خوش آمدید به پنل کارمندی</p>
+    </div>
+  </div>
+</div>
+
+<div class="quick-actions">
+  <a href="/employees" class="quick-action">
+    <i class="bi bi-person-badge"></i>
+    <span>پروفایل من</span>
+  </a>
+</div>
+<% } %>

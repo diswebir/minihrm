@@ -1,0 +1,28 @@
+<div class="text-center mb-4">
+  <p class="text-muted">لطفاً موقعیت شغلی مورد نظر خود را انتخاب کنید</p>
+</div>
+
+<form action="/apply/select-position" method="POST">
+  <div class="position-cards">
+    <% if (typeof positions !== 'undefined' && positions.length > 0) { %>
+      <% positions.forEach((p, index) => { %>
+      <label class="position-card">
+        <input type="radio" name="position_id" value="<%= p.id %>" <%= index === 0 ? 'checked' : '' %>>
+        <div class="position-info">
+          <h4><%= p.title %></h4>
+          <% if (p.department_name) { %><p><i class="bi bi-building me-1"></i><%= p.department_name %></p><% } %>
+          <% if (p.description) { %><p class="small"><%= p.description.substring(0, 100) %>...</p><% } %>
+        </div>
+        <% const types = {full_time:'تمام‌وقت', part_time:'پاره‌وقت', contract:'قراردادی', internship:'کارآموزی'}; %>
+        <span class="position-badge"><%= types[p.employment_type] || '' %></span>
+      </label>
+      <% }); %>
+    <% } else { %>
+      <div class="alert alert-warning">در حال حاضر موقعیت شغلی فعالی وجود ندارد</div>
+    <% } %>
+  </div>
+
+  <button type="submit" class="btn btn-primary btn-lg w-100">
+    <i class="bi bi-arrow-left me-2"></i>ادامه
+  </button>
+</form>

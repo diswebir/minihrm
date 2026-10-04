@@ -1,0 +1,34 @@
+<div class="page-header">
+  <div><h1 class="page-title"><%= userRole === 'employee' ? 'پروفایل من' : 'مدیریت کارمندان' %></h1></div>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <% if (employees && employees.length > 0) { %>
+    <div class="table-container">
+      <table class="table">
+        <thead>
+          <tr><th>نام</th><th>بخش</th><th>موبایل</th><th>ایمیل</th><th>نقش</th><th>وضعیت</th></tr>
+        </thead>
+        <tbody>
+          <% employees.forEach(e => { %>
+          <tr>
+            <td class="fw-bold"><%= e.first_name %> <%= e.last_name %></td>
+            <td><%= e.department_name || '-' %></td>
+            <td><%= e.phone || '-' %></td>
+            <td><%= e.email || '-' %></td>
+            <td>
+              <% const rl = {super_admin:'مدیر سیستم', hr_manager:'مدیر HR', hr_employee:'کارمند HR', employee:'کارمند'}; %>
+              <span class="badge-role badge-<%= e.role %>"><%= rl[e.role] || e.role %></span>
+            </td>
+            <td><span class="badge bg-<%= e.is_active ? 'success' : 'danger' %>"><%= e.is_active ? 'فعال' : 'غیرفعال' %></span></td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <% } else { %>
+    <div class="empty-state"><i class="bi bi-person-badge"></i><h5>کارمندی یافت نشد</h5></div>
+    <% } %>
+  </div>
+</div>

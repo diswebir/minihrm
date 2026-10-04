@@ -1,0 +1,66 @@
+<div class="page-header">
+  <div><h1 class="page-title">فرم‌ساز</h1><p class="page-subtitle">مدیریت فرم‌های استخدام</p></div>
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newTemplateModal"><i class="bi bi-plus-lg me-1"></i>فرم جدید</button>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <% if (templates && templates.length > 0) { %>
+    <div class="table-container">
+      <table class="table">
+        <thead>
+          <tr><th>نام فرم</th><th>مراحل</th><th>فیلدها</th><th>سازنده</th><th>وضعیت</th><th>عملیات</th></tr>
+        </thead>
+        <tbody>
+          <% templates.forEach(t => { %>
+          <tr>
+            <td class="fw-bold"><i class="bi bi-ui-checks text-primary me-2"></i><%= t.name %></td>
+            <td><%= t.total_steps %> مرحله</td>
+            <td><span class="badge bg-light text-dark"><%= t.field_count || 0 %> فیلد</span></td>
+            <td><%= t.creator_name || '-' %></td>
+            <td><span class="badge bg-<%= t.is_active ? 'success' : 'secondary' %>"><%= t.is_active ? 'فعال' : 'غیرفعال' %></span></td>
+            <td>
+              <a href="/form-builder/<%= t.id %>/edit" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil me-1"></i>ویرایش</a>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <% } else { %>
+    <div class="empty-state"><i class="bi bi-ui-checks"></i><h5>فرمی تعریف نشده</h5></div>
+    <% } %>
+  </div>
+</div>
+
+<!-- New Template Modal -->
+<div class="modal fade" id="newTemplateModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/form-builder" method="POST">
+        <div class="modal-header">
+          <h5 class="modal-title">فرم جدید</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">نام فرم <span class="text-danger">*</span></label>
+            <input type="text" name="name" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">توضیحات</label>
+            <textarea name="description" class="form-control" rows="2"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">تعداد مراحل</label>
+            <input type="number" name="total_steps" class="form-control" value="1" min="1" max="10">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+          <button type="submit" class="btn btn-primary">ایجاد</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,43 @@
+<div class="page-header">
+  <div><h1 class="page-title"><%= department ? 'ویرایش بخش' : 'بخش جدید' %></h1></div>
+  <a href="/departments" class="btn btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form action="<%= department ? '/departments/' + department.id : '/departments' %>" method="POST">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">نام بخش <span class="text-danger">*</span></label>
+          <input type="text" name="name" class="form-control" required value="<%= department ? department.name : '' %>">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">مدیر بخش</label>
+          <select name="manager_id" class="form-select">
+            <option value="">بدون مدیر</option>
+            <% if (typeof managers !== 'undefined') { managers.forEach(m => { %>
+            <option value="<%= m.id %>" <%= department && department.manager_id == m.id ? 'selected' : '' %>><%= m.first_name %> <%= m.last_name %></option>
+            <% }); } %>
+          </select>
+        </div>
+        <div class="col-12 mb-3">
+          <label class="form-label">توضیحات</label>
+          <textarea name="description" class="form-control" rows="3"><%= department ? department.description : '' %></textarea>
+        </div>
+        <% if (department) { %>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">وضعیت</label>
+          <div class="form-check form-switch">
+            <input type="checkbox" name="is_active" class="form-check-input" <%= department.is_active ? 'checked' : '' %>>
+            <label class="form-check-label">فعال</label>
+          </div>
+        </div>
+        <% } %>
+      </div>
+      <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>ذخیره</button>
+        <a href="/departments" class="btn btn-secondary">انصراف</a>
+      </div>
+    </form>
+  </div>
+</div>

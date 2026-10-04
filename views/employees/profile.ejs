@@ -1,0 +1,19 @@
+<div class="page-header">
+  <div><h1 class="page-title">پروفایل: <%= employee.first_name %> <%= employee.last_name %></h1></div>
+  <a href="/employees" class="btn btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-6 mb-3"><strong>نام کاربری:</strong> <code><%= employee.username %></code></div>
+      <div class="col-md-6 mb-3"><strong>نقش:</strong> <% const rl = {super_admin:'مدیر سیستم', hr_manager:'مدیر HR', hr_employee:'کارمند HR', employee:'کارمند'}; %><span class="badge-role badge-<%= employee.role %>"><%= rl[employee.role] || employee.role %></span></div>
+      <div class="col-md-6 mb-3"><strong>موبایل:</strong> <%= employee.phone || '-' %></div>
+      <div class="col-md-6 mb-3"><strong>ایمیل:</strong> <%= employee.email || '-' %></div>
+      <div class="col-md-6 mb-3"><strong>کد ملی:</strong> <%= employee.national_code || '-' %></div>
+      <div class="col-md-6 mb-3"><strong>بخش:</strong> <%= employee.department_name || '-' %></div>
+      <div class="col-md-6 mb-3"><strong>وضعیت:</strong> <span class="badge bg-<%= employee.is_active ? 'success' : 'danger' %>"><%= employee.is_active ? 'فعال' : 'غیرفعال' %></span></div>
+      <div class="col-md-6 mb-3"><strong>تاریخ عضویت:</strong> <%= new Date(employee.created_at).toLocaleDateString('fa-IR') %></div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,135 @@
+<% const userRole = user ? user.role : ''; %>
+<% const sidebarModules = (typeof modules !== 'undefined' && modules) ? modules : []; %>
+
+<aside class="sidebar" id="sidebar">
+  <!-- Logo -->
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <i class="bi bi-building"></i>
+      <span>MiniHRM</span>
+    </div>
+    <button class="sidebar-close d-lg-none" id="sidebarClose">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav">
+    <ul class="nav-list">
+      <!-- Dashboard -->
+      <li class="nav-item">
+        <a href="/dashboard" class="nav-link <%= currentPath === '/dashboard' ? 'active' : '' %>">
+          <i class="bi bi-grid-1x2"></i>
+          <span>داشبورد</span>
+        </a>
+      </li>
+
+      <!-- Users (super_admin, hr_manager) -->
+      <% if (['super_admin', 'hr_manager'].includes(userRole)) { %>
+      <li class="nav-item">
+        <a href="/users" class="nav-link <%= currentPath.startsWith('/users') ? 'active' : '' %>">
+          <i class="bi bi-people"></i>
+          <span>مدیریت کاربران</span>
+        </a>
+      </li>
+      <% } %>
+
+      <!-- Departments (super_admin, hr_manager) -->
+      <% if (['super_admin', 'hr_manager'].includes(userRole)) { %>
+      <li class="nav-item">
+        <a href="/departments" class="nav-link <%= currentPath.startsWith('/departments') ? 'active' : '' %>">
+          <i class="bi bi-building"></i>
+          <span>بخش‌ها</span>
+        </a>
+      </li>
+      <% } %>
+
+      <!-- Positions -->
+      <% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
+      <li class="nav-item">
+        <a href="/positions" class="nav-link <%= currentPath.startsWith('/positions') ? 'active' : '' %>">
+          <i class="bi bi-briefcase"></i>
+          <span>موقعیت‌های شغلی</span>
+        </a>
+      </li>
+      <% } %>
+
+      <!-- Candidates -->
+      <% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
+      <li class="nav-item">
+        <a href="/recruitment" class="nav-link <%= currentPath.startsWith('/recruitment') ? 'active' : '' %>">
+          <i class="bi bi-person-plus"></i>
+          <span>متقاضیان استخدام</span>
+        </a>
+      </li>
+      <% } %>
+
+      <!-- Form Builder -->
+      <% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
+      <li class="nav-item">
+        <a href="/form-builder" class="nav-link <%= currentPath.startsWith('/form-builder') ? 'active' : '' %>">
+          <i class="bi bi-ui-checks"></i>
+          <span>فرم‌ساز</span>
+        </a>
+      </li>
+      <% } %>
+
+      <!-- MBTI -->
+      <% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
+      <li class="nav-item">
+        <a href="/mbti" class="nav-link <%= currentPath.startsWith('/mbti') ? 'active' : '' %>">
+          <i class="bi bi-puzzle"></i>
+          <span>آزمون MBTI</span>
+        </a>
+      </li>
+      <% } %>
+
+      <!-- Employees -->
+      <li class="nav-item">
+        <a href="/employees" class="nav-link <%= currentPath.startsWith('/employees') ? 'active' : '' %>">
+          <i class="bi bi-person-badge"></i>
+          <span><%= userRole === 'employee' ? 'پروفایل من' : 'کارمندان' %></span>
+        </a>
+      </li>
+
+      <!-- Reports -->
+      <% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
+      <li class="nav-item">
+        <a href="/reports" class="nav-link <%= currentPath.startsWith('/reports') ? 'active' : '' %>">
+          <i class="bi bi-bar-chart"></i>
+          <span>گزارشات</span>
+        </a>
+      </li>
+      <% } %>
+
+      <!-- Settings (super_admin only) -->
+      <% if (userRole === 'super_admin') { %>
+      <li class="nav-item">
+        <a href="/settings" class="nav-link <%= currentPath.startsWith('/settings') ? 'active' : '' %>">
+          <i class="bi bi-gear"></i>
+          <span>تنظیمات</span>
+        </a>
+      </li>
+      <% } %>
+
+      <!-- Divider -->
+      <li class="nav-divider"></li>
+
+      <!-- Public Link -->
+      <li class="nav-item">
+        <a href="/apply" class="nav-link" target="_blank">
+          <i class="bi bi-box-arrow-up-left"></i>
+          <span>لینک استخدام عمومی</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Sidebar Footer -->
+  <div class="sidebar-footer">
+      <a href="/logout" class="nav-link logout-link">
+      <i class="bi bi-box-arrow-right"></i>
+      <span>خروج</span>
+    </a>
+  </div>
+</aside>

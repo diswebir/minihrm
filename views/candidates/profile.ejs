@@ -1,0 +1,131 @@
+<div class="page-header">
+  <div><h1 class="page-title">پروفایل متقاضی</h1></div>
+  <a href="/recruitment" class="btn btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a>
+</div>
+
+<!-- Profile Header -->
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="profile-header">
+      <div class="profile-avatar"><%= (candidate.first_name || '?')[0] %></div>
+      <div>
+        <h2><%= candidate.first_name || 'بدون‌نام' %> <%= candidate.last_name || '' %></h2>
+        <div class="profile-meta">
+          <span><i class="bi bi-phone"></i><%= candidate.phone %></span>
+          <% if (candidate.email) { %><span><i class="bi bi-envelope"></i><%= candidate.email %></span><% } %>
+          <% if (candidate.position_title) { %><span><i class="bi bi-briefcase"></i><%= candidate.position_title %></span><% } %>
+          <span class="badge-status badge-<%= candidate.status %>"><%= candidate.status %></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Change -->
+    <form action="/recruitment/<%= candidate.id %>/status" method="POST" class="d-flex gap-2 flex-wrap">
+      <select name="status" class="form-select" style="max-width: 200px;">
+        <option value="new" <%= candidate.status === 'new' ? 'selected' : '' %>>جدید</option>
+        <option value="under_review" <%= candidate.status === 'under_review' ? 'selected' : '' %>>در حال بررسی</option>
+        <option value="interview" <%= candidate.status === 'interview' ? 'selected' : '' %>>مصاحبه</option>
+        <option value="approved" <%= candidate.status === 'approved' ? 'selected' : '' %>>تأیید شده</option>
+        <option value="rejected" <%= candidate.status === 'rejected' ? 'selected' : '' %>>رد شده</option>
+        <option value="hired" <%= candidate.status === 'hired' ? 'selected' : '' %>>استخدام شده</option>
+      </select>
+      <input type="text" name="note" class="form-control" placeholder="یادداشت (اختیاری)" style="max-width: 300px;">
+      <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>تغییر وضعیت</button>
+    </form>
+  </div>
+</div>
+
+<!-- Tabs -->
+<ul class="nav nav-tabs" role="tablist">
+  <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#formResponses">اطلاعات فرم</a></li>
+  <% if (mbtiData) { %>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#mbtiResult">نتیجه MBTI</a></li>
+  <% } %>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#history">تاریخچه</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#notes">یادداشت‌ها</a></li>
+</ul>
+
+<div class="tab-content mt-3">
+  <!-- Form Responses -->
+  <div class="tab-pane fade show active" id="formResponses">
+    <% if (Object.keys(formSteps).length > 0) { %>
+      <% for (const [step, fields] of Object.entries(formSteps)) { %>
+      <div class="card mb-3">
+        <div class="card-header"><i class="bi bi-list-check me-2"></i>مرحله <%= step %></div>
+        <div class="card-body">
+          <div class="row">
+            <% fields.forEach(f => { %>
+            <div class="col-md-6 mb-2">
+              <strong><%= f.field_label || f.field_key %>:</strong>
+              <span class="text-muted"><%= f.field_value || '-' %></span>
+            </div>
+            <% }); %>
+          </div>
+        </div>
+      </div>
+      <% } %>
+    <% } else { %>
+      <div class="alert alert-info">هنوز اطلاعاتی ثبت نشده</div>
+    <% } %>
+  </div>
+
+  <!-- MBTI Result -->
+  <% if (mbtiData) { %>
+  <div class="tab-pane fade" id="mbtiResult">
+    <div class="card">
+      <div class="card-body">
+        <div class="text-center mb-4">
+          <div class="mbti-type-badge mx-auto mb-2"><%= mbtiData.type %></div>
+          <h4>نوع شخصیت: <%= mbtiData.type %></h4>
+        </div>
+        <pre class="bg-light p-3 rounded" style="white-space: pre-wrap; direction: rtl;"><%= mbtiData.analysis %></pre>
+      </div>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- History -->
+  <div class="tab-pane fade" id="history">
+    <% if (history && history.length > 0) { %>
+    <ul class="activity-list">
+      <% history.forEach(h => { %>
+      <li class="activity-item">
+        <div class="activity-dot status_change"></div>
+        <div>
+          <div class="activity-text"><strong><%= h.changed_by_name || 'سیستم' %></strong>: تغییر وضعیت از <code><%= h.old_status %></code> به <code><%= h.new_status %></code></div>
+          <% if (h.note) { %><div class="text-muted small"><%= h.note %></div><% } %>
+          <div class="activity-time"><%= new Date(h.created_at).toLocaleDateString('fa-IR') %></div>
+        </div>
+      </li>
+      <% }); %>
+    </ul>
+    <% } else { %>
+    <div class="alert alert-info">تاریخچه‌ای ثبت نشده</div>
+    <% } %>
+  </div>
+
+  <!-- Notes -->
+  <div class="tab-pane fade" id="notes">
+    <form action="/recruitment/<%= candidate.id %>/notes" method="POST" class="mb-3">
+      <div class="input-group">
+        <input type="text" name="note" class="form-control" placeholder="یادداشت جدید..." required>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-plus"></i></button>
+      </div>
+    </form>
+    <% if (notes && notes.length > 0) { %>
+    <% notes.forEach(n => { %>
+    <div class="card mb-2">
+      <div class="card-body py-2 px-3">
+        <div class="d-flex justify-content-between">
+          <strong class="small"><%= n.author_name || 'ناشناس' %></strong>
+          <small class="text-muted"><%= new Date(n.created_at).toLocaleDateString('fa-IR') %></small>
+        </div>
+        <p class="mb-0 small"><%= n.note %></p>
+      </div>
+    </div>
+    <% }); %>
+    <% } else { %>
+    <div class="alert alert-info">یادداشتی ثبت نشده</div>
+    <% } %>
+  </div>
+</div>

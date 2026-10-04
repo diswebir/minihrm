@@ -1,0 +1,99 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">متقاضیان استخدام</h1>
+    <p class="page-subtitle">لیست تمام متقاضیان ثبت‌نام شده</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="/recruitment/export/csv" class="btn btn-outline-success"><i class="bi bi-download me-1"></i>خروجی CSV</a>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="filter-bar">
+  <form method="GET" class="d-flex gap-2 flex-wrap align-items-end w-100">
+    <div>
+      <input type="text" name="search" class="form-control" placeholder="نام، موبایل، کد ملی..." value="<%= typeof filters !== 'undefined' && filters.search ? filters.search : '' %>">
+    </div>
+    <div>
+      <select name="status" class="form-select">
+        <option value="">همه وضعیت‌ها</option>
+        <option value="new" <%= typeof filters !== 'undefined' && filters.status === 'new' ? 'selected' : '' %>>جدید</option>
+        <option value="form_started" <%= typeof filters !== 'undefined' && filters.status === 'form_started' ? 'selected' : '' %>>شروع فرم</option>
+        <option value="form_completed" <%= typeof filters !== 'undefined' && filters.status === 'form_completed' ? 'selected' : '' %>>فرم تکمیل</option>
+        <option value="mbti_completed" <%= typeof filters !== 'undefined' && filters.status === 'mbti_completed' ? 'selected' : '' %>>MBTI تکمیل</option>
+        <option value="under_review" <%= typeof filters !== 'undefined' && filters.status === 'under_review' ? 'selected' : '' %>>در حال بررسی</option>
+        <option value="interview" <%= typeof filters !== 'undefined' && filters.status === 'interview' ? 'selected' : '' %>>مصاحبه</option>
+        <option value="approved" <%= typeof filters !== 'undefined' && filters.status === 'approved' ? 'selected' : '' %>>تأیید شده</option>
+        <option value="rejected" <%= typeof filters !== 'undefined' && filters.status === 'rejected' ? 'selected' : '' %>>رد شده</option>
+        <option value="hired" <%= typeof filters !== 'undefined' && filters.status === 'hired' ? 'selected' : '' %>>استخدام شده</option>
+      </select>
+    </div>
+    <div>
+      <select name="position" class="form-select">
+        <option value="">همه موقعیت‌ها</option>
+        <% if (typeof positions !== 'undefined') { positions.forEach(p => { %>
+        <option value="<%= p.id %>" <%= typeof filters !== 'undefined' && filters.position == p.id ? 'selected' : '' %>><%= p.title %></option>
+        <% }); } %>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
+  </form>
+</div>
+
+<!-- Candidates Table -->
+<div class="card">
+  <div class="card-body p-0">
+    <% if (candidates && candidates.length > 0) { %>
+    <div class="table-container">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>نام</th>
+            <th>موبایل</th>
+            <th>موقعیت شغلی</th>
+            <th>فرم</th>
+            <th>MBTI</th>
+            <th>وضعیت</th>
+            <th>تاریخ</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% candidates.forEach(c => { %>
+          <tr>
+            <td class="fw-bold"><a href="/recruitment/<%= c.id %>" class="no-text-decoration text-primary"><%= c.first_name || 'بدون‌نام' %> <%= c.last_name || '' %></a></td>
+            <td><code><%= c.phone %></code></td>
+            <td><%= c.position_title || '-' %></td>
+            <td><span class="badge bg-<%= c.form_completed ? 'success' : 'warning' %>"><%= c.form_completed ? 'تکمیل' : 'ناقص' %></span></td>
+            <td><span class="badge bg-<%= c.mbti_completed ? 'success' : 'secondary' %>"><%= c.mbti_type || 'انجام نشده' %></span></td>
+            <td><span class="badge-status badge-<%= c.status %>"><%= c.status %></span></td>
+            <td class="text-muted"><%= new Date(c.created_at).toLocaleDateString('fa-IR') %></td>
+            <td>
+              <a href="/recruitment/<%= c.id %>" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <% if (pagination && pagination.pages > 1) { %>
+    <div class="card-footer d-flex justify-content-center">
+      <nav>
+        <ul class="pagination mb-0">
+          <% for (let i = 1; i <= pagination.pages; i++) { %>
+          <li class="page-item <%= i === pagination.page ? 'active' : '' %>">
+            <a class="page-link" href="?page=<%= i %>&status=<%= typeof filters !== 'undefined' && filters.status ? filters.status : '' %>&position=<%= typeof filters !== 'undefined' && filters.position ? filters.position : '' %>&search=<%= typeof filters !== 'undefined' && filters.search ? filters.search : '' %>"><%= i %></a>
+          </li>
+          <% } %>
+        </ul>
+      </nav>
+    </div>
+    <% } %>
+
+    <% } else { %>
+    <div class="empty-state"><i class="bi bi-person-plus"></i><h5>متقاضی ثبت‌نام نکرده</h5><p class="text-muted">از بخش موقعیت‌های شغلی، QR Code تولید کنید</p></div>
+    <% } %>
+  </div>
+</div>

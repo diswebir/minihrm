@@ -1,0 +1,45 @@
+<div class="success-page">
+  <div class="success-icon">
+    <i class="bi bi-check-lg"></i>
+  </div>
+
+  <h2>ثبت‌نام با موفقیت انجام شد!</h2>
+
+  <% if (typeof candidate !== 'undefined' && candidate) { %>
+  <p>
+    <%= candidate.first_name || '' %> عزیز، اطلاعات شما با موفقیت ثبت شد.
+    <% if (candidate.position_title) { %>
+    <br>موقعیت شغلی: <strong><%= candidate.position_title %></strong>
+    <% } %>
+  </p>
+
+  <div class="card mt-4 text-start">
+    <div class="card-body">
+      <h6><i class="bi bi-info-circle me-2"></i>مراحل بعدی:</h6>
+      <ul class="mb-0">
+        <li>اطلاعات شما توسط واحد منابع انسانی بررسی خواهد شد</li>
+        <li>در صورت تأیید، برای مصاحبه با شما تماس گرفته خواهد شد</li>
+        <li>از شماره موبایل <strong><%= candidate.phone %></strong> برای پیگیری استفاده کنید</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+      <% if (candidate.form_completed) { %>
+      <span class="badge bg-success px-3 py-2"><i class="bi bi-check-circle me-1"></i>فرم تکمیل شده</span>
+      <% } %>
+      <% if (candidate.mbti_completed) { %>
+      <span class="badge bg-success px-3 py-2"><i class="bi bi-check-circle me-1"></i>آزمون MBTI انجام شده</span>
+      <% } %>
+    </div>
+  </div>
+  <% } %>
+
+  <div class="mt-4">
+    <small class="text-muted">
+      <i class="bi bi-shield-check me-1"></i>
+      اطلاعات شما نزد ما محفوظ است
+    </small>
+  </div>
+</div>
