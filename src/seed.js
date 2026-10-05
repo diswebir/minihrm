@@ -79,18 +79,27 @@ function run() {
     );
   }
 
+  // ---- مهاجرت دیتابیس‌های موجود: ستون الزامی بودن آزمون‌ها + ترتیب ----
+  try { db.prepare('ALTER TABLE tests ADD COLUMN required INTEGER DEFAULT 0').run(); } catch (_) { /* ستون از قبل وجود دارد */ }
+  db.prepare(`UPDATE tests SET sort = CASE code WHEN 'mbti' THEN 1 WHEN 'disc' THEN 2 WHEN 'eq' THEN 3 WHEN 'holland' THEN 4 ELSE sort END
+    WHERE code IN ('mbti','disc','eq','holland')`).run();
+
   // ---- روان‌آزمون‌ها (DISC / EQ / Holland) ---- (فقط اگر خالی باشند)
   const tCount2 = db.prepare('SELECT COUNT(*) c FROM tests').get().c;
   if (tCount2 === 0) {
-    const insTest = db.prepare('INSERT INTO tests (code, title, short_title, description, intro, icon, dimensions, scale_labels, enabled, sort) VALUES (?,?,?,?,?,?,?,?  ,1,?)');
+    const insTest = db.prepare('INSERT INTO tests (code, title, short_title, description, intro, icon, dimensions, scale_labels, required, enabled, sort) VALUES (?,?,?,?,?,?,?,?,?,1,?)');
     const insTQ = db.prepare('INSERT INTO test_questions (test_code, number, text, dimension, reverse, enabled, sort) VALUES (?,?,?,?,?,1,?)');
     const testData = require('./test-data');
     testData.TESTS.forEach((t, ti) => {
       insTest.run(t.code, t.title, t.short_title, t.description, t.intro, t.icon,
-        JSON.stringify(t.dimensions), JSON.stringify(t.scale_labels), ti + 1);
+        JSON.stringify(t.dimensions), JSON.stringify(t.scale_labels), t.required ? 1 : 0, ti + 2);
       for (const q of t.questions) insTQ.run(t.code, q.number, q.text, q.dimension, q.reverse ? 1 : 0, q.number);
     });
   }
+
+  // ---- ردیف MBTI در جدول آزمون‌ها (برای مدیریت یکپارچه الزام/عدم الزام) ----
+  db.prepare(`INSERT OR IGNORE INTO tests (code, title, short_title, description, intro, icon, dimensions, scale_labels, required, enabled, sort)
+    VALUES ('mbti','آزمون شخصیت‌شناسی MBTI','MBTI','۲۸ سوال اجباری، تحلیل ۱۶ تیپ شخصیتی','آزمون شخصیت‌شناسی MBTI','brain','[]','[]',1,1,1)`).run();
 
   // ---- default settings ----
   const insSet = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?,?)');

@@ -230,6 +230,19 @@
         hrmToast(res.message || 'خطا رخ داد', 'err');
       }
     }
+    if (action === 'toggle-required') {
+      e.preventDefault();
+      if (btn.disabled) return;
+      btn.disabled = true;
+      const res = await hrmPost(btn.getAttribute('data-url'), {});
+      btn.disabled = false;
+      if (res.ok) {
+        hrmToast(res.message, 'ok');
+        setTimeout(() => location.reload(), 600);
+      } else {
+        hrmToast(res.message || 'خطا رخ داد', 'err');
+      }
+    }
     if (action === 'status-change') {
       e.preventDefault();
       const res = await hrmPost(btn.getAttribute('data-url'), { status: btn.getAttribute('data-status') });

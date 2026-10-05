@@ -164,7 +164,7 @@ async function main() {
     // ---- نتایج آزمون‌های روان‌شناختی (DISC / EQ / Holland) ----
     const assessments = require('../src/lib/assessments');
     const testPatterns = a.tests || {};
-    for (const t of db.prepare('SELECT * FROM tests WHERE enabled = 1').all()) {
+    for (const t of db.prepare("SELECT * FROM tests WHERE enabled = 1 AND code != 'mbti'").all()) {
       const tqs = db.prepare('SELECT * FROM test_questions WHERE test_code = ? AND enabled = 1 ORDER BY number').all(t.code);
       const hi = testPatterns[t.code]; // بُعد غالب
       const tAnswers = tqs.map(q => {

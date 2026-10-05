@@ -1,0 +1,56 @@
+<%- include('../../partials/header') %>
+
+<div class="flex-between mb-4">
+  <div>
+    <a href="/hr/mbti/types" class="btn btn-ghost btn-sm">← راهنمای تفسیر آزمون‌ها</a>
+  </div>
+  <div class="flex-center gap-2 no-print">
+    <button onclick="window.print()" class="btn btn-soft"><%- icon('print', 15) %> چاپ راهنما</button>
+  </div>
+</div>
+
+<div class="type-hero mb-4">
+  <div class="flex-between" style="flex-wrap:wrap;gap:18px">
+    <div>
+      <div class="code" style="font-size:1.05rem;letter-spacing:0"><%= test.short_title || test.code %></div>
+      <h1 style="color:#fff;margin:14px 0 4px;font-size:1.5rem"><%= test.title %></h1>
+      <p style="color:rgba(255,255,255,.92);margin-top:10px;max-width:620px"><%= test.description %></p>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header"><div class="card-title"><%- icon('file') %> راهنمای خواندن نتایج</div></div>
+  <div class="card-body">
+    <p style="line-height:2.1"><%= guide.how_to_read %></p>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <% (guide.dimensionOrder || Object.keys(guide.dimensions)).forEach(function (key) {
+       var d = guide.dimensions[key];
+  %>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><%- icon('target') %> بُعد <%= key %></div>
+      </div>
+      <div class="card-body">
+        <p class="font-bold" style="line-height:2"><%= d.overview %></p>
+        <div class="alert success mt-2" style="margin-bottom:10px">
+          <strong class="text-sm">نمره بالا:</strong>
+          <div class="text-sm" style="line-height:2;margin-top:4px"><%= d.high %></div>
+        </div>
+        <div class="alert info" style="margin-bottom:10px">
+          <strong class="text-sm">نمره پایین:</strong>
+          <div class="text-sm" style="line-height:2;margin-top:4px"><%= d.low %></div>
+        </div>
+        <div class="text-sm" style="line-height:2"><strong>در محیط کار:</strong> <%= d.work %></div>
+        <ul style="padding-right:18px;line-height:2;margin:10px 0 0" class="text-sm">
+          <% (d.tips || []).forEach(function (t) { %><li><%= t %></li><% }); %>
+        </ul>
+      </div>
+    </div>
+  <% }); %>
+</div>
+
+<%- include('../../partials/footer') %>

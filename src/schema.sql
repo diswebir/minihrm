@@ -226,7 +226,7 @@ CREATE TABLE IF NOT EXISTS mbti_questions (
 
 -- ---------- آزمون‌های روان‌شناختی (DISC / هوش هیجانی / هالند و ...) ----------
 CREATE TABLE IF NOT EXISTS tests (
-  code TEXT PRIMARY KEY,             -- disc | eq | holland
+  code TEXT PRIMARY KEY,             -- mbti | disc | eq | holland
   title TEXT NOT NULL,
   short_title TEXT DEFAULT '',
   description TEXT DEFAULT '',
@@ -234,6 +234,7 @@ CREATE TABLE IF NOT EXISTS tests (
   icon TEXT DEFAULT 'brain',
   dimensions TEXT DEFAULT '[]',      -- JSON [{key,name,desc}]
   scale_labels TEXT DEFAULT '[]',    -- JSON ["کاملاً مخالفم", ...]
+  required INTEGER DEFAULT 0,        -- الزامی برای تکمیل فرم استخدام
   enabled INTEGER DEFAULT 1,
   sort INTEGER DEFAULT 0
 );

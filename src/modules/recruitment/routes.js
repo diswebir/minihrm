@@ -404,8 +404,8 @@ router.get('/apply', async (req, res) => {
 });
 
 router.post('/apply/start', rateLimit({ windowMs: 60 * 1000, max: 10 }), (req, res) => {
-  const { position_id } = req.body;
-  const position = db.prepare("SELECT * FROM positions WHERE id = ? AND status = 'open'").get(position_id);
+  const positionId = parseInt(req.body.position_id, 10);
+  const position = Number.isInteger(positionId) ? db.prepare("SELECT * FROM positions WHERE id = ? AND status = 'open'").get(positionId) : null;
   if (!position) return res.status(400).render('pages/error', { title: 'خطا', status: 400, message: 'موقعیت شغلی انتخاب‌شده معتبر نیست یا بسته شده است', layout: false });
   req.session.applyPositionId = position.id;
   if (req.session.candidatePhone && req.session.candidateApplicantId) {
@@ -477,7 +477,7 @@ router.get('/apply/wizard/:step', (req, res) => {
     title: 'فرم استخدام', layout: false,
     applicant, step: step || { key: 'review', title: 'بررسی و تایید نهایی', description: 'اطلاعات خود را مرور و تایید کنید', icon: 'check' },
     steps, fields, data, questions, answers,
-    testCards: stepKey === 'mbti' ? buildTestCards(applicant) : [],
+    testCards: (stepKey === 'mbti' || stepKey === 'review') ? buildTestCards(applicant) : [],
     stepOrder: STEP_ORDER.filter(k => steps.some(s => s.key === k) || k === 'review'),
     nextStep: nextStep(stepKey), prevStep: prevStep(stepKey),
     repeaterCols: seedData.REPEATER_COLUMNS,
@@ -668,20 +668,22 @@ const assessments = require('../../lib/assessments');
 
 /** کارت‌های وضعیت آزمون‌ها برای نمایش در مرحله «آزمون‌های روان‌شناختی» */
 function buildTestCards(applicant) {
-  const cards = [{
+  const cards = [];
+  const mbtiRow = db.prepare("SELECT required FROM tests WHERE code = 'mbti'").get();
+  cards.push({
     code: 'mbti', title: 'آزمون شخصیت‌شناسی MBTI',
-    description: '۲۸ سوال — الزامی',
+    description: '۲۸ سوال — ' + (mbtiRow && mbtiRow.required ? 'الزامی' : 'پیشنهادی'),
     done: !!applicant.mbti_type,
-    link: '/apply/wizard/mbti', required: true
-  }];
+    link: '/apply/wizard/mbti', required: !mbtiRow || !!mbtiRow.required
+  });
   if (moduleSystem.isEnabled('mbti')) {
-    const tests = db.prepare('SELECT * FROM tests WHERE enabled = 1 ORDER BY sort').all();
+    const tests = db.prepare("SELECT * FROM tests WHERE enabled = 1 AND code != 'mbti' ORDER BY sort").all();
     for (const t of tests) {
       const done = !!db.prepare('SELECT id FROM test_results WHERE applicant_id = ? AND test_code = ?').get(applicant.id, t.code);
       cards.push({
         code: t.code, title: t.title,
-        description: t.description || '',
-        done, link: '/apply/test/' + t.code, required: false
+        description: (t.description || '') + ' — ' + (t.required ? 'الزامی' : 'پیشنهادی'),
+        done, link: '/apply/test/' + t.code, required: !!t.required
       });
     }
   }
@@ -759,14 +761,27 @@ router.post('/apply/submit', async (req, res) => {
     const errors = validateStep(s.key, data);
     if (errors.length) return res.redirect('/apply/wizard/' + s.key);
   }
-  if (moduleSystem.isEnabled('mbti') && !applicant.mbti_type) {
-    return res.redirect('/apply/wizard/mbti');
-  }
   // تاییدیه صحت اطلاعات (از فرم مرور نهایی)
   const consentOk = req.body.consent === 'on' || req.body.consent === '1' || req.body.consent === 'true' || data.consent === true;
   if (!consentOk) {
     return res.redirect('/apply/wizard/review');
   }
+
+  // فقط آزمون‌های «الزامی» باید تکمیل شده باشند (آزمون‌های پیشنهادی اختیاری‌اند)
+  if (moduleSystem.isEnabled('mbti')) {
+    const mbtiRow = db.prepare("SELECT required FROM tests WHERE code = 'mbti'").get();
+    const missing = [];
+    if ((!mbtiRow || mbtiRow.required) && !applicant.mbti_type) missing.push('mbti');
+    const reqTests = db.prepare("SELECT code, short_title, title FROM tests WHERE enabled = 1 AND required = 1 AND code != 'mbti'").all();
+    for (const t of reqTests) {
+      const done = db.prepare('SELECT id FROM test_results WHERE applicant_id = ? AND test_code = ?').get(applicant.id, t.code);
+      if (!done) missing.push(t.code);
+    }
+    if (missing.length) {
+      return res.redirect('/apply/wizard/mbti');
+    }
+  }
+
   data.consent = true;
   db.prepare('UPDATE applicants SET data = ?, updated_at = datetime(\'now\') WHERE id = ?')
     .run(JSON.stringify(data), applicant.id);

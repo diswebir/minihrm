@@ -56,7 +56,7 @@
       <% if (typeof testCards !== 'undefined' && testCards && testCards.length > 1) { %>
         <div class="mb-4">
           <h3 style="font-size:1.05rem;font-weight:800;margin-bottom:4px">آزمون‌های روان‌شناختی</h3>
-          <p class="text-muted text-sm">آزمون MBTI الزامی است؛ سایر آزمون‌ها پیشنهادی‌اند و به تحلیل بهتر شما کمک می‌کنند.</p>
+          <p class="text-muted text-sm">آزمون‌های «الزامی» را برای ارسال نهایی فرم باید تکمیل کنید؛ آزمون‌های «پیشنهادی» اختیاری‌اند و به تحلیل بهتر شما کمک می‌کنند.</p>
           <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-top:12px">
             <% testCards.forEach(function (tc) { %>
               <a href="<%= tc.link %>" class="card" style="padding:14px;text-decoration:none;color:inherit;border:2px solid <%= tc.done ? 'var(--mint, #34d399)' : 'transparent' %>">
@@ -164,15 +164,34 @@
         <% }) %>
       </div>
 
-      <% if (stepOrder.indexOf('mbti') >= 0) { %>
-        <div class="alert success mt-3">
-          <%- icon('check', 20) %>
-          <div>
-            آزمون شخصیت‌شناسی <%= applicant.mbti_type ? 'با موفقیت تکمیل شده است ✓' : 'تکمیل نشده است — لطفاً ابتدا آزمون را انجام دهید' %>
-            <% if (!applicant.mbti_type) { %>
-              <a href="/apply/wizard/mbti" class="font-bold">شروع آزمون</a>
-            <% } %>
+      <% if (typeof testCards !== 'undefined' && testCards && testCards.length) { %>
+        <div class="mt-3">
+          <h3 style="font-size:1.05rem;font-weight:800;margin-bottom:10px">وضعیت آزمون‌های روان‌شناختی</h3>
+          <% var reqMissing = testCards.filter(function(tc){ return tc.required && !tc.done; }); %>
+          <% if (reqMissing.length) { %>
+            <div class="alert error">
+              <strong>آزمون‌های الزامی تکمیل نشده‌اند:</strong>
+              <% reqMissing.forEach(function(tc) { %><a href="<%= tc.link %>" class="font-bold"><%= tc.title %></a><span>؛ </span><% }); %>
+              — برای ارسال نهایی فرم، تکمیل آن‌ها الزامی است.
+            </div>
+          <% } %>
+          <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px">
+            <% testCards.forEach(function (tc) { %>
+              <a href="<%= tc.link %>" class="card" style="padding:12px;text-decoration:none;color:inherit;border:2px solid <%= tc.done ? 'var(--mint, #34d399)' : 'transparent' %>">
+                <div class="flex-between">
+                  <strong class="text-sm"><%= tc.title %></strong>
+                  <% if (tc.done) { %><span class="badge mint">تکمیل‌شده ✓</span>
+                  <% } else if (tc.required) { %><span class="badge rose">الزامی</span>
+                  <% } else { %><span class="badge">پیشنهادی</span><% } %>
+                </div>
+              </a>
+            <% }); %>
           </div>
+          <% if (!reqMissing.length) { %>
+            <div class="alert success mt-2">
+              <%- icon('check', 18) %> همه آزمون‌های الزامی تکمیل شده‌اند. آزمون‌های پیشنهادی اختیاری‌اند.
+            </div>
+          <% } %>
         </div>
       <% } %>
 

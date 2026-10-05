@@ -265,11 +265,6 @@ async function main() {
   r = await cand('POST', '/apply/test/eq', { form: eqAll });
   ok('ثبت آزمون هوش هیجانی', r.status === 302 && r.redirect.includes('/apply/wizard/mbti'));
 
-  const hollAll = {};
-  for (let i = 1; i <= 30; i++) hollAll['q_' + i] = '3';
-  r = await cand('POST', '/apply/test/holland', { form: hollAll });
-  ok('ثبت آزمون هالند', r.status === 302 && r.redirect.includes('/apply/wizard/mbti'));
-
   r = await cand('GET', '/apply/test/disc');
   ok('پاسخ‌های قبلی ذخیره و نمایش داده می‌شوند', r.status === 200 && r.text.includes('checked'));
 
@@ -288,8 +283,20 @@ async function main() {
   r = await cand('POST', '/apply/submit', { form: {} });
   ok('بدون تاییدیه ارسال نمی‌شود', r.status === 302 && r.redirect.includes('/review'));
 
+  // آزمون الزامی: هالند را الزامی می‌کنیم — متقاضی آن را انجام نداده و نباید فرم ارسال شود
+  r = await admin('POST', '/hr/mbti/tests/holland/required', { json: {} });
+  ok('تبدیل آزمون هالند به الزامی', JSON.parse(r.text).ok === true && JSON.parse(r.text).required === 1);
+
   r = await cand('POST', '/apply/submit', { form: { consent: 'on' } });
-  ok('ارسال موفق فرم', r.status === 302 && r.redirect.includes('/apply/done'));
+  ok('آزمون الزامی تکمیل‌نشده مانع ارسال فرم', r.status === 302 && r.redirect.includes('/apply/wizard/mbti'));
+
+  const hollAll = {};
+  for (let i = 1; i <= 30; i++) hollAll['q_' + i] = '3';
+  r = await cand('POST', '/apply/test/holland', { form: hollAll });
+  ok('ثبت آزمون هالند (الزامی)', r.status === 302 && r.redirect.includes('/apply/wizard/mbti'));
+
+  r = await cand('POST', '/apply/submit', { form: { consent: 'on' } });
+  ok('ارسال موفق فرم پس از تکمیل آزمون الزامی', r.status === 302 && r.redirect.includes('/apply/done'));
 
   r = await cand('GET', '/apply/done');
   ok('صفحه موفقیت با کد پیگیری', r.text.includes('ثبت موفق') && r.text.includes('TST-'));
@@ -352,10 +359,61 @@ async function main() {
   r = await admin('GET', '/hr/applicants/1');
   ok('کارت آزمون‌ها در پرونده متقاضی', r.text.includes('سایر آزمون‌های روان‌شناختی') && r.text.includes('کد RIASEC'));
 
+  /* ═══════ ۹.۶ مدیریت سوالات با انتخاب آزمون ═══════ */
+  console.log('▸ مدیریت سوالات آزمون‌ها');
   r = await admin('GET', '/hr/mbti/questions');
   ok('مدیریت سوالات آزمون', r.status === 200 && r.text.includes('سوالات آزمون'));
+  ok('انتخاب‌کننده آزمون در مدیریت سوالات',
+    r.text.includes('ابتدا آزمون مورد نظر را انتخاب کنید') && r.text.includes('آزمون DISC') && r.text.includes('هوش هیجانی') && r.text.includes('انتخاب‌شده'));
 
+  r = await admin('GET', '/hr/mbti/questions?test=disc');
+  ok('سوالات DISC با ویرایشگر لیکرت', r.status === 200 && r.text.includes('معکوس‌نمره') && r.text.includes('name="dim_'));
+
+  r = await admin('GET', '/hr/mbti/questions?test=eq');
+  ok('سوالات هوش هیجانی', r.text.includes('خودآگاهی') && r.text.includes('name="dim_'));
+
+  // ویرایش یک سوال لیکرت
+  const qm = r.text.match(/name="text_(\d+)"/);
+  const qid = qm ? qm[1] : null;
+  if (qid) {
+    r = await admin('POST', '/hr/mbti/questions/save', { form: { test: 'eq', ['text_' + qid]: 'متن ویرایش‌شده تستی سوال', ['dim_' + qid]: 'EM', ['en_' + qid]: 'on' } });
+    ok('ذخیره ویرایش سوال لیکرت', r.status === 302 && r.redirect.includes('test=eq'));
+    r = await admin('GET', '/hr/mbti/questions?test=eq');
+    ok('متن ویرایش‌شده ذخیره شد', r.text.includes('متن ویرایش‌شده تستی سوال'));
+  }
+
+  // افزودن و حذف سوال
+  r = await admin('POST', '/hr/mbti/questions/add', { json: { test: 'disc', text: 'سوال جدید تستی', dimension: 'D', reverse: '0' } });
+  const addQ = JSON.parse(r.text);
+  ok('افزودن سوال جدید به DISC', addQ.ok === true && addQ.id, r.text);
+
+  r = await admin('POST', `/hr/mbti/questions/${addQ.id}/delete`, { json: {} });
+  ok('حذف سوال', JSON.parse(r.text).ok === true);
+
+  r = await admin('POST', '/hr/mbti/questions/add', { json: { test: 'mbti', text: 'سوال تستی MBTI', option_a: 'گزینه الف', option_b: 'گزینه ب', trait_a: 'E', trait_b: 'I' } });
+  const addM = JSON.parse(r.text);
+  ok('افزودن سوال جدید به MBTI', addM.ok === true && addM.id, r.text);
+  if (addM.ok) await admin('POST', `/hr/mbti/questions/${addM.id}/delete`, { json: {} });
+
+  r = await admin('POST', '/hr/mbti/tests/eq/required', { json: {} });
+  ok('تغییر وضعیت الزام آزمون', JSON.parse(r.text).ok === true);
+  r = await admin('POST', '/hr/mbti/tests/eq/required', { json: {} });
+
+  /* ═══════ ۹.۷ راهنمای تفسیر آزمون‌ها ═══════ */
+  console.log('▸ راهنمای تفسیر آزمون‌ها');
   r = await admin('GET', '/hr/mbti/types');
+  ok('هاب راهنمای تفسیر آزمون‌ها', r.status === 200 && r.text.includes('راهنمای تفسیر آزمون‌ها') && r.text.includes('آزمون DISC') && r.text.includes('هالند'));
+
+  r = await admin('GET', '/hr/mbti/types/disc');
+  ok('راهنمای تفسیر DISC', r.status === 200 && r.text.includes('راهنمای خواندن نتایج') && r.text.includes('قاطعیت') && r.text.includes('نمره بالا'));
+
+  r = await admin('GET', '/hr/mbti/types/eq');
+  ok('راهنمای تفسیر هوش هیجانی', r.text.includes('خودآگاهی') && r.text.includes('همدلی'));
+
+  r = await admin('GET', '/hr/mbti/types/holland');
+  ok('راهنمای تفسیر هالند', r.text.includes('واقع‌گرا') && r.text.includes('RIASEC'));
+
+  r = await admin('GET', '/hr/mbti/types/mbti');
   ok('راهنمای ۱۶ تیپ', r.status === 200 && r.text.includes('INTJ') && r.text.includes('ESFP'));
 
   r = await admin('GET', '/hr/mbti/types/INTJ');

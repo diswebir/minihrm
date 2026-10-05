@@ -63,12 +63,12 @@
         <% } %>
         <% if (can('mbti.manage')) { %>
           <a class="nav-item <%= activeMenu === 'mbti-questions' ? 'active' : '' %>" href="/hr/mbti/questions">
-            <%- icon('brain') %> سوالات آزمون شخصیت
+            <%- icon('brain') %> مدیریت سوالات آزمون‌ها
           </a>
         <% } %>
         <% if (can('mbti.view')) { %>
           <a class="nav-item <%= activeMenu === 'mbti-types' ? 'active' : '' %>" href="/hr/mbti/types">
-            <%- icon('spark') %> راهنمای تیپ‌های شخصیتی
+            <%- icon('spark') %> راهنمای تفسیر آزمون‌ها
           </a>
         <% } %>
       <% } %>

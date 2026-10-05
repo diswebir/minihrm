@@ -1,67 +1,132 @@
 <%- include('../../partials/header') %>
 
 <% if (saved) { %>
-  <div class="alert success">
+  <div class="alert success" role="status">
     <%= saved === 'reset' ? 'سوالات به حالت پیش‌فرض (فایل اصلی آزمون) بازگردانی شدند.' : 'تنظیمات سوالات آزمون ذخیره شد.' %>
   </div>
 <% } %>
 
-<div class="flex-between mb-4">
-  <p class="text-muted text-sm" style="margin:0">
-    سوالات آزمون شخصیت‌شناسی MBTI (۲۸ سوال — مطابق فایل استاندارد شرکت).
-    متن سوالات، گزینه‌ها و حرف مرتبط هر گزینه قابل تنظیم است.
-  </p>
-  <div class="flex-center gap-2">
-    <a href="/hr/mbti/types" class="btn btn-soft"><%- icon('spark', 16) %> راهنمای تیپ‌ها</a>
-    <form method="post" action="/hr/mbti/questions/reset" data-confirm="سوالات به حالت اولیه بازگردد؟ تغییرات فعلی از بین می‌رود." style="margin:0">
-      <button class="btn btn-ghost">بازگردانی به پیش‌فرض</button>
-    </form>
-  </div>
-</div>
-
-<div class="alert info">
-  <%- icon('brain', 20) %>
+<div class="flex-between mb-3">
   <div>
-    <strong>راهنمای نگاشت حروف:</strong>
-    هر گزینه به یکی از حروف <span dir="ltr">E / I / S / N / T / F / J / P</span> نگاشت می‌شود.
-    در هر ۴ بُعد باید مجموعاً ۷ سوال وجود داشته باشد (۷ سوال برای هر بُعد).
+    <h1 style="font-size:1.45rem;font-weight:800"><%- icon('brain') %> مدیریت سوالات آزمون‌ها</h1>
+    <p class="text-muted text-sm" style="margin:4px 0 0">ابتدا آزمون مورد نظر را انتخاب کنید، سپس سوالات آن را ویرایش یا سوال جدید اضافه کنید.</p>
+  </div>
+  <a href="/hr/mbti/types" class="btn btn-soft"><%- icon('spark', 16) %> راهنمای تفسیر آزمون‌ها</a>
+</div>
+
+<!-- ===== انتخاب آزمون ===== -->
+<div class="grid mb-4" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
+  <% allTests.forEach(function (t) { %>
+    <a href="/hr/mbti/questions?test=<%= t.code %>"
+       class="card" style="padding:16px;text-decoration:none;color:inherit;border:2px solid <%= t.code === code ? 'var(--primary)' : 'transparent' %>">
+      <div class="flex-between">
+        <strong><%= t.title %></strong>
+        <% if (t.code === code) { %><span class="badge">انتخاب‌شده</span><% } %>
+      </div>
+      <div class="flex-center gap-2 mt-2">
+        <span class="badge <%= t.required ? 'rose' : '' %>"><%= t.required ? 'الزامی' : 'پیشنهادی' %></span>
+        <span class="badge <%= t.enabled ? 'mint' : 'rose' %>"><%= t.enabled ? 'فعال' : 'غیرفعال' %></span>
+      </div>
+    </a>
+  <% }); %>
+</div>
+
+<!-- ===== نوار ابزار آزمون انتخاب‌شده ===== -->
+<div class="card mb-4">
+  <div class="card-header">
+    <div class="card-title"><%- icon('clipboard') %> <%= test ? test.title : '' %>
+      <span class="text-xs text-muted" style="font-weight:500"><%= questions.length %> سوال</span>
+    </div>
+    <div class="flex-center gap-2">
+      <button type="button" class="btn <%= test && test.required ? 'btn-soft' : 'btn-mint' %> btn-sm"
+              data-action="toggle-required" data-url="/hr/mbti/tests/<%= code %>/required">
+        <%= test && test.required ? 'الزامی است — تبدیل به پیشنهادی' : 'پیشنهادی است — تبدیل به الزامی' %>
+      </button>
+      <form method="post" action="/hr/mbti/questions/reset" data-confirm="سوالات این آزمون به حالت اولیه بازگردد؟ تغییرات فعلی از بین می‌رود." style="margin:0">
+        <input type="hidden" name="test" value="<%= code %>">
+        <button class="btn btn-ghost btn-sm">بازگردانی به پیش‌فرض</button>
+      </form>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="alert info" style="margin:0">
+      <%- icon('spark', 18) %>
+      <div class="text-sm">
+        <% if (code === 'mbti') { %>
+          <strong>راهنمای نگاشت حروف:</strong> هر گزینه به یکی از حروف <span dir="ltr">E / I / S / N / T / F / J / P</span> نگاشت می‌شود.
+          برای هر بُعد (مثلاً E/I) باید متعادل سوال وجود داشته باشد.
+        <% } else { %>
+          <strong>مقیاس پاسخ:</strong> ۵ گزینه‌ای (کاملاً مخالفم تا کاملاً موافقم) —
+          گزینه‌های «معکوس‌نمره» هنگام امتیازدهی برعکس محاسبه می‌شوند.
+          افزودن سوال جدید با انتخاب «بُعد» انجام می‌شود و تحلیل به‌صورت خودکار با آن سازگار می‌ماند.
+        <% } %>
+      </div>
+    </div>
   </div>
 </div>
 
+<!-- ===== ویرایش سوالات ===== -->
 <form method="post" action="/hr/mbti/questions/save">
+  <input type="hidden" name="test" value="<%= code %>">
   <% questions.forEach(function(q) { %>
     <div class="card mb-3">
       <div class="card-body">
         <div class="flex-between mb-2">
-          <div class="flex-center">
+          <div class="flex-center" style="flex:1;gap:10px">
             <span class="question-no"><%= q.number %></span>
             <input class="input" name="text_<%= q.id %>" value="<%= q.text %>" style="min-width:420px">
           </div>
-          <label class="check-row">
-            <input type="checkbox" name="en_<%= q.id %>" <%= q.enabled ? 'checked' : '' %>>
-            فعال
-          </label>
-        </div>
-        <div class="form-grid">
-          <div class="flex-center gap-2">
-            <strong class="text-sm">الف)</strong>
-            <input class="input" name="oa_<%= q.id %>" value="<%= q.option_a %>">
-            <select class="select" name="ta_<%= q.id %>" style="width:86px" dir="ltr">
-              <% ['E','I','S','N','T','F','J','P'].forEach(function(t) { %>
-                <option value="<%= t %>" <%= q.trait_a === t ? 'selected' : '' %>><%= t %></option>
-              <% }) %>
-            </select>
-          </div>
-          <div class="flex-center gap-2">
-            <strong class="text-sm">ب)</strong>
-            <input class="input" name="ob_<%= q.id %>" value="<%= q.option_b %>">
-            <select class="select" name="tb_<%= q.id %>" style="width:86px" dir="ltr">
-              <% ['E','I','S','N','T','F','J','P'].forEach(function(t) { %>
-                <option value="<%= t %>" <%= q.trait_b === t ? 'selected' : '' %>><%= t %></option>
-              <% }) %>
-            </select>
+          <div class="flex-center gap-3">
+            <label class="check-row">
+              <input type="checkbox" name="en_<%= q.id %>" <%= q.enabled ? 'checked' : '' %>>
+              فعال
+            </label>
+            <button type="button" class="btn btn-danger btn-sm" data-action="delete-row"
+              data-url="/hr/mbti/questions/<%= q.id %>/delete"
+              data-confirm="سوال شماره <%= q.number %> حذف شود؟">حذف</button>
           </div>
         </div>
+
+        <% if (code === 'mbti') { %>
+          <div class="form-grid">
+            <div class="flex-center gap-2">
+              <strong class="text-sm">الف)</strong>
+              <input class="input" name="oa_<%= q.id %>" value="<%= q.option_a %>">
+              <select class="select" name="ta_<%= q.id %>" style="width:86px" dir="ltr" aria-label="بُعد گزینه الف">
+                <% ['E','I','S','N','T','F','J','P'].forEach(function(t) { %>
+                  <option value="<%= t %>" <%= q.trait_a === t ? 'selected' : '' %>><%= t %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="flex-center gap-2">
+              <strong class="text-sm">ب)</strong>
+              <input class="input" name="ob_<%= q.id %>" value="<%= q.option_b %>">
+              <select class="select" name="tb_<%= q.id %>" style="width:86px" dir="ltr" aria-label="بُعد گزینه ب">
+                <% ['E','I','S','N','T','F','J','P'].forEach(function(t) { %>
+                  <option value="<%= t %>" <%= q.trait_b === t ? 'selected' : '' %>><%= t %></option>
+                <% }) %>
+              </select>
+            </div>
+          </div>
+        <% } else { %>
+          <div class="form-grid">
+            <div class="field" style="margin:0">
+              <label class="label" style="font-size:.78rem">بُعد</label>
+              <select class="select" name="dim_<%= q.id %>">
+                <% dimensions.forEach(function(d) { %>
+                  <option value="<%= d.key %>" <%= q.dimension === d.key ? 'selected' : '' %>><%= d.name %> (<%= d.key %>)</option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="field" style="margin:0">
+              <label class="label" style="font-size:.78rem">نمره‌دهی</label>
+              <label class="check-row">
+                <input type="checkbox" name="rev_<%= q.id %>" <%= q.reverse ? 'checked' : '' %>>
+                معکوس‌نمره
+              </label>
+            </div>
+          </div>
+        <% } %>
       </div>
     </div>
   <% }) %>
@@ -71,5 +136,87 @@
     <button class="btn btn-primary btn-lg"><%- icon('check', 18) %> ذخیره سوالات</button>
   </div>
 </form>
+
+<!-- ===== افزودن سوال جدید ===== -->
+<div class="card">
+  <div class="card-header"><div class="card-title"><%- icon('plus') %> افزودن سوال جدید به «<%= test ? test.title : '' %>»</div></div>
+  <div class="card-body">
+    <form onsubmit="return addQuestion(event)">
+      <input type="hidden" id="aq-test" value="<%= code %>">
+      <div class="field">
+        <label class="label" for="aq-text">متن سوال</label>
+        <input class="input" id="aq-text" required>
+      </div>
+      <% if (code === 'mbti') { %>
+        <div class="form-grid">
+          <div class="field">
+            <label class="label" for="aq-oa">گزینه الف</label>
+            <input class="input" id="aq-oa" required>
+          </div>
+          <div class="field">
+            <label class="label" for="aq-ta">بُعد گزینه الف</label>
+            <select class="select" id="aq-ta" dir="ltr">
+              <% ['E','S','T','J','I','N','F','P'].forEach(function(t) { %><option value="<%= t %>"><%= t %></option><% }); %>
+            </select>
+          </div>
+          <div class="field">
+            <label class="label" for="aq-ob">گزینه ب</label>
+            <input class="input" id="aq-ob" required>
+          </div>
+          <div class="field">
+            <label class="label" for="aq-tb">بُعد گزینه ب</label>
+            <select class="select" id="aq-tb" dir="ltr">
+              <% ['I','N','F','P','E','S','T','J'].forEach(function(t) { %><option value="<%= t %>"><%= t %></option><% }); %>
+            </select>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="form-grid">
+          <div class="field">
+            <label class="label" for="aq-dim">بُعد</label>
+            <select class="select" id="aq-dim">
+              <% dimensions.forEach(function(d) { %>
+                <option value="<%= d.key %>"><%= d.name %> (<%= d.key %>)</option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="field">
+            <label class="label" for="aq-rev">نمره‌دهی</label>
+            <select class="select" id="aq-rev">
+              <option value="0">عادی</option>
+              <option value="1">معکوس‌نمره</option>
+            </select>
+          </div>
+        </div>
+      <% } %>
+      <button class="btn btn-mint"><%- icon('plus', 16) %> افزودن سوال</button>
+    </form>
+  </div>
+</div>
+
+<script>
+async function addQuestion(e) {
+  e.preventDefault();
+  const code = document.getElementById('aq-test').value;
+  const body = { test: code, text: document.getElementById('aq-text').value };
+  if (code === 'mbti') {
+    body.option_a = document.getElementById('aq-oa').value;
+    body.option_b = document.getElementById('aq-ob').value;
+    body.trait_a = document.getElementById('aq-ta').value;
+    body.trait_b = document.getElementById('aq-tb').value;
+  } else {
+    body.dimension = document.getElementById('aq-dim').value;
+    body.reverse = document.getElementById('aq-rev').value;
+  }
+  const res = await hrmPost('/hr/mbti/questions/add', body);
+  if (res.ok) {
+    hrmToast(res.message, 'ok');
+    setTimeout(function () { location.reload(); }, 550);
+  } else {
+    hrmToast(res.message || 'خطا رخ داد', 'err');
+  }
+  return false;
+}
+</script>
 
 <%- include('../../partials/footer') %>

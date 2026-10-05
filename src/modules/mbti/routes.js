@@ -23,48 +23,170 @@ router.use((req, res, next) => {
   next();
 });
 
-/* ---- سوالات آزمون (قابل تنظیم توسط منابع انسانی) ---- */
+/* ---- سوالات آزمون‌ها (قابل تنظیم توسط منابع انسانی — انتخاب آزمون) ---- */
+const TEST_CODES = ['mbti', 'disc', 'eq', 'holland'];
+
+function loadTestCtx(code) {
+  const test = code === 'mbti'
+    ? db.prepare("SELECT * FROM tests WHERE code = 'mbti'").get()
+    : db.prepare('SELECT * FROM tests WHERE code = ?').get(code);
+  return test || null;
+}
+
 router.get('/hr/mbti/questions', requirePerm('mbti.manage'), (req, res) => {
-  const questions = db.prepare('SELECT * FROM mbti_questions ORDER BY sort, number').all();
-  const types = db.prepare('SELECT code, title, nickname FROM mbti_types ORDER BY code').all();
+  const code = TEST_CODES.includes(String(req.query.test)) ? String(req.query.test) : 'mbti';
+  const test = loadTestCtx(code);
+  const allTests = db.prepare("SELECT code, title, short_title, required, enabled FROM tests ORDER BY sort").all();
+
+  let questions = [];
+  let dimensions = [];
+  if (code === 'mbti') {
+    questions = db.prepare('SELECT * FROM mbti_questions ORDER BY sort, number').all();
+    dimensions = [
+      { key: 'E', name: 'برون‌گرایی' }, { key: 'I', name: 'درون‌گرایی' },
+      { key: 'S', name: 'حسی' }, { key: 'N', name: 'شهودی' },
+      { key: 'T', name: 'منطقی' }, { key: 'F', name: 'احساسی' },
+      { key: 'J', name: 'منظم' }, { key: 'P', name: 'منعطف' }
+    ];
+  } else {
+    questions = db.prepare('SELECT * FROM test_questions WHERE test_code = ? ORDER BY sort, number').all(code);
+    dimensions = helpers.parseJson((test && test.dimensions) || '[]', []);
+  }
+
   res.render('modules/mbti/questions', {
-    title: 'سوالات آزمون شخصیت', activeMenu: 'mbti-questions',
-    questions, types, saved: req.query.saved || null
+    title: 'مدیریت سوالات آزمون‌ها', activeMenu: 'mbti-questions',
+    test, code, questions, dimensions, allTests,
+    types: code === 'mbti' ? db.prepare('SELECT code, title, nickname FROM mbti_types ORDER BY code').all() : [],
+    saved: req.query.saved || null
   });
 });
 
 router.post('/hr/mbti/questions/save', requirePerm('mbti.manage'), (req, res) => {
-  const upd = db.prepare('UPDATE mbti_questions SET text = ?, option_a = ?, option_b = ?, trait_a = ?, trait_b = ?, enabled = ? WHERE id = ?');
-  const questions = db.prepare('SELECT * FROM mbti_questions ORDER BY id').all();
-  const validTraits = ['E', 'I', 'S', 'N', 'T', 'F', 'J', 'P'];
+  const code = TEST_CODES.includes(String(req.body.test)) ? String(req.body.test) : 'mbti';
+
+  if (code === 'mbti') {
+    const upd = db.prepare('UPDATE mbti_questions SET text = ?, option_a = ?, option_b = ?, trait_a = ?, trait_b = ?, enabled = ? WHERE id = ?');
+    const questions = db.prepare('SELECT * FROM mbti_questions ORDER BY id').all();
+    const validTraits = ['E', 'I', 'S', 'N', 'T', 'F', 'J', 'P'];
+    for (const q of questions) {
+      const text = req.body['text_' + q.id];
+      const option_a = req.body['oa_' + q.id];
+      const option_b = req.body['ob_' + q.id];
+      const trait_a = (req.body['ta_' + q.id] || q.trait_a).toUpperCase();
+      const trait_b = (req.body['tb_' + q.id] || q.trait_b).toUpperCase();
+      const enabled = req.body['en_' + q.id] === 'on' ? 1 : 0;
+      if (!validTraits.includes(trait_a) || !validTraits.includes(trait_b)) continue;
+      upd.run(
+        text ? text.trim().slice(0, 500) : q.text,
+        option_a ? option_a.trim().slice(0, 300) : q.option_a,
+        option_b ? option_b.trim().slice(0, 300) : q.option_b,
+        trait_a, trait_b, enabled, q.id
+      );
+    }
+    audit.log(req, 'mbti.questions_save', 'mbti', code, {});
+    return res.redirect('/hr/mbti/questions?test=' + code + '&saved=1');
+  }
+
+  // آزمون‌های لیکرت (DISC / EQ / Holland): متن، بُعد، معکوس‌نمره، فعال
+  const upd = db.prepare('UPDATE test_questions SET text = ?, dimension = ?, reverse = ?, enabled = ? WHERE id = ?');
+  const questions = db.prepare('SELECT * FROM test_questions WHERE test_code = ? ORDER BY id').all(code);
+  const validDims = helpers.parseJson((loadTestCtx(code) || {}).dimensions || '[]', []).map(d => d.key);
   for (const q of questions) {
     const text = req.body['text_' + q.id];
-    const option_a = req.body['oa_' + q.id];
-    const option_b = req.body['ob_' + q.id];
-    const trait_a = (req.body['ta_' + q.id] || q.trait_a).toUpperCase();
-    const trait_b = (req.body['tb_' + q.id] || q.trait_b).toUpperCase();
+    const dim = (req.body['dim_' + q.id] || q.dimension).toUpperCase();
+    const reverse = req.body['rev_' + q.id] === 'on' ? 1 : 0;
     const enabled = req.body['en_' + q.id] === 'on' ? 1 : 0;
-    if (!validTraits.includes(trait_a) || !validTraits.includes(trait_b)) continue;
+    if (validDims.length && !validDims.includes(dim)) continue;
     upd.run(
       text ? text.trim().slice(0, 500) : q.text,
-      option_a ? option_a.trim().slice(0, 300) : q.option_a,
-      option_b ? option_b.trim().slice(0, 300) : q.option_b,
-      trait_a, trait_b, enabled, q.id
+      dim, reverse, enabled, q.id
     );
   }
-  audit.log(req, 'mbti.questions_save', 'mbti', '', {});
-  res.redirect('/hr/mbti/questions?saved=1');
+  audit.log(req, 'mbti.questions_save', 'mbti', code, {});
+  res.redirect('/hr/mbti/questions?test=' + code + '&saved=1');
+});
+
+router.post('/hr/mbti/questions/add', requirePerm('mbti.manage'), (req, res) => {
+  const code = TEST_CODES.includes(String(req.body.test)) ? String(req.body.test) : 'mbti';
+  const text = cleanText(req.body.text, 500);
+  if (!text) return res.status(400).json({ ok: false, message: 'متن سوال الزامی است' });
+
+  if (code === 'mbti') {
+    const ta = String(req.body.trait_a || 'E').toUpperCase();
+    const tb = String(req.body.trait_b || 'I').toUpperCase();
+    const validTraits = ['E', 'I', 'S', 'N', 'T', 'F', 'J', 'P'];
+    if (!validTraits.includes(ta) || !validTraits.includes(tb) || ta === tb) {
+      return res.status(400).json({ ok: false, message: 'صفات بُعد نامعتبر است' });
+    }
+    const num = db.prepare('SELECT COALESCE(MAX(number),0) n FROM mbti_questions').get().n + 1;
+    const info = db.prepare('INSERT INTO mbti_questions (number, text, option_a, option_b, trait_a, trait_b, enabled, sort) VALUES (?,?,?,?,?,?  ,1,?)')
+      .run(num, text, cleanText(req.body.option_a, 300) || 'گزینه الف', cleanText(req.body.option_b, 300) || 'گزینه ب', ta, tb, num);
+    audit.log(req, 'mbti.question_add', 'mbti', code, { number: num });
+    return res.json({ ok: true, message: 'سوال اضافه شد', id: info.lastInsertRowid, number: num });
+  }
+
+  const test = loadTestCtx(code);
+  const validDims = helpers.parseJson((test && test.dimensions) || '[]', []).map(d => d.key);
+  const dim = String(req.body.dimension || '').toUpperCase();
+  if (!validDims.includes(dim)) return res.status(400).json({ ok: false, message: 'بُعد سوال نامعتبر است' });
+  const num = db.prepare('SELECT COALESCE(MAX(number),0) n FROM test_questions WHERE test_code = ?').get(code).n + 1;
+  const info = db.prepare('INSERT INTO test_questions (test_code, number, text, dimension, reverse, enabled, sort) VALUES (?,?,?,?,?,?,?)')
+    .run(code, num, text, dim, req.body.reverse === 'on' || req.body.reverse === '1' ? 1 : 0, 1, num);
+  audit.log(req, 'mbti.question_add', 'mbti', code, { number: num, dimension: dim });
+  res.json({ ok: true, message: 'سوال اضافه شد', id: info.lastInsertRowid, number: num });
+});
+
+router.post('/hr/mbti/questions/:id/delete', requirePerm('mbti.manage'), (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const mq = db.prepare('SELECT id FROM mbti_questions WHERE id = ?').get(id);
+  if (mq) {
+    db.prepare('DELETE FROM mbti_questions WHERE id = ?').run(id);
+    audit.log(req, 'mbti.question_delete', 'mbti', 'mbti', { id });
+    return res.json({ ok: true, message: 'سوال حذف شد' });
+  }
+  const tq = db.prepare('SELECT id, test_code FROM test_questions WHERE id = ?').get(id);
+  if (tq) {
+    db.prepare('DELETE FROM test_questions WHERE id = ?').run(id);
+    audit.log(req, 'mbti.question_delete', 'mbti', tq.test_code, { id });
+    return res.json({ ok: true, message: 'سوال حذف شد' });
+  }
+  return res.status(404).json({ ok: false, message: 'یافت نشد' });
+});
+
+/** الزامی/پیشنهادی بودن آزمون برای فرم استخدام */
+router.post('/hr/mbti/tests/:code/required', requirePerm('mbti.manage'), (req, res) => {
+  const code = String(req.params.code);
+  const test = loadTestCtx(code);
+  if (!test) return res.status(404).json({ ok: false, message: 'آزمون یافت نشد' });
+  const newState = test.required ? 0 : 1;
+  db.prepare('UPDATE tests SET required = ? WHERE code = ?').run(newState, code);
+  audit.log(req, 'mbti.test_required', 'mbti', code, { required: newState });
+  res.json({ ok: true, required: newState, message: newState ? 'آزمون الزامی شد' : 'آزمون پیشنهادی (اختیاری) شد' });
 });
 
 router.post('/hr/mbti/questions/reset', requirePerm('mbti.manage'), (req, res) => {
-  // بازگردانی سوالات به حالت پیش‌فرض (از فایل اصلی)
-  const data = require('../../seed-data');
-  const upd = db.prepare('UPDATE mbti_questions SET text = ?, option_a = ?, option_b = ?, trait_a = ?, trait_b = ?, enabled = 1 WHERE number = ?');
-  for (const q of data.MBTI_QUESTIONS) {
-    upd.run(q.text, q.option_a, q.option_b, q.trait_a, q.trait_b, q.number);
+  // بازگردانی سوالات به حالت پیش‌فرض (از فایل اصلی آزمون)
+  const code = TEST_CODES.includes(String(req.body.test)) ? String(req.body.test) : 'mbti';
+
+  if (code === 'mbti') {
+    const data = require('../../seed-data');
+    const upd = db.prepare('UPDATE mbti_questions SET text = ?, option_a = ?, option_b = ?, trait_a = ?, trait_b = ?, enabled = 1 WHERE number = ?');
+    for (const q of data.MBTI_QUESTIONS) {
+      upd.run(q.text, q.option_a, q.option_b, q.trait_a, q.trait_b, q.number);
+    }
+    audit.log(req, 'mbti.questions_reset', 'mbti', code, {});
+    return res.redirect('/hr/mbti/questions?test=' + code + '&saved=reset');
   }
-  audit.log(req, 'mbti.questions_reset', 'mbti', '', {});
-  res.redirect('/hr/mbti/questions?saved=reset');
+
+  const testData = require('../../test-data');
+  const src = testData.TESTS.find(t => t.code === code);
+  if (src) {
+    db.prepare('DELETE FROM test_questions WHERE test_code = ?').run(code);
+    const insTQ = db.prepare('INSERT INTO test_questions (test_code, number, text, dimension, reverse, enabled, sort) VALUES (?,?,?,?,?,1,?)');
+    for (const q of src.questions) insTQ.run(code, q.number, q.text, q.dimension, q.reverse ? 1 : 0, q.number);
+  }
+  audit.log(req, 'mbti.questions_reset', 'mbti', code, {});
+  res.redirect('/hr/mbti/questions?test=' + code + '&saved=reset');
 });
 
 /* ---- تحلیل کامل نتیجه (فقط منابع انسانی/مدیریت) ---- */
@@ -100,17 +222,53 @@ router.get('/hr/mbti/analysis/:applicantId', requirePerm('mbti.view'), (req, res
   });
 });
 
-/* ---- راهنمای تیپ‌ها (مرجع) ---- */
+/* ---- راهنمای تفسیر آزمون‌ها (مرجع — انتخاب آزمون) ---- */
 router.get('/hr/mbti/types', requirePerm('mbti.view'), (req, res) => {
-  const types = db.prepare('SELECT code, title, nickname, group_title, one_liner FROM mbti_types ORDER BY code').all();
-  res.render('modules/mbti/types', {
-    title: 'راهنمای تیپ‌های شخصیتی', activeMenu: 'mbti-types',
-    types
+  const cards = [{
+    code: 'mbti', title: 'آزمون شخصیت‌شناسی MBTI', icon: 'brain',
+    description: 'راهنمای ۱۶ تیپ شخصیتی — توضیح کامل هر تیپ، نقاط قوت، سبک کاری و نکات مصاحبه',
+    link: '/hr/mbti/types/mbti'
+  }];
+  const testData = require('../../test-data');
+  for (const t of testData.TESTS) {
+    cards.push({
+      code: t.code, title: t.title, icon: t.icon || 'target',
+      description: t.description,
+      link: '/hr/mbti/types/' + t.code
+    });
+  }
+  res.render('modules/mbti/guide-hub', {
+    title: 'راهنمای تفسیر آزمون‌ها', activeMenu: 'mbti-types',
+    cards
   });
 });
 
 router.get('/hr/mbti/types/:code', requirePerm('mbti.view'), (req, res) => {
-  const typeRow = db.prepare('SELECT * FROM mbti_types WHERE code = ?').get(String(req.params.code).toUpperCase());
+  const raw = String(req.params.code);
+  const testCodes = ['disc', 'eq', 'holland'];
+
+  // راهنمای تفسیر آزمون‌های DISC / EQ / Holland
+  if (testCodes.includes(raw.toLowerCase())) {
+    const testData = require('../../test-data');
+    const t = testData.TESTS.find(x => x.code === raw.toLowerCase());
+    const row = db.prepare('SELECT * FROM tests WHERE code = ?').get(t.code);
+    return res.render('modules/mbti/test-guide', {
+      title: 'راهنمای تفسیر ' + t.short_title, activeMenu: 'mbti-types',
+      guide: t.guide, test: Object.assign({}, t, row || {})
+    });
+  }
+
+  // شبکه ۱۶ تیپ MBTI
+  if (raw.toLowerCase() === 'mbti') {
+    const types = db.prepare('SELECT code, title, nickname, group_title, one_liner FROM mbti_types ORDER BY code').all();
+    return res.render('modules/mbti/types', {
+      title: 'راهنمای ۱۶ تیپ شخصیتی MBTI', activeMenu: 'mbti-types',
+      types
+    });
+  }
+
+  // جزئیات یک تیپ MBTI
+  const typeRow = db.prepare('SELECT * FROM mbti_types WHERE code = ?').get(raw.toUpperCase());
   if (!typeRow) return res.status(404).render('pages/error', { title: 'یافت نشد', status: 404, message: 'تیپ یافت نشد' });
   for (const key of ['strengths', 'weaknesses', 'ideal_jobs', 'interview_tips', 'red_flags']) {
     typeRow[key + '_parsed'] = helpers.parseJson(typeRow[key], []);
@@ -141,7 +299,7 @@ router.get('/hr/tests', requirePerm('mbti.view'), (req, res) => {
   });
 
   // آزمون‌های جدید
-  const tests = db.prepare('SELECT * FROM tests WHERE enabled = 1 ORDER BY sort').all();
+  const tests = db.prepare("SELECT * FROM tests WHERE enabled = 1 AND code != 'mbti' ORDER BY sort").all();
   for (const t of tests) {
     const done = db.prepare('SELECT COUNT(*) c FROM test_results WHERE test_code = ?').get(t.code).c;
     cards.push({
