@@ -1,0 +1,97 @@
+<%- include('../../partials/header') %>
+
+<div class="flex-between mb-4">
+  <a href="/hr/mbti/types" class="btn btn-ghost btn-sm"><%- icon('arrow', 15) %> بازگشت به راهنمای تیپ‌ها</a>
+</div>
+
+<div class="type-hero mb-4">
+  <div class="code"><%= typeRow.code %></div>
+  <h1 style="color:#fff;margin:14px 0 4px;font-size:1.6rem"><%= typeRow.title %></h1>
+  <div style="opacity:.9;font-weight:600"><%= typeRow.nickname %> — <%= typeRow.group_title %></div>
+  <p style="color:rgba(255,255,255,.9);margin-top:12px;font-size:1.02rem"><%= typeRow.one_liner %></p>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-header"><div class="card-title"><%- icon('file') %> توصیف کامل</div></div>
+    <div class="card-body">
+      <p style="white-space:pre-line;line-height:2.1"><%= typeRow.description %></p>
+    </div>
+  </div>
+
+  <div>
+    <div class="card mb-4">
+      <div class="card-header"><div class="card-title"><%- icon('star') %> نقاط قوت</div></div>
+      <div class="card-body">
+        <% typeRow.strengths_parsed.forEach(function(s) { %>
+          <div class="flex-center gap-2 text-sm" style="padding:5px 0"><span style="color:var(--mint)">●</span> <%= s %></div>
+        <% }) %>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title"><%- icon('shield') %> نقاط قابل توسعه</div></div>
+      <div class="card-body">
+        <% typeRow.weaknesses_parsed.forEach(function(s) { %>
+          <div class="flex-center gap-2 text-sm" style="padding:5px 0"><span style="color:var(--amber)">●</span> <%= s %></div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-title"><%- icon('briefcase') %> سبک کار</div></div>
+    <div class="card-body"><p class="text-sm" style="line-height:2.1"><%= typeRow.work_style %></p></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-title"><%- icon('users') %> نقش در تیم</div></div>
+    <div class="card-body"><p class="text-sm" style="line-height:2.1"><%= typeRow.team_role %></p></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-title"><%- icon('chat') %> سبک ارتباط</div></div>
+    <div class="card-body"><p class="text-sm" style="line-height:2.1"><%= typeRow.communication %></p></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-title"><%- icon('check') %> تصمیم‌گیری و رهبری</div></div>
+    <div class="card-body">
+      <p class="text-sm" style="line-height:2.1"><%= typeRow.decision_making %></p>
+      <p class="text-sm" style="line-height:2.1"><%= typeRow.leadership %></p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-title"><%- icon('clock') %> مدیریت استرس و انگیزه</div></div>
+    <div class="card-body">
+      <p class="text-sm" style="line-height:2.1"><strong>در استرس:</strong> <%= typeRow.stress %></p>
+      <p class="text-sm" style="line-height:2.1"><strong>انگیزه‌ها:</strong> <%= typeRow.motivation %></p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-title"><%- icon('briefcase') %> مشاغل سازگار</div></div>
+    <div class="card-body">
+      <% typeRow.ideal_jobs_parsed.forEach(function(j) { %>
+        <span class="badge primary" style="margin:4px 3px"><%= j %></span>
+      <% }) %>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-title"><%- icon('eye') %> نکات مصاحبه (ویژه منابع انسانی)</div></div>
+    <div class="card-body">
+      <% typeRow.interview_tips_parsed.forEach(function(s) { %>
+        <div class="flex-center gap-2 text-sm" style="padding:5px 0"><span style="color:var(--primary)">●</span> <%= s %></div>
+      <% }) %>
+      <hr class="divider">
+      <h4 style="color:var(--rose)">هشدارها</h4>
+      <% typeRow.red_flags_parsed.forEach(function(s) { %>
+        <div class="flex-center gap-2 text-sm" style="padding:5px 0"><span style="color:var(--rose)">▲</span> <%= s %></div>
+      <% }) %>
+    </div>
+  </div>
+</div>
+
+<%- include('../../partials/footer') %>

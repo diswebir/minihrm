@@ -1,0 +1,40 @@
+<%- include('../../partials/header') %>
+
+<div class="flex-between mb-4">
+  <div>
+    <p class="text-muted text-sm" style="margin:0">
+      نقش‌های سامانه و سطح دسترسی هرکدام را مدیریت کنید. می‌توانید نقش جدید بسازید و مجوزهای دلخواه را به آن اختصاص دهید.
+    </p>
+  </div>
+  <a href="/admin/roles/new" class="btn btn-primary"><%- icon('plus', 18) %> نقش جدید</a>
+</div>
+
+<div class="grid grid-3">
+  <% roles.forEach(function(r) { %>
+    <div class="card">
+      <div class="card-body">
+        <div class="flex-between">
+          <div>
+            <h3 style="margin-bottom:4px"><%= r.name %></h3>
+            <% if (r.is_system) { %><span class="badge violet">سیستمی</span><% } else { %><span class="badge blue">سفارشی</span><% } %>
+          </div>
+          <div class="stat-icon primary" style="width:42px;height:42px;border-radius:13px"><%- icon('key', 20) %></div>
+        </div>
+        <p class="text-sm text-muted mt-2"><%= r.description %></p>
+        <div class="flex-between mt-3">
+          <span class="text-sm"><strong><%= counts[r.id] || 0 %></strong> کاربر</span>
+          <div class="flex-center gap-2">
+            <a href="/admin/roles/<%= r.id %>/edit" class="btn btn-soft btn-sm"><%- icon('edit', 15) %> ویرایش</a>
+            <% if (!r.is_system) { %>
+              <form method="post" action="/admin/roles/<%= r.id %>/delete" data-confirm="این نقش حذف شود؟" style="margin:0">
+                <button class="btn btn-danger btn-sm"><%- icon('trash', 15) %></button>
+              </form>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
+<%- include('../../partials/footer') %>

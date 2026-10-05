@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo"><%- icon('phone', 28) %></div>
+    <h1 class="auth-title">تایید شماره موبایل</h1>
+    <p class="auth-sub">
+      موقعیت انتخابی: <strong><%= position.title %></strong><br>
+      برای ادامه، شماره موبایل خود را وارد کنید تا کد تایید ارسال شود.
+    </p>
+
+    <div id="otp-msg"></div>
+
+    <form id="otp-form">
+      <div class="field">
+        <label class="label">شماره موبایل <span class="req">*</span></label>
+        <input class="input" name="phone" required placeholder="09123456789" style="direction:ltr;text-align:left" inputmode="numeric">
+        <div class="help">کد تایید یکبار مصرف (OTP) به این شماره ارسال می‌شود</div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-lg btn-block">ارسال کد تایید</button>
+    </form>
+
+    <div id="verify-section" style="display:none">
+      <hr class="divider">
+      <form id="verify-form">
+        <div class="field">
+          <label class="label">کد تایید</label>
+          <input class="input" name="code" required placeholder="کد ۵ رقمی" style="direction:ltr;text-align:center;letter-spacing:8px;font-size:1.2rem;font-weight:700" inputmode="numeric" maxlength="8">
+        </div>
+        <button type="submit" class="btn btn-mint btn-lg btn-block">تایید و ادامه</button>
+      </form>
+      <form id="continue-form" method="post" action="/apply/verified" style="display:none"></form>
+    </div>
+
+    <hr class="divider">
+    <div class="text-center text-sm">
+      <a href="/apply"><strong>بازگشت به انتخاب موقعیت شغلی</strong></a>
+    </div>
+  </div>
+</div>
+<script src="/js/app.js"></script>
+</body>
+</html>

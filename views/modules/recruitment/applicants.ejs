@@ -1,0 +1,91 @@
+<%- include('../../partials/header') %>
+
+<div class="flex-between mb-4">
+  <div class="flex-center gap-2" style="flex-wrap:wrap">
+    <a href="/hr/applicants" class="badge <%= !filters.status ? 'primary' : 'gray' %>" style="padding:7px 14px">همه (<%= Object.values(countMap).reduce(function(a,b){return a+b;},0) %>)</a>
+    <% Object.keys(countMap).forEach(function(s) {
+      var sb = statusBadge(s);
+    %>
+      <a href="/hr/applicants?status=<%= s %>" class="badge <%= filters.status === s ? sb.color : 'gray' %>" style="padding:7px 14px">
+        <%= sb.label %> (<%= countMap[s] %>)
+      </a>
+    <% }) %>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <form method="get" action="/hr/applicants" class="flex-center gap-2" style="flex:1;flex-wrap:wrap">
+      <input class="input" name="q" placeholder="جستجو با نام، موبایل، کد ملی یا کد پیگیری..." value="<%= filters.q %>" style="max-width:280px">
+      <select class="select" name="position_id" style="max-width:220px">
+        <option value="">همه موقعیت‌های شغلی</option>
+        <% positions.forEach(function(p) { %>
+          <option value="<%= p.id %>" <%= filters.position_id == p.id ? 'selected' : '' %>><%= p.title %></option>
+        <% }) %>
+      </select>
+      <button class="btn btn-soft"><%- icon('search', 16) %> جستجو</button>
+    </form>
+  </div>
+  <div class="card-body" style="padding-top:12px">
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>متقاضی</th>
+            <th>موقعیت شغلی</th>
+            <th>تماس</th>
+            <th>تیپ شخصیتی</th>
+            <th>وضعیت</th>
+            <th>تاریخ ارسال</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% applicants.forEach(function(a) {
+            var sb = statusBadge(a.status);
+          %>
+            <tr>
+              <td>
+                <div class="flex-center" style="gap:10px">
+                  <span class="avatar-sm"><%= (a.first_name || 'م').charAt(0) %></span>
+                  <div>
+                    <div class="font-bold"><%= (a.first_name || '') + ' ' + (a.last_name || '') %></div>
+                    <div class="text-xs text-muted"><%= a.tracking_code %></div>
+                  </div>
+                </div>
+              </td>
+              <td class="text-sm"><%= a.position_title || '—' %></td>
+              <td class="text-sm" style="direction:ltr;text-align:right"><%= a.phone %></td>
+              <td>
+                <% if (a.mbti_type && can('mbti.view')) { %>
+                  <a href="/hr/mbti/types/<%= a.mbti_type %>" class="score-tag"><%= a.mbti_type %></a>
+                <% } else if (a.mbti_type) { %>
+                  <span class="badge gray">ثبت شده</span>
+                <% } else { %>
+                  <span class="text-muted text-xs">—</span>
+                <% } %>
+              </td>
+              <td><span class="badge <%= sb.color %>"><%= sb.label %></span></td>
+              <td class="text-sm text-muted"><%= jalali(a.submitted_at || a.created_at) %></td>
+              <td>
+                <a href="/hr/applicants/<%= a.id %>" class="btn btn-soft btn-sm"><%- icon('eye', 15) %> پرونده</a>
+              </td>
+            </tr>
+          <% }) %>
+          <% if (!applicants.length) { %>
+            <tr>
+              <td colspan="7">
+                <div class="empty-state">
+                  <%- icon('users', 40) %>
+                  <p>متقاضی‌ای یافت نشد</p>
+                </div>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<%- include('../../partials/footer') %>

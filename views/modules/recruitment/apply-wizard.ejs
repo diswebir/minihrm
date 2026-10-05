@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="auth-wrap" style="align-items:flex-start;padding-top:34px">
+  <div class="auth-card xwide">
+
+    <!-- سربرگ -->
+    <div class="flex-between">
+      <div class="flex-center">
+        <div class="auth-logo" style="margin:0;width:48px;height:48px;border-radius:15px;font-size:1.2rem">HR</div>
+        <div>
+          <div class="font-bold"><%= company %></div>
+          <div class="text-xs text-muted">فرم استخدام — <%= step.title %></div>
+        </div>
+      </div>
+      <a href="/apply" class="btn btn-ghost btn-sm"><%- icon('close', 15) %></a>
+    </div>
+
+    <!-- نوار پیشرفت -->
+    <%
+      var stepIdx = stepOrder.indexOf(step.key);
+      var pct = Math.round(((stepIdx + 1) / stepOrder.length) * 100);
+    %>
+    <div class="wizard-progress mt-3"><span style="width:<%= pct %>%"></span></div>
+    <div class="flex-between text-xs text-muted">
+      <span>مرحله <%= stepIdx + 1 %> از <%= stepOrder.length %></span>
+      <span><%= step.description || '' %></span>
+    </div>
+
+    <!-- استپر -->
+    <div class="stepper">
+      <% stepOrder.forEach(function(sk, i) {
+        var st = steps.find(function(x){ return x.key === sk; }) || { title: 'بررسی نهایی', icon: 'check' };
+        var state = i < stepIdx ? 'done' : (i === stepIdx ? 'current' : '');
+      %>
+        <div class="step-item <%= state %>">
+          <div class="step-dot"><%= i < stepIdx ? '✓' : (i + 1) %></div>
+          <div class="step-label"><%= st.title %></div>
+        </div>
+        <% if (i < stepOrder.length - 1) { %><div class="step-line"></div><% } %>
+      <% }) %>
+    </div>
+
+    <% if (error) { %>
+      <div class="alert error"><%= error %></div>
+    <% } %>
+
+    <% if (step.key === 'mbti') { %>
+      <!-- ===== آزمون شخصیت ===== -->
+      <div class="alert info">
+        <%- icon('brain', 20) %>
+        <div>
+          <strong>آزمون شخصیت‌شناسی:</strong>
+          در هر سوال، گزینه‌ای را انتخاب کنید که اغلب رفتار شما را بهتر توصیف می‌کند.
+          پاسخ درست یا غلط وجود ندارد. نتیجه این آزمون فقط برای تیم منابع انسانی قابل مشاهده است.
+        </div>
+      </div>
+
+      <form method="post" action="/apply/wizard/mbti">
+        <%
+          var answerMap = {};
+          answers.forEach(function(a){ answerMap[a.number] = a.choice; });
+        %>
+        <% questions.forEach(function(q) { %>
+          <div class="question-card">
+            <div class="question-text">
+              <span class="question-no"><%= q.number %></span>
+              <%= q.text %>
+            </div>
+            <div class="option-tiles cols-2">
+              <label class="option-tile <%= answerMap[q.number] === 'a' ? 'selected' : '' %>">
+                <input type="radio" name="q_<%= q.number %>" value="a" <%= answerMap[q.number] === 'a' ? 'checked' : '' %> required>
+                <span><strong>الف)</strong> <%= q.option_a %></span>
+              </label>
+              <label class="option-tile <%= answerMap[q.number] === 'b' ? 'selected' : '' %>">
+                <input type="radio" name="q_<%= q.number %>" value="b" <%= answerMap[q.number] === 'b' ? 'checked' : '' %>>
+                <span><strong>ب)</strong> <%= q.option_b %></span>
+              </label>
+            </div>
+          </div>
+        <% }) %>
+
+        <div class="wizard-nav">
+          <a href="/apply/wizard/<%= prevStep %>" class="btn btn-ghost">مرحله قبل</a>
+          <button type="submit" class="btn btn-primary btn-lg">ثبت پاسخ‌ها و ادامه</button>
+        </div>
+      </form>
+
+    <% } else if (step.key === 'review') { %>
+      <!-- ===== مرور و تایید ===== -->
+      <h3>مرور اطلاعات</h3>
+      <p class="text-sm text-muted">لطفاً اطلاعات خود را بررسی کنید. برای ویرایش هر بخش، به مرحله مربوطه بازگردید.</p>
+
+      <div class="grid grid-2 mt-3">
+        <%
+          var reviewItems = [];
+          steps.forEach(function(s) {
+            if (s.key === 'review' || s.key === 'mbti') return;
+            var stepFields = fields.filter(function(f){ return f.step_key === s.key && f.visible; });
+            var summary = [];
+            stepFields.forEach(function(f) {
+              var v = data[f.field_key];
+              if (f.type === 'repeater') {
+                summary.push(f.label + ': ' + ((v && v.length) ? v.length + ' ردیف' : '—'));
+              } else if (f.type === 'switch') {
+                summary.push(f.label + ': ' + (v ? 'تایید شد' : '—'));
+              } else if (f.type === 'checkbox') {
+                summary.push(f.label + ': ' + ((v && v.length) ? v.join('، ') : '—'));
+              } else if (f.type === 'file') {
+                summary.push(f.label + ': ' + (applicant.photo_path ? 'آپلود شد' : '—'));
+              } else if (v) {
+                summary.push(f.label + ': ' + v);
+              }
+            });
+            reviewItems.push({ step: s, summary: summary });
+          });
+        %>
+        <% reviewItems.forEach(function(ri) { %>
+          <div class="card">
+            <div class="card-body">
+              <div class="flex-between">
+                <div class="card-title" style="font-size:.92rem"><%- icon(ri.step.icon || 'file', 17) %> <%= ri.step.title %></div>
+                <a href="/apply/wizard/<%= ri.step.key %>" class="btn btn-soft btn-sm">ویرایش</a>
+              </div>
+              <div class="mt-2">
+                <% ri.summary.slice(0, 8).forEach(function(line) { %>
+                  <div class="text-xs" style="padding:3px 0;border-bottom:1px dashed var(--border)"><%= line %></div>
+                <% }) %>
+                <% if (!ri.summary.length) { %>
+                  <div class="text-xs text-muted">—</div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+
+      <% if (stepOrder.indexOf('mbti') >= 0) { %>
+        <div class="alert success mt-3">
+          <%- icon('check', 20) %>
+          <div>
+            آزمون شخصیت‌شناسی <%= applicant.mbti_type ? 'با موفقیت تکمیل شده است ✓' : 'تکمیل نشده است — لطفاً ابتدا آزمون را انجام دهید' %>
+            <% if (!applicant.mbti_type) { %>
+              <a href="/apply/wizard/mbti" class="font-bold">شروع آزمون</a>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
+
+      <form method="post" action="/apply/submit" class="mt-3">
+        <div class="card" style="border:2px solid var(--primary)">
+          <div class="card-body">
+            <label class="check-row" style="align-items:flex-start">
+              <input type="checkbox" name="consent" required style="margin-top:5px">
+              <div>
+                <strong>تاییدیه صحت اطلاعات</strong>
+                <div class="text-sm text-muted">
+                  اینجانب <%= (data.first_name || '') + ' ' + (data.last_name || '') %> صحت کلیه اطلاعات مندرج در این فرم را تایید و گواهی می‌نمایم.
+                  اطلاعات این فرم محرمانه تلقی شده و صرفاً در فرایند استخدام شرکت استفاده می‌شود.
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="wizard-nav">
+          <a href="/apply/wizard/<%= prevStep %>" class="btn btn-ghost">مرحله قبل</a>
+          <button type="submit" class="btn btn-primary btn-lg" <%= (stepOrder.indexOf('mbti') >= 0 && !applicant.mbti_type) ? 'disabled' : '' %>>
+            <%- icon('check', 18) %> ارسال نهایی فرم استخدام
+          </button>
+        </div>
+      </form>
+
+    <% } else { %>
+      <!-- ===== مراحل عادی فرم ===== -->
+      <form method="post" action="/apply/wizard/<%= step.key %>" enctype="multipart/form-data">
+        <div class="form-grid">
+          <% fields.forEach(function(f) {
+            var v = data[f.field_key];
+          %>
+            <% if (f.type === 'repeater') { %>
+              <!-- ردیف‌های تکرارشونده -->
+              <div class="full">
+                <label class="label"><%= f.label %><% if (f.required) { %><span class="req">*</span><% } %></label>
+                <% if (f.help) { %><div class="help" style="margin-bottom:8px"><%= f.help %></div><% } %>
+
+                <div class="repeater-container" id="rep-<%= f.field_key %>">
+                  <%
+                    var rows = (Array.isArray(v) && v.length) ? v : [{}];
+                  %>
+                  <% rows.forEach(function(row, ri) { %>
+                    <div class="repeater-row">
+                      <div class="flex-between" style="margin-bottom:10px">
+                        <strong class="text-sm">ردیف <span class="row-num"><%= ri + 1 %></span></strong>
+                        <button type="button" class="btn btn-danger btn-sm row-remove"><%- icon('trash', 14) %> حذف</button>
+                      </div>
+                      <div class="form-grid">
+                        <% (repeaterCols[f.field_key] || []).forEach(function(col) { %>
+                          <div class="field" style="margin-bottom:4px">
+                            <label class="label" style="font-size:.78rem"><%= col.label %><% if (col.required) { %><span class="req">*</span><% } %></label>
+                            <% if (col.type === 'select') { %>
+                              <select class="select" data-col="<%= col.key %>" name="rows[<%= ri %>][<%= col.key %>]">
+                                <option value="">—</option>
+                                <% (col.options || []).forEach(function(o) { %>
+                                  <option value="<%= o.value %>" <%= row[col.key] === o.value ? 'selected' : '' %>><%= o.label %></option>
+                                <% }) %>
+                              </select>
+                            <% } else { %>
+                              <input class="input" data-col="<%= col.key %>" name="rows[<%= ri %>][<%= col.key %>]" value="<%= row[col.key] || '' %>">
+                            <% } %>
+                          </div>
+                        <% }) %>
+                      </div>
+                    </div>
+                  <% }) %>
+                </div>
+
+                <button type="button" class="repeater-add" data-target="rep-<%= f.field_key %>">
+                  + افزودن ردیف جدید
+                </button>
+
+                <!-- قالب ردیف -->
+                <template id="tpl-rep-<%= f.field_key %>">
+                  <div class="repeater-row">
+                    <div class="flex-between" style="margin-bottom:10px">
+                      <strong class="text-sm">ردیف <span class="row-num">__IDX__</span></strong>
+                      <button type="button" class="btn btn-danger btn-sm row-remove"><%- icon('trash', 14) %> حذف</button>
+                    </div>
+                    <div class="form-grid">
+                      <% (repeaterCols[f.field_key] || []).forEach(function(col) { %>
+                        <div class="field" style="margin-bottom:4px">
+                          <label class="label" style="font-size:.78rem"><%= col.label %><% if (col.required) { %><span class="req">*</span><% } %></label>
+                          <% if (col.type === 'select') { %>
+                            <select class="select" data-col="<%= col.key %>" name="rows[__IDX__][<%= col.key %>]">
+                              <option value="">—</option>
+                              <% (col.options || []).forEach(function(o) { %>
+                                <option value="<%= o.value %>"><%= o.label %></option>
+                              <% }) %>
+                            </select>
+                          <% } else { %>
+                            <input class="input" data-col="<%= col.key %>" name="rows[__IDX__][<%= col.key %>]" value="">
+                          <% } %>
+                        </div>
+                      <% }) %>
+                    </div>
+                  </div>
+                </template>
+              </div>
+
+            <% } else if (f.type === 'radio') { %>
+              <div class="<%= f.width === 'full' ? 'full' : '' %>">
+                <label class="label"><%= f.label %><% if (f.required) { %><span class="req">*</span><% } %></label>
+                <div class="option-tiles cols-2">
+                  <% (parseJson(f.options, [])).forEach(function(o) { %>
+                    <label class="option-tile <%= v === o.value ? 'selected' : '' %>">
+                      <input type="radio" name="f_<%= f.field_key %>" value="<%= o.value %>" <%= v === o.value ? 'checked' : '' %> <%= f.required ? 'required' : '' %>>
+                      <span><%= o.label %></span>
+                    </label>
+                  <% }) %>
+                </div>
+                <% if (f.help) { %><div class="help"><%= f.help %></div><% } %>
+              </div>
+
+            <% } else if (f.type === 'checkbox') { %>
+              <div class="full">
+                <label class="label"><%= f.label %><% if (f.required) { %><span class="req">*</span><% } %></label>
+                <div class="option-tiles cols-2">
+                  <% (parseJson(f.options, [])).forEach(function(o) {
+                    var isChecked = Array.isArray(v) && v.indexOf(o.value) >= 0;
+                  %>
+                    <label class="option-tile <%= isChecked ? 'selected' : '' %>">
+                      <input type="checkbox" name="f_<%= f.field_key %>" value="<%= o.value %>" <%= isChecked ? 'checked' : '' %>>
+                      <span><%= o.label %></span>
+                    </label>
+                  <% }) %>
+                </div>
+                <% if (f.help) { %><div class="help"><%= f.help %></div><% } %>
+              </div>
+
+            <% } else if (f.type === 'switch') { %>
+              <div class="full">
+                <div class="card" style="background:var(--primary-softer);border:1.5px solid var(--primary-soft)">
+                  <div class="card-body">
+                    <label class="check-row" style="align-items:flex-start">
+                      <input type="checkbox" name="f_<%= f.field_key %>" <%= v ? 'checked' : '' %> <%= f.required ? 'required' : '' %> style="margin-top:4px">
+                      <div>
+                        <strong><%= f.label %><% if (f.required) { %><span class="req">*</span><% } %></strong>
+                        <div class="text-sm text-muted"><%= f.help %></div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+            <% } else if (f.type === 'textarea') { %>
+              <div class="full">
+                <label class="label"><%= f.label %><% if (f.required) { %><span class="req">*</span><% } %></label>
+                <textarea class="textarea" name="f_<%= f.field_key %>" <%= f.required ? 'required' : '' %>><%= v || '' %></textarea>
+                <% if (f.help) { %><div class="help"><%= f.help %></div><% } %>
+              </div>
+
+            <% } else if (f.type === 'file') { %>
+              <div class="full">
+                <label class="label"><%= f.label %><% if (f.required) { %><span class="req">*</span><% } %></label>
+                <input class="input" type="file" name="f_<%= f.field_key %>" accept=".jpg,.jpeg,.png,.webp">
+                <% if (applicant.photo_path) { %>
+                  <div class="flex-center gap-2 mt-2">
+                    <img src="<%= applicant.photo_path %>" style="width:56px;height:56px;object-fit:cover;border-radius:14px">
+                    <span class="badge green">عکس فعلی</span>
+                  </div>
+                <% } %>
+                <% if (f.help) { %><div class="help"><%= f.help %></div><% } %>
+              </div>
+
+            <% } else if (f.type === 'select') { %>
+              <div class="<%= f.width === 'full' ? 'full' : '' %>">
+                <label class="label"><%= f.label %><% if (f.required) { %><span class="req">*</span><% } %></label>
+                <select class="select" name="f_<%= f.field_key %>" <%= f.required ? 'required' : '' %>>
+                  <option value="">— انتخاب کنید —</option>
+                  <% (parseJson(f.options, [])).forEach(function(o) { %>
+                    <option value="<%= o.value %>" <%= v === o.value ? 'selected' : '' %>><%= o.label %></option>
+                  <% }) %>
+                </select>
+                <% if (f.help) { %><div class="help"><%= f.help %></div><% } %>
+              </div>
+
+            <% } else { %>
+              <div class="<%= f.width === 'full' ? 'full' : '' %>">
+                <label class="label"><%= f.label %><% if (f.required) { %><span class="req">*</span><% } %></label>
+                <% if (f.type === 'date') { %>
+                  <input class="input" name="f_<%= f.field_key %>" value="<%= v || '' %>" data-jalali <%= f.required ? 'required' : '' %> placeholder="مثال: 1370/05/12">
+                <% } else if (f.type === 'phone' || f.type === 'email' || f.type === 'number') { %>
+                  <input class="input" type="<%= f.type === 'email' ? 'email' : 'text' %>" name="f_<%= f.field_key %>" value="<%= v || '' %>"
+                         style="direction:ltr;text-align:<%= f.type === 'number' ? 'right' : 'left' %>" <%= f.required ? 'required' : '' %>
+                         <%= f.type === 'number' ? 'inputmode="numeric"' : '' %>>
+                <% } else { %>
+                  <input class="input" name="f_<%= f.field_key %>" value="<%= v || '' %>" <%= f.required ? 'required' : '' %>>
+                <% } %>
+                <% if (f.help) { %><div class="help"><%= f.help %></div><% } %>
+              </div>
+            <% } %>
+          <% }) %>
+        </div>
+
+        <div class="wizard-nav">
+          <% if (step.key !== 'personal') { %>
+            <a href="/apply/wizard/<%= prevStep %>" class="btn btn-ghost">مرحله قبل</a>
+          <% } else { %>
+            <a href="/apply" class="btn btn-ghost">انصراف</a>
+          <% } %>
+          <button type="submit" class="btn btn-primary btn-lg">
+            ذخیره و ادامه <%- icon('arrow', 17) %>
+          </button>
+        </div>
+      </form>
+    <% } %>
+
+    <div class="text-center text-xs text-muted mt-4">
+      <%= company %> — اطلاعات شما محرمانه است و صرفاً در فرایند استخدام استفاده می‌شود
+    </div>
+  </div>
+</div>
+<script src="/js/app.js"></script>
+</body>
+</html>

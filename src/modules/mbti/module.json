@@ -1,0 +1,11 @@
+{
+  "code": "mbti",
+  "name": "ماژول آزمون شخصیت MBTI",
+  "description": "آزمون ۲۸ سوالی شخصیت‌شناسی و تحلیل حرفه‌ای نتایج (فقط برای منابع انسانی)",
+  "icon": "brain",
+  "version": "1.0.0",
+  "sort": 2,
+  "nav": [
+    { "label": "سوالات آزمون شخصیت", "url": "/hr/mbti/questions", "icon": "brain", "permission": "mbti.manage", "section": "روانشناسی" }
+  ]
+}

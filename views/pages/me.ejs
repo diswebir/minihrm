@@ -1,0 +1,86 @@
+<%- include('../partials/header') %>
+
+<% if (query.saved) { %>
+  <div class="alert success">تغییرات با موفقیت ذخیره شد.</div>
+<% } %>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><%- icon('user') %> پروفایل من</div>
+    </div>
+    <div class="card-body">
+      <form method="post" action="/me/profile">
+        <div class="form-grid">
+          <div class="field">
+            <label class="label">نام و نام خانوادگی</label>
+            <input class="input" name="full_name" value="<%= user.full_name %>" required>
+          </div>
+          <div class="field">
+            <label class="label">نام کاربری</label>
+            <input class="input" value="<%= user.username %>" disabled style="direction:ltr;text-align:left">
+          </div>
+          <div class="field">
+            <label class="label">ایمیل</label>
+            <input class="input" type="email" name="email" value="<%= user.email || '' %>" style="direction:ltr;text-align:left">
+          </div>
+          <div class="field">
+            <label class="label">شماره موبایل</label>
+            <input class="input" name="phone" value="<%= user.phone || '' %>" style="direction:ltr;text-align:left">
+          </div>
+        </div>
+        <div class="flex-between">
+          <span class="badge primary"><%= user.role_name || '' %></span>
+          <button class="btn btn-primary">ذخیره تغییرات</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div>
+    <div class="card mb-4">
+      <div class="card-header">
+        <div class="card-title"><%- icon('key') %> تغییر رمز عبور</div>
+      </div>
+      <div class="card-body">
+        <form method="post" action="/me/password">
+          <div class="field">
+            <label class="label">رمز عبور فعلی</label>
+            <input class="input" type="password" name="old_password" required style="direction:ltr">
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label class="label">رمز عبور جدید</label>
+              <input class="input" type="password" name="new_password" required style="direction:ltr">
+              <div class="help">حداقل ۸ کاراکتر</div>
+            </div>
+            <div class="field">
+              <label class="label">تکرار رمز جدید</label>
+              <input class="input" type="password" name="new_password2" required style="direction:ltr">
+            </div>
+          </div>
+          <button class="btn btn-mint">تغییر رمز عبور</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><%- icon('bell') %> آخرین اعلان‌های من</div>
+      </div>
+      <div class="card-body">
+        <% if (!myNotifs.length) { %>
+          <div class="empty-state text-sm">اعلانی ندارید</div>
+        <% } %>
+        <% myNotifs.forEach(function(n) { %>
+          <a class="notif-item <%= n.read_at ? '' : 'unread' %>" href="<%= n.link || '#' %>">
+            <div><%= n.title %></div>
+            <div class="text-xs text-muted"><%= n.body %> — <%= jalali(n.created_at) %></div>
+          </a>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

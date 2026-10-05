@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    body { background: #fff; font-size: 12.5px; }
+    .print-wrap { max-width: 860px; margin: 20px auto; padding: 0 16px; }
+    .print-head {
+      display: flex; justify-content: space-between; align-items: center;
+      border: 2px solid #2e3452; border-radius: 12px; padding: 14px 18px; margin-bottom: 14px;
+    }
+    .print-section { border: 1.5px solid #c9cfe4; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px; }
+    .print-section h3 {
+      background: #eef0f9; margin: -12px -16px 10px; padding: 8px 16px;
+      border-radius: 12px 12px 0 0; font-size: 13.5px;
+    }
+    .p-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px 18px; }
+    .p-kv { display: flex; gap: 6px; padding: 3px 0; border-bottom: 1px dotted #dde; font-size: 11.5px; }
+    .p-kv .k { color: #666; min-width: 110px; }
+    .p-kv .v { font-weight: 600; }
+    table.p-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
+    table.p-table th, table.p-table td { border: 1px solid #c9cfe4; padding: 5px 8px; text-align: right; }
+    table.p-table th { background: #eef0f9; }
+    @media print { .no-print { display: none !important; } .print-wrap { margin: 0; } }
+  </style>
+</head>
+<body>
+<div class="print-wrap">
+  <div class="no-print flex-between" style="margin-bottom:14px">
+    <a href="/hr/applicants/<%= applicant.id %>" class="btn btn-ghost btn-sm">بازگشت به پرونده</a>
+    <button onclick="window.print()" class="btn btn-primary btn-sm">چاپ</button>
+  </div>
+
+  <div class="print-head">
+    <div>
+      <h2 style="margin:0"><%= company %></h2>
+      <div style="font-size:12px">فرم استخدام — پرونده متقاضی</div>
+    </div>
+    <div style="text-align:left">
+      <div><strong>نام:</strong> <%= (applicant.first_name || '') + ' ' + (applicant.last_name || '') %></div>
+      <div><strong>تاریخ:</strong> <%= jalali(applicant.submitted_at || applicant.created_at) %></div>
+      <div><strong>کد پیگیری:</strong> <%= applicant.tracking_code %></div>
+    </div>
+  </div>
+
+  <%
+    function pval(v) { return (v === undefined || v === null || v === '') ? '—' : v; }
+  %>
+
+  <div class="print-section">
+    <h3>مشخصات متقاضی</h3>
+    <div class="p-grid">
+      <div class="p-kv"><div class="k">نام پدر</div><div class="v"><%= pval(data.father_name) %></div></div>
+      <div class="p-kv"><div class="k">کد ملی</div><div class="v"><%= pval(applicant.national_id) %></div></div>
+      <div class="p-kv"><div class="k">شماره شناسنامه</div><div class="v"><%= pval(data.birth_serial) %></div></div>
+      <div class="p-kv"><div class="k">تاریخ تولد</div><div class="v"><%= pval(data.birth_date) %></div></div>
+      <div class="p-kv"><div class="k">محل صدور</div><div class="v"><%= pval(data.issue_place) %></div></div>
+      <div class="p-kv"><div class="k">جنسیت</div><div class="v"><%= pval(data.gender === 'male' ? 'مرد' : (data.gender === 'female' ? 'زن' : data.gender)) %></div></div>
+      <div class="p-kv"><div class="k">دین / مذهب</div><div class="v"><%= pval((data.religion || '') + ' ' + (data.sect || '')) %></div></div>
+      <div class="p-kv"><div class="k">تلفن همراه</div><div class="v"><%= applicant.phone %></div></div>
+      <div class="p-kv"><div class="k">تلفن ثابت</div><div class="v"><%= pval(data.phone_landline) %></div></div>
+      <div class="p-kv"><div class="k">ایمیل</div><div class="v"><%= pval(data.email) %></div></div>
+      <div class="p-kv"><div class="k">وضعیت تاهل</div><div class="v"><%= pval(data.marital_status) %></div></div>
+      <div class="p-kv"><div class="k">تعداد فرزند</div><div class="v"><%= pval(data.children_count) %></div></div>
+      <div class="p-kv"><div class="k">نظام وظیفه</div><div class="v"><%= pval(data.military_status) %></div></div>
+      <div class="p-kv"><div class="k">سابقه بیمه</div><div class="v"><%= pval(data.has_insurance) %></div></div>
+      <div class="p-kv"><div class="k">شماره بیمه</div><div class="v"><%= pval(data.insurance_number) %></div></div>
+    </div>
+    <div class="p-kv" style="margin-top:6px"><div class="k">آدرس</div><div class="v"><%= pval(data.address) %> — کدپستی: <%= pval(data.postal_code) %></div></div>
+  </div>
+
+  <div class="print-section">
+    <h3>سوابق کاری</h3>
+    <table class="p-table">
+      <thead>
+        <tr><th>نام شرکت</th><th>سمت</th><th>تاریخ شروع/پایان</th><th>مدت</th><th>آخرین حقوق</th><th>علت قطع همکاری</th><th>تلفن</th></tr>
+      </thead>
+      <tbody>
+        <% (data.experiences || []).forEach(function(e) { %>
+          <tr>
+            <td><%= pval(e.company) %></td><td><%= pval(e.position) %></td>
+            <td><%= pval(e.period) %></td><td><%= pval(e.duration) %></td>
+            <td><%= pval(e.last_salary) %></td><td><%= pval(e.leave_reason) %></td>
+            <td><%= pval(e.work_phone) %></td>
+          </tr>
+        <% }) %>
+        <% if (!(data.experiences || []).length) { %>
+          <tr><td colspan="7" style="text-align:center">—</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="print-section">
+    <h3>تحصیلات، زبان‌ها و مهارت‌ها</h3>
+    <table class="p-table">
+      <thead>
+        <tr><th>مقطع</th><th>رشته</th><th>محل تحصیل</th><th>سال</th></tr>
+      </thead>
+      <tbody>
+        <% (data.educations || []).forEach(function(e) { %>
+          <tr><td><%= pval(e.level) %></td><td><%= pval(e.major) %></td><td><%= pval(e.institute) %></td><td><%= pval(e.year) %></td></tr>
+        <% }) %>
+        <% if (!(data.educations || []).length) { %><tr><td colspan="4" style="text-align:center">—</td></tr><% } %>
+      </tbody>
+    </table>
+    <div class="p-grid mt-2">
+      <div>
+        <strong>زبان‌ها:</strong>
+        <% (data.languages || []).forEach(function(l) { %>
+          <div style="font-size:11px"><%= pval(l.language) %> — <%= pval(l.level) %></div>
+        <% }) %>
+      </div>
+      <div>
+        <strong>مهارت‌های نرم‌افزاری:</strong>
+        <% (data.skills || []).forEach(function(l) { %>
+          <div style="font-size:11px"><%= pval(l.name) %> — <%= pval(l.level) %></div>
+        <% }) %>
+      </div>
+      <div>
+        <strong>دوره‌های آموزشی:</strong>
+        <% (data.courses || []).forEach(function(l) { %>
+          <div style="font-size:11px"><%= pval(l.title) %> (<%= pval(l.institute) %>)</div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+
+  <div class="print-section">
+    <h3>دیدگاه‌ها، انتظارات و شرایط شغل</h3>
+    <div class="p-kv"><div class="k">عوامل رضایت</div><div class="v"><%= pval(data.satisfaction_factors) %></div></div>
+    <div class="p-kv"><div class="k">عوامل عدم رضایت</div><div class="v"><%= pval(data.dissatisfaction_factors) %></div></div>
+    <div class="p-grid">
+      <div class="p-kv"><div class="k">نوع همکاری</div><div class="v"><%= pval(data.cooperation_type) %></div></div>
+      <div class="p-kv"><div class="k">حقوق مورد انتظار</div><div class="v"><%= pval(data.expected_salary) %></div></div>
+      <div class="p-kv"><div class="k">سمت مورد نظر</div><div class="v"><%= pval(data.desired_position) %></div></div>
+      <div class="p-kv"><div class="k">تاریخ شروع</div><div class="v"><%= pval(data.start_date) %></div></div>
+      <div class="p-kv"><div class="k">اضافه‌کاری</div><div class="v"><%= pval(data.overtime_ready) %></div></div>
+      <div class="p-kv"><div class="k">سلامت</div><div class="v"><%= pval(data.health_ok) %></div></div>
+    </div>
+    <div class="p-kv"><div class="k">معرف‌ها</div><div class="v">
+      <% (data.references || []).forEach(function(r) { %>
+        <%= pval(r.full_name) %> (<%= pval(r.relation) %>) — <%= pval(r.phone) %> &nbsp;&nbsp;
+      <% }) %>
+    </div></div>
+    <div class="p-kv"><div class="k">تاییدیه صحت اطلاعات</div><div class="v"><%= data.consent ? 'بله — تایید شد' : '—' %></div></div>
+  </div>
+
+  <% if (applicant.mbti_type) { %>
+  <div class="print-section">
+    <h3>نتیجه آزمون شخصیت (محرمانه — ویژه منابع انسانی)</h3>
+    <div class="p-kv"><div class="k">تیپ شخصیتی</div><div class="v"><%= applicant.mbti_type %></div></div>
+  </div>
+  <% } %>
+
+  <div class="print-section">
+    <h3>نظرات و تصمیمات</h3>
+    <table class="p-table">
+      <thead>
+        <tr><th>مرحله</th><th>برداشت و نظر</th><th>تصمیم</th><th>امضا و تاریخ</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>مصاحبه‌کننده</td>
+          <td style="height:44px"></td>
+          <td style="min-width:130px">مناسب / بررسی بیشتر / رد</td>
+          <td style="min-width:110px"></td>
+        </tr>
+        <tr>
+          <td>منابع انسانی</td>
+          <td style="height:44px"></td>
+          <td>مناسب / بررسی بیشتر / رد</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>مدیریت</td>
+          <td style="height:44px"></td>
+          <td>مناسب / بررسی بیشتر / رد</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top:10px;font-size:11px">
+      اینجانب <%= (applicant.first_name || '') + ' ' + (applicant.last_name || '') %> صحت کلیه اطلاعات مندرج در این فرم را تایید و گواهی می‌نمایم.
+    </div>
+  </div>
+</div>
+</body>
+</html>

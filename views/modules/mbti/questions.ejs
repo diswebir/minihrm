@@ -1,0 +1,75 @@
+<%- include('../../partials/header') %>
+
+<% if (saved) { %>
+  <div class="alert success">
+    <%= saved === 'reset' ? 'سوالات به حالت پیش‌فرض (فایل اصلی آزمون) بازگردانی شدند.' : 'تنظیمات سوالات آزمون ذخیره شد.' %>
+  </div>
+<% } %>
+
+<div class="flex-between mb-4">
+  <p class="text-muted text-sm" style="margin:0">
+    سوالات آزمون شخصیت‌شناسی MBTI (۲۸ سوال — مطابق فایل استاندارد شرکت).
+    متن سوالات، گزینه‌ها و حرف مرتبط هر گزینه قابل تنظیم است.
+  </p>
+  <div class="flex-center gap-2">
+    <a href="/hr/mbti/types" class="btn btn-soft"><%- icon('spark', 16) %> راهنمای تیپ‌ها</a>
+    <form method="post" action="/hr/mbti/questions/reset" data-confirm="سوالات به حالت اولیه بازگردد؟ تغییرات فعلی از بین می‌رود." style="margin:0">
+      <button class="btn btn-ghost">بازگردانی به پیش‌فرض</button>
+    </form>
+  </div>
+</div>
+
+<div class="alert info">
+  <%- icon('brain', 20) %>
+  <div>
+    <strong>راهنمای نگاشت حروف:</strong>
+    هر گزینه به یکی از حروف <span dir="ltr">E / I / S / N / T / F / J / P</span> نگاشت می‌شود.
+    در هر ۴ بُعد باید مجموعاً ۷ سوال وجود داشته باشد (۷ سوال برای هر بُعد).
+  </div>
+</div>
+
+<form method="post" action="/hr/mbti/questions/save">
+  <% questions.forEach(function(q) { %>
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="flex-between mb-2">
+          <div class="flex-center">
+            <span class="question-no"><%= q.number %></span>
+            <input class="input" name="text_<%= q.id %>" value="<%= q.text %>" style="min-width:420px">
+          </div>
+          <label class="check-row">
+            <input type="checkbox" name="en_<%= q.id %>" <%= q.enabled ? 'checked' : '' %>>
+            فعال
+          </label>
+        </div>
+        <div class="form-grid">
+          <div class="flex-center gap-2">
+            <strong class="text-sm">الف)</strong>
+            <input class="input" name="oa_<%= q.id %>" value="<%= q.option_a %>">
+            <select class="select" name="ta_<%= q.id %>" style="width:86px" dir="ltr">
+              <% ['E','I','S','N','T','F','J','P'].forEach(function(t) { %>
+                <option value="<%= t %>" <%= q.trait_a === t ? 'selected' : '' %>><%= t %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="flex-center gap-2">
+            <strong class="text-sm">ب)</strong>
+            <input class="input" name="ob_<%= q.id %>" value="<%= q.option_b %>">
+            <select class="select" name="tb_<%= q.id %>" style="width:86px" dir="ltr">
+              <% ['E','I','S','N','T','F','J','P'].forEach(function(t) { %>
+                <option value="<%= t %>" <%= q.trait_b === t ? 'selected' : '' %>><%= t %></option>
+              <% }) %>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+
+  <div class="flex-between mb-4">
+    <span class="text-sm text-muted">پس از ذخیره، آزمون‌های جدید با تنظیمات جدید امتیازدهی می‌شوند.</span>
+    <button class="btn btn-primary btn-lg"><%- icon('check', 18) %> ذخیره سوالات</button>
+  </div>
+</form>
+
+<%- include('../../partials/footer') %>

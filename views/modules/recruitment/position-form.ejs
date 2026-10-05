@@ -1,0 +1,72 @@
+<%- include('../../partials/header') %>
+
+<% if (error) { %>
+  <div class="alert error"><%= error %></div>
+<% } %>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title"><%- icon('briefcase') %> <%= position && position.id ? 'ویرایش موقعیت شغلی' : 'موقعیت شغلی جدید' %></div>
+    <a href="/hr/positions" class="btn btn-ghost btn-sm">بازگشت</a>
+  </div>
+  <div class="card-body">
+    <form method="post">
+      <div class="form-grid">
+        <div class="field">
+          <label class="label">عنوان موقعیت شغلی <span class="req">*</span></label>
+          <input class="input" name="title" required value="<%= position ? position.title : '' %>" placeholder="مثال: کارشناس منابع انسانی">
+        </div>
+        <div class="field">
+          <label class="label">واحد سازمانی</label>
+          <input class="input" name="department" value="<%= position ? (position.department || '') : '' %>" placeholder="مثال: فناوری اطلاعات">
+        </div>
+        <div class="field">
+          <label class="label">نوع همکاری</label>
+          <select class="select" name="employment_type">
+            <% [['full_time','تمام وقت'],['part_time','پاره وقت'],['remote','دورکاری'],['project','پروژه‌ای'],['intern','کارآموزی']].forEach(function(o) { %>
+              <option value="<%= o[0] %>" <%= (position && position.employment_type === o[0]) ? 'selected' : '' %>><%= o[1] %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="field">
+          <label class="label">وضعیت</label>
+          <select class="select" name="status">
+            <option value="open" <%= (!position || position.status === 'open') ? 'selected' : '' %>>باز (در حال استخدام)</option>
+            <option value="draft" <%= (position && position.status === 'draft') ? 'selected' : '' %>>پیش‌نویس</option>
+            <option value="closed" <%= (position && position.status === 'closed') ? 'selected' : '' %>>بسته</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">شرح شغل</label>
+        <textarea class="textarea" name="description" rows="4"><%= position ? (position.description || '') : '' %></textarea>
+      </div>
+      <div class="field">
+        <label class="label">شرایط و الزامات</label>
+        <textarea class="textarea" name="requirements" rows="4"><%= position ? (position.requirements || '') : '' %></textarea>
+      </div>
+      <div class="field">
+        <label class="label">مزایا</label>
+        <textarea class="textarea" name="benefits" rows="2"><%= position ? (position.benefits || '') : '' %></textarea>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label class="label">حداقل حقوق (اختیاری)</label>
+          <input class="input" name="min_salary" value="<%= position ? (position.min_salary || '') : '' %>">
+        </div>
+        <div class="field">
+          <label class="label">حداکثر حقوق (اختیاری)</label>
+          <input class="input" name="max_salary" value="<%= position ? (position.max_salary || '') : '' %>">
+        </div>
+      </div>
+
+      <div class="flex-between mt-3">
+        <a href="/hr/positions" class="btn btn-ghost">انصراف</a>
+        <button class="btn btn-primary btn-lg"><%= position && position.id ? 'ذخیره تغییرات' : 'ثبت موقعیت شغلی' %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('../../partials/footer') %>

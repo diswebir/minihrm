@@ -1,0 +1,304 @@
+<%- include('../../partials/header') %>
+
+<div class="flex-between mb-4">
+  <div>
+    <p class="text-muted text-sm" style="margin:0">
+      تحلیل کامل و حرفه‌ای نتیجه آزمون شخصیت — <strong><%= (applicant.first_name || '') + ' ' + (applicant.last_name || '') %></strong>
+      | موقعیت: <strong><%= applicant.position_title || '—' %></strong>
+    </p>
+  </div>
+  <div class="flex-center gap-2 no-print">
+    <a href="/hr/applicants/<%= applicant.id %>" class="btn btn-ghost"><%- icon('arrow', 15) %> پرونده متقاضی</a>
+    <button onclick="window.print()" class="btn btn-soft"><%- icon('print', 15) %> چاپ تحلیل</button>
+  </div>
+</div>
+
+<div class="alert warn no-print">
+  <%- icon('shield', 20) %>
+  <div>
+    <strong>محرمانه:</strong> این گزارش تحلیل شخصیت صرفاً برای تیم منابع انسانی و مدیریت تهیه شده است و
+    به‌هیچ‌وجه نباید در اختیار متقاضی قرار گیرد. نتایج آزمون‌های شخصیت ابزار کمکی تصمیم‌گیری‌اند و
+    نباید مبنای تصمیم قطعی بدون در نظر گرفتن مهارت، تجربه و مصاحبه باشند.
+  </div>
+</div>
+
+<!-- ===== هیروی تیپ ===== -->
+<div class="type-hero mb-4">
+  <div class="flex-between" style="flex-wrap:wrap;gap:18px">
+    <div>
+      <div class="code"><%= result.typeCode %></div>
+      <h1 style="color:#fff;margin:14px 0 4px;font-size:1.55rem">
+        <%= typeRow ? typeRow.title : '' %> — <%= typeRow ? typeRow.nickname : '' %>
+      </h1>
+      <div style="opacity:.9"><%= result.groupTitle %></div>
+      <p style="color:rgba(255,255,255,.92);margin-top:10px;max-width:560px">
+        <%= typeRow ? typeRow.one_liner : '' %>
+      </p>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="background:rgba(255,255,255,.16);border-radius:18px;padding:14px 20px;text-align:center;min-width:110px">
+        <div style="font-size:.74rem;opacity:.85">تعداد پاسخ‌ها</div>
+        <div style="font-size:1.55rem;font-weight:800"><%= result.answeredCount %>/<%= result.totalQuestions %></div>
+      </div>
+      <% if (fit && fit.score) { %>
+      <div style="background:rgba(255,255,255,.16);border-radius:18px;padding:14px 20px;text-align:center;min-width:110px">
+        <div style="font-size:.74rem;opacity:.85">سازگاری شغلی</div>
+        <div style="font-size:1.55rem;font-weight:800"><%= fit.score %>%</div>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ابعاد شخصیتی ===== -->
+<div class="grid grid-2 mb-4">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><%- icon('chart') %> تحلیل ابعاد چهارگانه</div>
+    </div>
+    <div class="card-body">
+      <% result.dimensions.forEach(function(d) {
+        var clarity = result.clarity.find(function(c){ return c.key === d.key; });
+      %>
+        <div class="mb-4">
+          <div class="flex-between">
+            <span class="text-sm font-bold"><%= d.aName %> (<%= d.aScore %> از <%= d.total %>)</span>
+            <span class="text-sm font-bold"><%= d.bName %> (<%= d.bScore %> از <%= d.total %>)</span>
+          </div>
+          <div class="dim-bar">
+            <div class="side a" style="width:<%= d.pctA %>%"><%= d.pctA %>%</div>
+            <div class="side b" style="width:<%= d.pctB %>%"><%= d.pctB %>%</div>
+          </div>
+          <div class="flex-between">
+            <div class="help" style="margin:0">
+              گرایش غالب: <strong><%= d.winnerName %></strong>
+              <% if (d.borderline) { %>
+                <span class="badge amber">مرزی — نتیجه قطعی نیست</span>
+              <% } else { %>
+                <span class="badge green"><%= clarity ? clarity.level : '' %></span>
+              <% } %>
+            </div>
+            <div class="help" style="margin:0">
+              <%= d.winner === d.a ? d.aDesc : d.bDesc %>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+
+      <% var borderlineDims = result.dimensions.filter(function(d){ return d.borderline; }); %>
+      <% if (borderlineDims.length) { %>
+        <div class="alert warn" style="margin-bottom:0">
+          <%- icon('clock', 18) %>
+          <div class="text-sm">
+            <strong>راهنمای اعتبار نتیجه:</strong>
+            <% borderlineDims.forEach(function(d) { %>
+              بُعد <%= d.aName %> / <%= d.bName %> در محدوده مرزی است؛
+              برای اطمینان بیشتر در مصاحبه به رفتار واقعی متقاضی در این بُعد توجه ویژه کنید.
+            <% }) %>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- تحلیل ترکیبی -->
+  <div>
+    <div class="card mb-4">
+      <div class="card-header">
+        <div class="card-title"><%- icon('spark') %> تحلیل ترکیبی ابعاد</div>
+      </div>
+      <div class="card-body">
+        <% if (result.interactions && result.interactions.length) { %>
+          <% result.interactions.forEach(function(line) { %>
+            <div class="flex-center gap-2 text-sm" style="padding:6px 0;align-items:flex-start">
+              <span style="color:var(--primary);margin-top:3px">◆</span>
+              <span><%= line %></span>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <div class="text-muted text-sm">ترکیب خاصی برای گزارش وجود ندارد.</div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- سازگاری شغلی -->
+    <% if (fit) { %>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><%- icon('briefcase') %> سازگاری با موقعیت شغلی «<%= applicant.position_title || '—' %>»</div>
+      </div>
+      <div class="card-body">
+        <div class="flex-between">
+          <div class="bar-track" style="flex:1">
+            <div class="bar-fill mint" style="width:<%= fit.score || 0 %>%"></div>
+          </div>
+          <div class="bar-value" style="width:52px"><%= fit.score || 0 %>%</div>
+        </div>
+        <p class="text-sm mt-3"><%= fit.note %></p>
+        <% if (fit.matched && fit.matched.length) { %>
+          <div class="text-sm"><strong>مشاغل مرتبط تیپ با این موقعیت:</strong></div>
+          <% fit.matched.forEach(function(j) { %>
+            <span class="badge green" style="margin:3px 2px"><%= j %></span>
+          <% }) %>
+        <% } %>
+      </div>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- ===== توصیف کامل تیپ ===== -->
+<% if (typeRow) { %>
+<div class="card mb-4">
+  <div class="card-header">
+    <div class="card-title"><%- icon('file') %> توصیف کامل تیپ <%= typeRow.code %> «<%= typeRow.title %>»</div>
+    <a href="/hr/mbti/types/<%= typeRow.code %>" class="btn btn-soft btn-sm">صفحه کامل تیپ</a>
+  </div>
+  <div class="card-body">
+    <p style="white-space:pre-line;line-height:2.1"><%= typeRow.description %></p>
+
+    <div class="grid grid-2 mt-4">
+      <div>
+        <h4>نقاط قوت کلیدی</h4>
+        <% typeRow.strengths_parsed.forEach(function(s) { %>
+          <div class="flex-center gap-2 text-sm" style="padding:4px 0"><span style="color:var(--mint)">●</span> <%= s %></div>
+        <% }) %>
+
+        <h4 class="mt-3">سبک کار</h4>
+        <p class="text-sm" style="line-height:2"><%= typeRow.work_style %></p>
+
+        <h4 class="mt-2">تصمیم‌گیری</h4>
+        <p class="text-sm" style="line-height:2"><%= typeRow.decision_making %></p>
+
+        <h4 class="mt-2">رهبری</h4>
+        <p class="text-sm" style="line-height:2"><%= typeRow.leadership %></p>
+      </div>
+      <div>
+        <h4>نقاط قابل توسعه</h4>
+        <% typeRow.weaknesses_parsed.forEach(function(s) { %>
+          <div class="flex-center gap-2 text-sm" style="padding:4px 0"><span style="color:var(--amber)">●</span> <%= s %></div>
+        <% }) %>
+
+        <h4 class="mt-3">نقش در تیم</h4>
+        <p class="text-sm" style="line-height:2"><%= typeRow.team_role %></p>
+
+        <h4 class="mt-2">مدیریت استرس</h4>
+        <p class="text-sm" style="line-height:2"><%= typeRow.stress %></p>
+
+        <h4 class="mt-2">انگیزه‌ها</h4>
+        <p class="text-sm" style="line-height:2"><%= typeRow.motivation %></p>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <h4>مشاغل سازگار با این تیپ</h4>
+    <% typeRow.ideal_jobs_parsed.forEach(function(j) { %>
+      <span class="badge primary" style="margin:3px 2px"><%= j %></span>
+    <% }) %>
+  </div>
+</div>
+
+<!-- ===== راهنمای مصاحبه ===== -->
+<div class="grid grid-2 mb-4">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><%- icon('eye') %> راهنمای مصاحبه متناسب با این تیپ</div>
+    </div>
+    <div class="card-body">
+      <% typeRow.interview_tips_parsed.forEach(function(s) { %>
+        <div class="flex-center gap-2 text-sm" style="padding:6px 0;align-items:flex-start">
+          <span style="color:var(--primary);margin-top:3px">✓</span> <span><%= s %></span>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title" style="color:var(--rose)"><%- icon('shield') %> نکات هشدار و مراقبت</div>
+    </div>
+    <div class="card-body">
+      <% typeRow.red_flags_parsed.forEach(function(s) { %>
+        <div class="flex-center gap-2 text-sm" style="padding:6px 0;align-items:flex-start">
+          <span style="color:var(--rose);margin-top:3px">▲</span> <span><%= s %></span>
+        </div>
+      <% }) %>
+      <div class="alert info mt-3" style="margin-bottom:0">
+        <div class="text-sm">
+          توجه: هشدارها صرفاً نکاتی برای بررسی دقیق‌تر در مصاحبه‌اند و نباید به‌تنهایی مبنای رد صلاحیت قرار گیرند.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<% } %>
+
+<!-- ===== تحلیل پاسخ‌به‌پاسخ سوالات ===== -->
+<div class="card mb-4">
+  <div class="card-header">
+    <div class="card-title"><%- icon('form') %> تحلیل پاسخ‌های سوالات</div>
+    <span class="card-sub">نگاشت هر پاسخ به بُعد مربوطه</span>
+  </div>
+  <div class="card-body">
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr><th>ردیف</th><th>سوال</th><th>پاسخ متقاضی</th><th>بُعد</th></tr>
+        </thead>
+        <tbody>
+          <%
+            var amap = {};
+            answers.forEach(function(a){ amap[a.number] = a.choice; });
+          %>
+          <% questions.forEach(function(q) {
+            var choice = amap[q.number];
+            var trait = choice === 'a' ? q.trait_a : (choice === 'b' ? q.trait_b : '—');
+          %>
+            <tr>
+              <td><span class="question-no" style="width:24px;height:24px;font-size:.7rem"><%= q.number %></span></td>
+              <td class="text-sm" style="max-width:340px"><%= q.text %></td>
+              <td class="text-sm">
+                <% if (choice === 'a') { %>
+                  <strong>الف)</strong> <%= q.option_a %>
+                <% } else if (choice === 'b') { %>
+                  <strong>ب)</strong> <%= q.option_b %>
+                <% } else { %>
+                  <span class="text-muted">بدون پاسخ</span>
+                <% } %>
+              </td>
+              <td><span class="score-tag"><%= trait %></span></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== جمع‌بندی امتیازها ===== -->
+<div class="card mb-4">
+  <div class="card-header">
+    <div class="card-title"><%- icon('chart') %> جمع‌بندی امتیازهای خام</div>
+  </div>
+  <div class="card-body">
+    <div class="grid grid-4">
+      <% [['E','برون‌گرایی'],['I','درون‌گرایی'],['S','حسی'],['N','شهودی'],['T','تفکر'],['F','احساس'],['J','قضاوت'],['P','ادراک']].forEach(function(p) { %>
+        <div class="stat-card" style="box-shadow:none;border:1.5px solid var(--border)">
+          <div class="stat-icon <%= (result.typeCode.indexOf(p[0]) >= 0) ? 'primary' : 'violet' %>" style="width:42px;height:42px;border-radius:13px;font-weight:800;font-size:1.05rem">
+            <%= p[0] %>
+          </div>
+          <div>
+            <div class="stat-value" style="font-size:1.25rem"><%= result.counts[p[0]] %></div>
+            <div class="stat-label"><%= p[1] %></div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</div>
+
+<div class="text-center text-xs text-muted no-print">
+  این گزارش به‌صورت خودکار توسط سامانه مدیریت منابع انسانی تهیه شده است — <%= jalaliFull(new Date().toISOString()) %>
+</div>
+
+<%- include('../../partials/footer') %>

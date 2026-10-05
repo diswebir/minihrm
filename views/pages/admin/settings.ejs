@@ -1,0 +1,136 @@
+<%- include('../../partials/header') %>
+
+<% if (saved) { %>
+  <div class="alert success">تنظیقات با موفقیت ذخیره شد.</div>
+<% } %>
+<% if (testResult) { %>
+  <div class="alert <%= testResult.ok ? 'success' : 'error' %>"><%= testResult.message %></div>
+<% } %>
+
+<div class="grid grid-2">
+  <!-- عمومی -->
+  <div class="card">
+    <div class="card-header"><div class="card-title"><%- icon('building') %> تنظیمات عمومی</div></div>
+    <div class="card-body">
+      <form method="post" action="/admin/settings/general">
+        <div class="field">
+          <label class="label">نام شرکت</label>
+          <input class="input" name="company_name" value="<%= settings.company_name || '' %>">
+        </div>
+        <div class="field">
+          <label class="label">عنوان سامانه</label>
+          <input class="input" name="app_title" value="<%= settings.app_title || '' %>">
+        </div>
+        <div class="field">
+          <label class="label">پیشوند کد پیگیری متقاضیان</label>
+          <input class="input" name="tracking_prefix" value="<%= settings.tracking_prefix || 'ERF' %>" style="direction:ltr;text-align:left">
+        </div>
+        <button class="btn btn-primary">ذخیره</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- پیامک -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><%- icon('phone') %> تنظیمات پیامک (IPPanel)</div>
+      <a href="https://ippanelcom.github.io/Edge-Document/docs/" target="_blank" class="btn btn-ghost btn-sm">مستندات</a>
+    </div>
+    <div class="card-body">
+      <form method="post" action="/admin/settings/sms">
+        <div class="field">
+          <label class="label">درایور پیامک</label>
+          <select class="select" name="sms_driver">
+            <option value="mock" <%= (settings.sms_driver || 'mock') === 'mock' ? 'selected' : '' %>>حالت آزمایشی (نمایش کد OTP)</option>
+            <option value="ippanel" <%= settings.sms_driver === 'ippanel' ? 'selected' : '' %>>IPPanel — پیامک واقعی</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="label">کلید دسترسی (API Key / Token)</label>
+          <input class="input" name="sms_ippanel_apikey" value="<%= settings.sms_ippanel_apikey || '' %>" style="direction:ltr;text-align:left">
+          <div class="help">پنل IPPanel › توسعه‌دهندگان › کلیدهای دسترسی</div>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label class="label">شماره فرستنده</label>
+            <input class="input" name="sms_ippanel_from" value="<%= settings.sms_ippanel_from || '+983000505' %>" style="direction:ltr;text-align:left">
+          </div>
+          <div class="field">
+            <label class="label">کد الگو (Pattern Code)</label>
+            <input class="input" name="sms_ippanel_pattern_code" value="<%= settings.sms_ippanel_pattern_code || '' %>" style="direction:ltr;text-align:left">
+            <div class="help">الگوی تایید شده با متغیر code</div>
+          </div>
+        </div>
+        <div class="field">
+          <label class="check-row">
+            <input type="checkbox" name="sms_mock_show" value="1" <%= (settings.sms_mock_show || '1') === '1' ? 'checked' : '' %>>
+            نمایش کد OTP در حالت آزمایشی
+          </label>
+        </div>
+        <button class="btn btn-primary">ذخیره تنظیمات پیامک</button>
+      </form>
+
+      <hr class="divider">
+      <form method="post" action="/admin/settings/sms/test">
+        <div class="field">
+          <label class="label">تست ارسال پیامک</label>
+          <div class="flex-center">
+            <input class="input" name="test_phone" placeholder="09123456789" style="direction:ltr;text-align:left">
+            <button class="btn btn-mint">ارسال تست</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- امنیت -->
+  <div class="card">
+    <div class="card-header"><div class="card-title"><%- icon('shield') %> امنیت و OTP</div></div>
+    <div class="card-body">
+      <form method="post" action="/admin/settings/security">
+        <div class="form-grid">
+          <div class="field">
+            <label class="label">تعداد ارقام کد OTP</label>
+            <input class="input" type="number" name="otp_length" min="4" max="8" value="<%= settings.otp_length || '5' %>">
+          </div>
+          <div class="field">
+            <label class="label">مدت اعتبار کد (ثانیه)</label>
+            <input class="input" type="number" name="otp_expiry_seconds" value="<%= settings.otp_expiry_seconds || '300' %>">
+          </div>
+          <div class="field">
+            <label class="label">فاصله ارسال مجدد (ثانیه)</label>
+            <input class="input" type="number" name="otp_resend_seconds" value="<%= settings.otp_resend_seconds || '120' %>">
+          </div>
+          <div class="field">
+            <label class="label">حداکثر تلاش برای هر کد</label>
+            <input class="input" type="number" name="otp_max_attempts" value="<%= settings.otp_max_attempts || '5' %>">
+          </div>
+          <div class="field">
+            <label class="label">مدت نشست کاربران (ساعت)</label>
+            <input class="input" type="number" name="session_hours" value="<%= settings.session_hours || '24' %>">
+          </div>
+        </div>
+        <button class="btn btn-primary">ذخیره</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- پشتیبان‌گیری -->
+  <div class="card">
+    <div class="card-header"><div class="card-title"><%- icon('download') %> پشتیبان‌گیری</div></div>
+    <div class="card-body">
+      <p class="text-sm text-muted">
+        از کل پایگاه داده سامانه (کاربران، متقاضیان، تنظیمات و ...) یک نسخه پشتیبان تهیه کنید.
+        توصیه می‌شود به‌صورت دوره‌ای این کار را انجام دهید.
+      </p>
+      <a href="/admin/settings/backup" class="btn btn-mint">
+        <%- icon('download', 18) %> دانلود نسخه پشتیبان (فایل دیتابیس)
+      </a>
+      <div class="help mt-2">
+        فایل پشتیبان با هر نرم‌افزار SQLite قابل بازیابی است. برای بازگردانی، جایگزین فایل data/app.db کنید.
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../../partials/footer') %>

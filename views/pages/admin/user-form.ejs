@@ -1,0 +1,98 @@
+<%- include('../../partials/header') %>
+
+<% if (error) { %>
+  <div class="alert error"><%= error %></div>
+<% } %>
+
+<% var u = target || (typeof old !== 'undefined' && old ? old : {}) %>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title"><%- icon('user') %> <%= target ? 'ویرایش کاربر: ' + target.full_name : 'کاربر جدید' %></div>
+    <a href="/admin/users" class="btn btn-ghost btn-sm">بازگشت</a>
+  </div>
+  <div class="card-body">
+    <form method="post">
+      <div class="form-grid">
+        <div class="field">
+          <label class="label">نام و نام خانوادگی <span class="req">*</span></label>
+          <input class="input" name="full_name" required value="<%= u.full_name || '' %>">
+        </div>
+        <div class="field">
+          <label class="label">نام کاربری <span class="req">*</span></label>
+          <input class="input" name="username" required style="direction:ltr;text-align:left"
+                 value="<%= u.username || '' %>" <%= target ? 'disabled' : '' %>>
+          <% if (target) { %><div class="help">نام کاربری قابل تغییر نیست</div><% } %>
+        </div>
+        <div class="field">
+          <label class="label">ایمیل</label>
+          <input class="input" type="email" name="email" style="direction:ltr;text-align:left" value="<%= u.email || '' %>">
+        </div>
+        <div class="field">
+          <label class="label">شماره موبایل</label>
+          <input class="input" name="phone" style="direction:ltr;text-align:left" value="<%= u.phone || '' %>">
+        </div>
+        <div class="field">
+          <label class="label">نقش</label>
+          <select class="select" name="role_id">
+            <option value="">— انتخاب نقش —</option>
+            <% roles.forEach(function(r) { %>
+              <option value="<%= r.id %>" <%= (u.role_id == r.id) ? 'selected' : '' %>><%= r.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="field">
+          <label class="label">وضعیت</label>
+          <select class="select" name="status" <%= (target && target.is_super_admin) ? 'disabled' : '' %>>
+            <option value="active" <%= (u.status !== 'disabled') ? 'selected' : '' %>>فعال</option>
+            <option value="disabled" <%= (u.status === 'disabled') ? 'selected' : '' %>>غیرفعال</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="label"><%= target ? 'رمز عبور جدید (در صورت تغییر)' : 'رمز عبور' %> <span class="req">*</span></label>
+          <input class="input" type="password" name="password" style="direction:ltr" <%= target ? '' : 'required' %>>
+          <div class="help">حداقل ۸ کاراکتر</div>
+        </div>
+        <div class="field">
+          <label class="label">تکرار رمز عبور <span class="req">*</span></label>
+          <input class="input" type="password" name="password2" style="direction:ltr" <%= target ? '' : 'required' %>>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <h3>بازنویسی مجوزهای اختصاصی کاربر</h3>
+      <p class="text-sm text-muted">
+        مجوزهای پایه از نقش کاربر ارث‌بری می‌شوند. در این بخش می‌توانید برای این کاربر به‌صورت خاص، مجوزی را اضافه (Grant) یا لغو (Deny) کنید.
+      </p>
+      <div class="grid grid-2">
+        <% Object.keys(permissionGroups).forEach(function(gname) { %>
+          <div>
+            <div class="nav-section" style="padding-right:0"><%= gname %></div>
+            <% permissionGroups[gname].forEach(function(p) {
+              var mode = (userPerms && userPerms[p.id]) || '';
+            %>
+              <div class="flex-between" style="padding:7px 0;border-bottom:1px dashed var(--border)">
+                <div>
+                  <div class="text-sm font-bold"><%= p.name %></div>
+                  <div class="text-xs text-muted"><%= p.description %></div>
+                </div>
+                <select class="select" name="perm_<%= p.code %>" style="width:110px;padding:6px 8px;font-size:.78rem">
+                  <option value="" <%= mode === '' ? 'selected' : '' %>>از نقش</option>
+                  <option value="grant" <%= mode === 'grant' ? 'selected' : '' %>>اجازه</option>
+                  <option value="deny" <%= mode === 'deny' ? 'selected' : '' %>>لغو</option>
+                </select>
+              </div>
+            <% }) %>
+          </div>
+        <% }) %>
+      </div>
+
+      <div class="flex-between mt-4">
+        <a href="/admin/users" class="btn btn-ghost">انصراف</a>
+        <button class="btn btn-primary btn-lg"><%= target ? 'ذخیره تغییرات' : 'ثبت کاربر' %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('../../partials/footer') %>

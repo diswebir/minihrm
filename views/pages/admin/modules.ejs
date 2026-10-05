@@ -1,0 +1,53 @@
+<%- include('../../partials/header') %>
+
+<p class="text-muted text-sm mb-4">
+  قابلیت‌های سامانه به‌صورت ماژولار طراحی شده‌اند. هر ماژول را می‌توانید در هر زمان فعال یا غیرفعال کنید؛
+  داده‌های ماژول‌های غیرفعال حفظ می‌شوند.
+</p>
+
+<div class="grid grid-2">
+  <% modules.forEach(function(m) { %>
+    <div class="card">
+      <div class="card-body">
+        <div class="flex-between">
+          <div class="flex-center gap-3">
+            <div class="stat-icon <%= m.enabled ? 'primary' : 'violet' %>" style="width:48px;height:48px;border-radius:15px;opacity:<%= m.installed ? 1 : .5 %>">
+              <%- icon(m.icon || 'puzzle', 22) %>
+            </div>
+            <div>
+              <h3 style="margin:0"><%= m.name %></h3>
+              <div class="text-xs text-muted">نسخه <%= m.version %></div>
+            </div>
+          </div>
+          <div>
+            <% if (!m.installed) { %>
+              <span class="badge gray">به‌زودی</span>
+            <% } else if (m.enabled) { %>
+              <span class="badge green"><span class="badge-dot"></span> فعال</span>
+            <% } else { %>
+              <span class="badge gray">غیرفعال</span>
+            <% } %>
+          </div>
+        </div>
+        <p class="text-sm text-muted mt-3"><%= m.description %></p>
+        <% if (m.installed) { %>
+          <div class="flex-between mt-3">
+            <div class="text-xs text-muted">
+              <%= (m.nav || []).length %> بخش در منو
+            </div>
+            <button class="btn <%= m.enabled ? 'btn-danger' : 'btn-mint' %> btn-sm"
+                    data-action="toggle-module" data-url="/admin/modules/<%= m.code %>/toggle">
+              <%= m.enabled ? 'غیرفعال‌سازی' : 'فعال‌سازی' %>
+            </button>
+          </div>
+        <% } else { %>
+          <div class="alert info mt-3" style="margin-bottom:0">
+            این ماژول در نسخه‌های آینده سامانه اضافه می‌شود.
+          </div>
+        <% } %>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
+<%- include('../../partials/footer') %>

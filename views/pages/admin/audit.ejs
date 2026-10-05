@@ -1,0 +1,41 @@
+<%- include('../../partials/header') %>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title"><%- icon('shield') %> تاریخچه فعالیت‌های سامانه</div>
+    <span class="card-sub">صفحه <%= page %> از <%= totalPages %></span>
+  </div>
+  <div class="card-body" style="padding-top:12px">
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr><th>کاربر</th><th>عملیات</th><th>موجودیت</th><th>جزئیات</th><th>تاریخ</th></tr>
+        </thead>
+        <tbody>
+          <% logs.forEach(function(l) { %>
+            <tr>
+              <td class="font-bold"><%= l.user_name || 'سیستم' %></td>
+              <td><span class="badge primary"><%= l.action %></span></td>
+              <td class="text-sm"><%= l.entity %> <%= l.entity_id ? '#' + l.entity_id : '' %></td>
+              <td class="text-xs text-muted" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><%= l.detail %></td>
+              <td class="text-sm text-muted"><%= jalaliFull(l.created_at) %></td>
+            </tr>
+          <% }) %>
+          <% if (!logs.length) { %>
+            <tr><td colspan="5" class="text-center text-muted">هنوز فعالیتی ثبت نشده است</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if (totalPages > 1) { %>
+      <div class="pagination">
+        <% for (var i = 1; i <= totalPages; i++) { %>
+          <a class="page-btn <%= i === page ? 'active' : '' %>" href="/admin/audit?page=<%= i %>"><%= i %></a>
+        <% } %>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../../partials/footer') %>

@@ -1,0 +1,69 @@
+<%- include('../../partials/header') %>
+
+<div class="flex-between mb-4">
+  <p class="text-muted text-sm" style="margin:0">
+    موقعیت‌های شغلی شرکت را تعریف کنید. برای هر موقعیت، QR اختصاصی جهت ثبت‌نام متقاضیان قابل دریافت است.
+  </p>
+  <% if (can('positions.manage')) { %>
+    <a href="/hr/positions/new" class="btn btn-primary"><%- icon('plus', 18) %> موقعیت جدید</a>
+  <% } %>
+</div>
+
+<% if (!positions.length) { %>
+  <div class="card">
+    <div class="empty-state">
+      <%- icon('briefcase', 44) %>
+      <h3>هنوز موقعیت شغلی تعریف نشده است</h3>
+      <p class="text-sm">اولین موقعیت شغلی شرکت را اضافه کنید تا متقاضیان بتوانند ثبت‌نام کنند.</p>
+      <% if (can('positions.manage')) { %>
+        <a href="/hr/positions/new" class="btn btn-primary">افزودن موقعیت شغلی</a>
+      <% } %>
+    </div>
+  </div>
+<% } else { %>
+<div class="grid grid-2">
+  <% positions.forEach(function(p) { %>
+    <div class="card">
+      <div class="card-body">
+        <div class="flex-between">
+          <div>
+            <h3 style="margin-bottom:4px"><%= p.title %></h3>
+            <div class="flex-center gap-2">
+              <% if (p.status === 'open') { %><span class="badge green"><span class="badge-dot"></span> باز</span>
+              <% } else if (p.status === 'closed') { %><span class="badge rose">بسته</span>
+              <% } else { %><span class="badge gray">پیش‌نویس</span><% } %>
+              <% if (p.department) { %><span class="badge blue"><%= p.department %></span><% } %>
+              <span class="badge violet">
+                <%= ({full_time:'تمام وقت',part_time:'پاره وقت',remote:'دورکاری',project:'پروژه‌ای',intern:'کارآموزی'})[p.employment_type] || p.employment_type %>
+              </span>
+            </div>
+          </div>
+          <div class="stat-icon sky" style="width:46px;height:46px;border-radius:14px"><%- icon('briefcase', 22) %></div>
+        </div>
+
+        <% if (p.description) { %>
+          <p class="text-sm text-muted mt-3" style="min-height:44px"><%= p.description.substring(0, 150) %><%= p.description.length > 150 ? '...' : '' %></p>
+        <% } %>
+
+        <div class="flex-between mt-3">
+          <div class="flex-center gap-2">
+            <span class="badge primary"><%= p.applicants_count %> متقاضی</span>
+            <span class="text-xs text-muted">کد: <%= p.code %></span>
+          </div>
+          <div class="flex-center gap-2">
+            <a href="/hr/positions/<%= p.id %>/qr" class="btn btn-soft btn-sm"><%- icon('qr', 15) %> QR</a>
+            <% if (can('positions.manage')) { %>
+              <a href="/hr/positions/<%= p.id %>/edit" class="btn btn-ghost btn-sm"><%- icon('edit', 15) %> ویرایش</a>
+              <button class="btn btn-danger btn-sm" data-action="delete-row"
+                      data-url="/hr/positions/<%= p.id %>/delete"
+                      data-confirm="این موقعیت حذف/بسته شود؟"><%- icon('trash', 15) %></button>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+</div>
+<% } %>
+
+<%- include('../../partials/footer') %>
