@@ -1,0 +1,31 @@
+<div class="page-header"><div><h1 class="page-title">مجوزها</h1></div>
+<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPermitModal"><i class="bi bi-plus-lg me-1"></i>مجوز جدید</button></div>
+<div class="card"><div class="card-body p-0">
+<% if (permits && permits.length > 0) { %>
+<table class="table"><thead><tr><th>نوع مجوز</th><th>شماره</th><th>صادرکننده</th><th>تاریخ صدور</th><th>تاریخ انقضا</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+<tbody><% permits.forEach(p => { %>
+<tr>
+<td class="fw-bold"><%= p.permit_type %></td><td><%= p.permit_number || '-' %></td><td><%= p.issuing_authority || '-' %></td>
+<td><%= p.issue_date || '-' %></td><td><%= p.expiry_date || '-' %></td>
+<td><% const sc={active:'success',expired:'danger',pending_renewal:'warning',cancelled:'secondary'}; %><span class="badge bg-<%= sc[p.status]||'secondary' %>"><%= p.status %></span></td>
+<td><form action="/legal/permits/<%= p.id %>/delete" method="POST" class="d-inline"><button class="btn btn-sm btn-outline-danger" data-confirm="حذف شود؟"><i class="bi bi-trash"></i></button></form></td>
+</tr><% }); %></tbody></table>
+<% } else { %><div class="empty-state"><i class="bi bi-file-earmark"></i><h5>مجوزی ثبت نشده</h5></div><% } %>
+</div></div>
+
+<div class="modal fade" id="addPermitModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+<form action="/legal/permits" method="POST">
+<div class="modal-header"><h5 class="modal-title">مجوز جدید</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+<div class="modal-body">
+<div class="mb-3"><label class="form-label">نوع مجوز <span class="text-danger">*</span></label><input type="text" name="permit_type" class="form-control" required placeholder="مثال: پروانه بهره‌برداری"></div>
+<div class="row">
+<div class="col-md-6 mb-3"><label class="form-label">شماره</label><input type="text" name="permit_number" class="form-control"></div>
+<div class="col-md-6 mb-3"><label class="form-label">صادرکننده</label><input type="text" name="issuing_authority" class="form-control"></div>
+<div class="col-md-6 mb-3"><label class="form-label">تاریخ صدور</label><input type="date" name="issue_date" class="form-control"></div>
+<div class="col-md-6 mb-3"><label class="form-label">تاریخ انقضا</label><input type="date" name="expiry_date" class="form-control"></div>
+</div>
+<div class="form-check mb-3"><input type="checkbox" name="renewal_required" class="form-check-input"><label class="form-check-label">نیاز به تمدید</label></div>
+<div class="mb-3"><label class="form-label">یادداشت</label><textarea name="notes" class="form-control" rows="2"></textarea></div>
+</div>
+<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button><button type="submit" class="btn btn-primary">ثبت</button></div>
+</form></div></div></div>

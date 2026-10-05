@@ -1,0 +1,23 @@
+<div class="page-header"><div><h1 class="page-title"><%= assignment.title %></h1></div>
+<a href="/training/my-courses" class="btn btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a></div>
+<div class="card mb-3"><div class="card-body">
+<div class="d-flex gap-3 text-muted mb-3">
+<span><i class="bi bi-clock me-1"></i><%= assignment.duration_hours %> ساعت</span>
+<span><i class="bi bi-tag me-1"></i><%= assignment.content_type %></span>
+</div>
+<% if (assignment.description) { %><p><%= assignment.description %></p><% } %>
+<% if (assignment.content_type === 'link' && assignment.content_url) { %>
+<div class="ratio ratio-16x9"><iframe src="<%= assignment.content_url %>" allowfullscreen></iframe></div>
+<% } else if (assignment.content_type === 'video' && assignment.content_url) { %>
+<div class="ratio ratio-16x9"><iframe src="<%= assignment.content_url %>" allowfullscreen></iframe></div>
+<% } else if (assignment.content_type === 'text' && assignment.content_text) { %>
+<div class="bg-light p-4 rounded" style="white-space:pre-wrap;line-height:2;"><%= assignment.content_text %></div>
+<% } else if (assignment.content_url) { %>
+<a href="<%= assignment.content_url %>" target="_blank" class="btn btn-primary"><i class="bi bi-link-45deg me-1"></i>مشاهده محتوا</a>
+<% } %>
+</div></div>
+<% if (assignment.status !== 'completed') { %>
+<form action="/training/my-courses/<%= assignment.id %>/complete" method="POST" class="text-center">
+<button type="submit" class="btn btn-success btn-lg"><i class="bi bi-check-circle me-2"></i>تکمیل دوره</button>
+</form>
+<% } %>

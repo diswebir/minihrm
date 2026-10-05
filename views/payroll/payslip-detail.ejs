@@ -1,0 +1,72 @@
+<div class="page-header"><div><h1 class="page-title">فیش حقوقی</h1></div>
+<div class="d-flex gap-2">
+<% if (payslip.status === 'draft') { %>
+<form action="/payroll/payslips/<%= payslip.id %>/approve" method="POST" class="d-inline"><button class="btn btn-success"><i class="bi bi-check-lg me-1"></i>تأیید</button></form>
+<% } %>
+<% if (payslip.status === 'approved') { %>
+<form action="/payroll/payslips/<%= payslip.id %>/pay" method="POST" class="d-inline"><button class="btn btn-primary"><i class="bi bi-cash me-1"></i>پرداخت</button></form>
+<% } %>
+<a href="/payroll/payslips" class="btn btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a>
+</div></div>
+
+<div class="card" id="payslipPrint"><div class="card-body">
+<div class="text-center mb-4">
+<h4 class="fw-bold"><%= company %></h4>
+<p class="text-muted mb-0">فیش حقوقی - دوره <%= payslip.period_year %>/<payslip.period_month %></p>
+</div>
+<div class="row mb-4">
+<div class="col-md-6">
+<p><strong>نام:</strong> <%= payslip.first_name %> <%= payslip.last_name %></p>
+<p><strong>کد ملی:</strong> <%= payslip.national_code || '-' %></p>
+</div>
+<div class="col-md-6 text-md-end">
+<p><strong>وضعیت:</strong> <span class="badge bg-<%= payslip.status==='paid'?'success':payslip.status==='approved'?'info':'warning' %>"><%= payslip.status %></span></p>
+<% if (payslip.paid_at) { %><p><strong>تاریخ پرداخت:</strong> <%= new Date(payslip.paid_at).toLocaleDateString('fa-IR') %></p><% } %>
+</div></div>
+
+<h6 class="text-primary mb-3"><i class="bi bi-plus-circle me-1"></i>دریافتی‌ها</h6>
+<table class="table table-bordered mb-4">
+<tr><td>پایه حقوق</td><td class="text-start"><%= (payslip.base_salary||0).toLocaleString('fa') %> ریال</td></tr>
+<tr><td>جمع مزایا</td><td class="text-start"><%= (payslip.allowances_total||0).toLocaleString('fa') %> ریال</td></tr>
+<tr><td>اضافه‌کاری (<%= payslip.overtime_hours || 0 %> ساعت)</td><td class="text-start"><%= (payslip.overtime_pay||0).toLocaleString('fa') %> ریال</td></tr>
+<% if (payslip.bonus) { %><tr><td>پاداش</td><td class="text-start"><%= (payslip.bonus||0).toLocaleString('fa') %> ریال</td></tr><% } %>
+<% items.filter(i => i.item_type === 'addition').forEach(item => { %>
+<tr><td><%= item.title %> <% if (item.description) { %><small class="text-muted">(<%= item.description %>)</small><% } %></td>
+<td class="text-start"><%= item.amount.toLocaleString('fa') %> ریال</td></tr>
+<% }); %>
+<tr class="table-success"><td class="fw-bold">جمع ناخالص</td><td class="text-start fw-bold"><%= (payslip.gross_salary||0).toLocaleString('fa') %> ریال</td></tr>
+</table>
+
+<h6 class="text-danger mb-3"><i class="bi bi-dash-circle me-1"></i>کسورات</h6>
+<table class="table table-bordered mb-4">
+<tr><td>سهم بیمه کارمند</td><td class="text-start"><%= (payslip.insurance_deduction||0).toLocaleString('fa') %> ریال</td></tr>
+<tr><td>مالیات</td><td class="text-start"><%= (payslip.tax_deduction||0).toLocaleString('fa') %> ریال</td></tr>
+<% if (payslip.loan_deduction) { %><tr><td>اقساط وام</td><td class="text-start"><%= (payslip.loan_deduction||0).toLocaleString('fa') %> ریال</td></tr><% } %>
+<% items.filter(i => i.item_type === 'deduction').forEach(item => { %>
+<tr><td><%= item.title %> <% if (item.description) { %><small class="text-muted">(<%= item.description %>)</small><% } %></td>
+<td class="text-start"><%= item.amount.toLocaleString('fa') %> ریال</td></tr>
+<% }); %>
+<tr class="table-danger"><td class="fw-bold">جمع کسورات</td><td class="text-start fw-bold"><%= (payslip.deductions_total||0).toLocaleString('fa') %> ریال</td></tr>
+</table>
+
+<div class="alert alert-success text-center">
+<h5 class="mb-0">خالص پرداختی: <strong><%= (payslip.net_salary||0).toLocaleString('fa') %> ریال</strong></h5>
+</div>
+
+<!-- Add Custom Item -->
+<div class="card mt-3"><div class="card-header">افزودن آیتم سفارشی</div><div class="card-body">
+<form action="/payroll/payslips/<%= payslip.id %>/items" method="POST" class="row g-2">
+<div class="col-md-3"><select name="item_type" class="form-select"><option value="addition">اضافه (+)</option><option value="deduction">کسر (-)</option></select></div>
+<div class="col-md-3"><input type="text" name="title" class="form-control" placeholder="عنوان" required></div>
+<div class="col-md-3"><input type="number" name="amount" class="form-control" placeholder="مبلغ (ریال)" required></div>
+<div class="col-md-2"><input type="text" name="description" class="form-control" placeholder="توضیح"></div>
+<div class="col-md-1"><button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus"></i></button></div>
+</form>
+</div></div>
+
+</div></div>
+
+<div class="text-center mt-3">
+<button onclick="window.print()" class="btn btn-outline-primary"><i class="bi bi-printer me-1"></i>چاپ فیش</button>
+</div>
+<style>@media print{body *{visibility:hidden}#payslipPrint,#payslipPrint *{visibility:visible}#payslipPrint{position:absolute;left:0;top:0;width:100%}}</style>

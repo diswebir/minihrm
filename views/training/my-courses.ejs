@@ -1,0 +1,26 @@
+<div class="page-header"><div><h1 class="page-title">دوره‌های آموزشی من</h1></div></div>
+<% if (assignments && assignments.length > 0) { %>
+<div class="row"><% assignments.forEach(a => { %>
+<div class="col-md-6 mb-3"><div class="card">
+<div class="card-body">
+<div class="d-flex justify-content-between align-items-start mb-2">
+<h5 class="fw-bold mb-0"><%= a.title %></h5>
+<% const statusColors = {assigned:'warning',in_progress:'info',completed:'success',expired:'danger'}; %>
+<span class="badge bg-<%= statusColors[a.status] || 'secondary' %>"><%= a.status %></span>
+</div>
+<p class="text-muted small mb-2"><%= a.description ? a.description.substring(0,100) : '' %></p>
+<div class="d-flex gap-3 text-muted small mb-3">
+<span><i class="bi bi-clock me-1"></i><%= a.duration_hours %> ساعت</span>
+<span><i class="bi bi-tag me-1"></i><%= a.category %></span>
+<% if (a.due_date) { %><span><i class="bi bi-calendar me-1"></i>مهلت: <%= a.due_date %></span><% } %>
+</div>
+<% if (a.status === 'completed') { %>
+<div class="alert alert-success py-2 mb-0"><i class="bi bi-check-circle me-1"></i>تکمیل شده</div>
+<% } else { %>
+<a href="/training/my-courses/<%= a.id %>" class="btn btn-primary btn-sm"><i class="bi bi-play-fill me-1"></i>مشاهده دوره</a>
+<% } %>
+</div></div></div>
+<% }); %></div>
+<% } else { %>
+<div class="empty-state"><i class="bi bi-book"></i><h5>دوره‌ای اختصاص داده نشده</h5></div>
+<% } %>

@@ -1,0 +1,36 @@
+<div class="page-header">
+  <div><h1 class="page-title"><%= course ? 'ویرایش دوره' : 'دوره جدید' %></h1></div>
+  <a href="/training" class="btn btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a>
+</div>
+<div class="card"><div class="card-body">
+<form action="<%= course ? '/training/' + course.id : '/training' %>" method="POST">
+<div class="row">
+<div class="col-md-6 mb-3"><label class="form-label">عنوان دوره <span class="text-danger">*</span></label><input type="text" name="title" class="form-control" required value="<%= course ? course.title : '' %>"></div>
+<div class="col-md-3 mb-3"><label class="form-label">دسته‌بندی</label>
+<select name="category" class="form-select">
+<option value="general" <%= course && course.category==='general' ? 'selected' : '' %>>عمومی</option>
+<option value="technical" <%= course && course.category==='technical' ? 'selected' : '' %>>فنی</option>
+<option value="management" <%= course && course.category==='management' ? 'selected' : '' %>>مدیریتی</option>
+<option value="safety" <%= course && course.category==='safety' ? 'selected' : '' %>>ایمنی</option>
+<option value="soft_skills" <%= course && course.category==='soft_skills' ? 'selected' : '' %>>مهارت نرم</option>
+</select></div>
+<div class="col-md-3 mb-3"><label class="form-label">نوع محتوا</label>
+<select name="content_type" class="form-select">
+<option value="video" <%= course && course.content_type==='video' ? 'selected' : '' %>>ویدیو</option>
+<option value="document" <%= course && course.content_type==='document' ? 'selected' : '' %>>سند</option>
+<option value="link" <%= course && course.content_type==='link' ? 'selected' : '' %>>لینک</option>
+<option value="text" <%= course && course.content_type==='text' ? 'selected' : '' %>>متن</option>
+</select></div>
+<div class="col-md-4 mb-3"><label class="form-label">مدت (ساعت)</label><input type="number" name="duration_hours" class="form-control" value="<%= course ? course.duration_hours : '1' %>" step="0.5"></div>
+<div class="col-md-4 mb-3"><label class="form-label">بخش مرتبط</label>
+<select name="department_id" class="form-select"><option value="">همه بخش‌ها</option>
+<% if (typeof departments !== 'undefined') departments.forEach(d => { %><option value="<%= d.id %>" <%= course && course.department_id == d.id ? 'selected' : '' %>><%= d.name %></option><% }); %>
+</select></div>
+<div class="col-md-4 mb-3"><label class="form-label">&nbsp;</label><div class="form-check form-switch"><input type="checkbox" name="is_mandatory" class="form-check-input" <%= course && course.is_mandatory ? 'checked' : '' %>><label class="form-check-label">اجباری</label></div></div>
+<div class="col-md-6 mb-3"><label class="form-label">URL محتوا</label><input type="url" name="content_url" class="form-control" dir="ltr" value="<%= course ? course.content_url : '' %>" placeholder="https://..."></div>
+<div class="col-12 mb-3"><label class="form-label">توضیحات</label><textarea name="description" class="form-control" rows="3"><%= course ? course.description : '' %></textarea></div>
+<div class="col-12 mb-3"><label class="form-label">محتوای متنی دوره</label><textarea name="content_text" class="form-control" rows="6"><%= course ? course.content_text : '' %></textarea></div>
+<% if (course) { %><div class="col-md-4 mb-3"><label class="form-label">وضعیت</label><div class="form-check form-switch"><input type="checkbox" name="is_active" class="form-check-input" <%= course.is_active ? 'checked' : '' %>><label class="form-check-label">فعال</label></div></div><% } %>
+</div>
+<div class="d-flex gap-2 mt-2"><button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>ذخیره</button><a href="/training" class="btn btn-secondary">انصراف</a></div>
+</form></div></div>

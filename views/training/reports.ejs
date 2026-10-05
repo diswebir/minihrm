@@ -1,0 +1,16 @@
+<div class="page-header"><div><h1 class="page-title">گزارش آموزش</h1></div>
+<a href="/training" class="btn btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a></div>
+<div class="stats-grid mb-3">
+<div class="stat-card"><div class="stat-icon primary"><i class="bi bi-book"></i></div><div class="stat-info"><h3><%= stats.totalCourses %></h3><p>کل دوره‌ها</p></div></div>
+<div class="stat-card"><div class="stat-icon info"><i class="bi bi-person-check"></i></div><div class="stat-info"><h3><%= stats.totalAssignments %></h3><p>کل اختصاص‌ها</p></div></div>
+<div class="stat-card"><div class="stat-icon success"><i class="bi bi-check-circle"></i></div><div class="stat-info"><h3><%= stats.completed %></h3><p>تکمیل شده</p></div></div>
+<div class="stat-card"><div class="stat-icon warning"><i class="bi bi-hourglass"></i></div><div class="stat-info"><h3><%= stats.inProgress %></h3><p>در حال انجام</p></div></div>
+<div class="stat-card"><div class="stat-icon danger"><i class="bi bi-exclamation-triangle"></i></div><div class="stat-info"><h3><%= stats.mandatoryPending %></h3><p>اجباری تکمیل‌نشده</p></div></div>
+</div>
+<div class="card"><div class="card-header">دسته‌بندی دوره‌ها</div><div class="card-body">
+<% if (byCategory && byCategory.length > 0) { %>
+<div class="row"><% byCategory.forEach(c => { %>
+<div class="col-md-3 mb-2"><div class="d-flex justify-content-between p-2 bg-light rounded"><span><%= c.category %></span><span class="badge bg-primary"><%= c.count %></span></div></div>
+<% }); %></div>
+<% } else { %><p class="text-muted mb-0">داده‌ای موجود نیست</p><% } %>
+</div></div>

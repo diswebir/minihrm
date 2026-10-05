@@ -1,0 +1,25 @@
+<div class="page-header"><div><h1 class="page-title">صدور فیش حقوقی</h1></div>
+<a href="/payroll" class="btn btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a></div>
+<div class="card"><div class="card-body">
+<form action="/payroll/generate" method="POST">
+<div class="row mb-3">
+<div class="col-md-3"><label class="form-label">سال</label><input type="number" name="year" class="form-control" value="<%= year %>"></div>
+<div class="col-md-3"><label class="form-label">ماه</label>
+<select name="month" class="form-select">
+<% const months=['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند']; %>
+<% months.forEach((m,i) => { %><option value="<%= i+1 %>" <%= (i+1)===month ? 'selected' : '' %>><%= m %></option><% }); %>
+</select></div>
+</div>
+<% if (employees && employees.length > 0) { %>
+<div class="table-container"><table class="table"><thead><tr><th>انتخاب</th><th>نام</th><th>پایه حقوق</th><th>اضافه‌کاری (ساعت)</th></tr></thead>
+<tbody><% employees.forEach(e => { %>
+<tr><td><input type="checkbox" name="user_ids" value="<%= e.user_id %>" class="form-check-input"></td>
+<td class="fw-bold"><%= e.first_name %> <%= e.last_name %></td>
+<td><%= (e.base_salary||0).toLocaleString('fa') %></td>
+<td><input type="number" name="overtime_hours" class="form-control form-control-sm" value="0" style="width:80px;" placeholder="0"></td></tr>
+<% }); %></tbody></table></div>
+<button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>صدور فیش</button>
+<% } else { %>
+<div class="alert alert-warning">ابتدا ساختار حقوقی کارکنان را تنظیم کنید</div>
+<% } %>
+</form></div></div>

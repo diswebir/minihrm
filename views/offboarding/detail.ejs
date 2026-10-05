@@ -1,0 +1,51 @@
+<div class="page-header"><div><h1 class="page-title">جزئیات تسویه - <%= request.first_name %> <%= request.last_name %></h1></div>
+<a href="/offboarding" class="btn btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a></div>
+
+<div class="row">
+<div class="col-md-8 mb-3">
+<!-- Settlement Info -->
+<div class="card mb-3"><div class="card-header"><i class="bi bi-calculator me-2"></i>محاسبه تسویه</div><div class="card-body">
+<form action="/offboarding/<%= request.id %>/settlement" method="POST">
+<div class="row">
+<div class="col-md-6 mb-3"><label class="form-label">سنوات پایان کار</label><input type="number" name="severance_pay" class="form-control" value="<%= request.severance_pay %>"></div>
+<div class="col-md-6 mb-3"><label class="form-label">عیدی و پاداش</label><input type="number" name="settlement_amount" class="form-control" value="<%= request.settlement_amount %>"></div>
+<div class="col-md-6 mb-3"><label class="form-label">مانده مرخصی</label><input type="number" name="unused_leave_pay" class="form-control" value="<%= request.unused_leave_pay %>"></div>
+<div class="col-md-6 mb-3"><label class="form-label">مانده وام</label><input type="number" name="loan_remaining" class="form-control" value="<%= request.loan_remaining %>"></div>
+</div>
+<button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>بروزرسانی</button>
+</form>
+<div class="alert alert-success mt-3 text-center">
+<h5>مبلغ قابل پرداخت: <strong><%= ((request.severance_pay||0)+(request.settlement_amount||0)+(request.unused_leave_pay||0)-(request.loan_remaining||0)).toLocaleString('fa') %> ریال</strong></h5>
+</div>
+</div></div>
+
+<!-- Checklist -->
+<div class="card mb-3"><div class="card-header"><i class="bi bi-check2-square me-2"></i>چک‌لیست خروج</div><div class="card-body">
+<form action="/offboarding/<%= request.id %>/checklist" method="POST">
+<div class="row">
+<div class="col-md-6 mb-2"><div class="form-check"><input type="checkbox" name="equipment_returned" class="form-check-input" <%= request.equipment_returned ? 'checked' : '' %>><label class="form-check-label">تجهیزات بازگردانده شده</label></div></div>
+<div class="col-md-6 mb-2"><div class="form-check"><input type="checkbox" name="access_revoked" class="form-check-input" <%= request.access_revoked ? 'checked' : '' %>><label class="form-check-label">دسترسی‌ها لغو شده</label></div></div>
+<div class="col-md-6 mb-2"><div class="form-check"><input type="checkbox" name="knowledge_transferred" class="form-check-input" <%= request.knowledge_transferred ? 'checked' : '' %>><label class="form-check-label">انتقال دانش انجام شده</label></div></div>
+<div class="col-md-6 mb-2"><div class="form-check"><input type="checkbox" name="exit_interview_done" class="form-check-input" <%= request.exit_interview_done ? 'checked' : '' %>><label class="form-check-label">مصاحبه خروج انجام شده</label></div></div>
+</div>
+<button type="submit" class="btn btn-primary btn-sm mt-2">بروزرسانی چک‌لیست</button>
+</form>
+</div></div>
+</div>
+
+<div class="col-md-4 mb-3">
+<div class="card mb-3"><div class="card-header">اطلاعات درخواست</div><div class="card-body">
+<p><strong>نوع:</strong> <%= request.request_type %></p>
+<p><strong>آخرین روز:</strong> <%= request.last_working_day || '-' %></p>
+<p><strong>وضعیت:</strong> <span class="badge bg-<%= request.status==='completed'?'success':request.status==='approved'?'info':'warning' %>"><%= request.status %></span></p>
+<% if (request.reason) { %><p><strong>دلیل:</strong> <%= request.reason %></p><% } %>
+<% if (request.notes) { %><p><strong>یادداشت:</strong> <%= request.notes %></p><% } %>
+</div></div>
+<% if (request.status === 'pending') { %>
+<form action="/offboarding/<%= request.id %>/approve" method="POST"><button class="btn btn-success w-100 mb-2"><i class="bi bi-check-lg me-1"></i>تأیید درخواست</button></form>
+<% } %>
+<% if (request.status !== 'completed' && request.status !== 'rejected') { %>
+<form action="/offboarding/<%= request.id %>/complete" method="POST"><button class="btn btn-danger w-100" data-confirm="آیا از تکمیل تسویه مطمئن هستید؟"><i class="bi bi-check-circle me-1"></i>تکمیل تسویه</button></form>
+<% } %>
+</div>
+</div>

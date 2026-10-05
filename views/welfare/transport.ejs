@@ -1,0 +1,37 @@
+<div class="page-header"><div><h1 class="page-title">ایاب و ذهاب - ناوگان</h1></div>
+<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addVehicleModal"><i class="bi bi-plus-lg me-1"></i>وسیله جدید</button></div>
+<div class="row">
+<% if (vehicles && vehicles.length > 0) { vehicles.forEach(v => { %>
+<div class="col-md-4 mb-3"><div class="card">
+<div class="card-body">
+<div class="d-flex justify-content-between mb-2">
+<h5 class="fw-bold mb-0"><%= v.route_name || v.plate_number %></h5>
+<span class="badge bg-info"><%= v.passenger_count %>/<%= v.capacity %> نفر</span>
+</div>
+<p class="text-muted small mb-1"><i class="bi bi-truck me-1"></i><%= v.vehicle_type %> | <%= v.plate_number %></p>
+<% if (v.driver_name) { %><p class="text-muted small mb-1"><i class="bi bi-person me-1"></i><%= v.driver_name %> <% if (v.driver_phone) { %><%= v.driver_phone %><% } %></p><% } %>
+<% if (v.route_description) { %><p class="text-muted small mb-2"><%= v.route_description %></p><% } %>
+<div class="progress mb-2" style="height:6px;"><div class="progress-bar bg-primary" style="width:<%= Math.round((v.passenger_count/v.capacity)*100) %>%"></div></div>
+<a href="/welfare/transport/<%= v.id %>" class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-eye me-1"></i>مدیریت مسافران</a>
+</div></div></div>
+<% }); } else { %>
+<div class="col-12"><div class="empty-state"><i class="bi bi-truck"></i><h5>وسیله نقلیه‌ای ثبت نشده</h5></div></div>
+<% } %>
+</div>
+
+<div class="modal fade" id="addVehicleModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+<form action="/welfare/transport/vehicle" method="POST">
+<div class="modal-header"><h5 class="modal-title">وسیله نقلیه جدید</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+<div class="modal-body">
+<div class="row">
+<div class="col-md-6 mb-3"><label class="form-label">نوع</label><select name="vehicle_type" class="form-select"><option value="van">ون</option><option value="bus">اتوبوس</option><option value="minibus">مینی‌بوس</option><option value="car">خودرو</option></select></div>
+<div class="col-md-6 mb-3"><label class="form-label">پلاک <span class="text-danger">*</span></label><input type="text" name="plate_number" class="form-control" required></div>
+<div class="col-md-6 mb-3"><label class="form-label">مدل</label><input type="text" name="model" class="form-control"></div>
+<div class="col-md-6 mb-3"><label class="form-label">ظرفیت</label><input type="number" name="capacity" class="form-control" value="10"></div>
+<div class="col-md-6 mb-3"><label class="form-label">نام راننده</label><input type="text" name="driver_name" class="form-control"></div>
+<div class="col-md-6 mb-3"><label class="form-label">تلفن راننده</label><input type="text" name="driver_phone" class="form-control"></div>
+<div class="col-12 mb-3"><label class="form-label">نام مسیر</label><input type="text" name="route_name" class="form-control" placeholder="مثال: مسیر شمال - ونک"></div>
+<div class="col-12 mb-3"><label class="form-label">شرح مسیر</label><textarea name="route_description" class="form-control" rows="2" placeholder="ایستگاه‌ها و ساعات حرکت"></textarea></div>
+</div></div>
+<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button><button type="submit" class="btn btn-primary">ثبت</button></div>
+</form></div></div></div>

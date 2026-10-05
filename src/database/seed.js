@@ -26,6 +26,11 @@ function seedDatabase() {
     ['مدیریت کارمندان', 'employees', 'مدیریت اطلاعات کارمندان', 'bi-person-badge', 1, 7],
     ['گزارشات', 'reports', 'گزارشات و آمار سامانه', 'bi-bar-chart', 1, 8],
     ['تنظیمات', 'settings', 'تنظیمات عمومی سامانه', 'bi-gear', 1, 9],
+    ['آموزش', 'training', 'مدیریت دوره‌های آموزشی و آموزش کارکنان', 'bi-book', 1, 10],
+    ['حقوق و دستمزد', 'payroll', 'مدیریت حقوق، فیش حقوقی و وام‌ها', 'bi-cash-stack', 1, 11],
+    ['ترک کار', 'offboarding', 'تسویه حساب و فرآیند خروج کارکنان', 'bi-box-arrow-right', 1, 12],
+    ['رفاهیات', 'welfare', 'ایاب و ذهاب، آشپزخانه، نگهبانی', 'bi-heart-pulse', 1, 13],
+    ['امور حقوقی', 'legal', 'مجوزها، سهامداران، امور ثبتی', 'bi-shield-check', 1, 14],
   ];
 
   const insertModules = db.transaction(() => {
@@ -52,6 +57,7 @@ function seedDatabase() {
     ['ippanel_api_key', '', 'sms', 'کلید API IPPanel', 'text'],
     ['ippanel_from_number', '+983000505', 'sms', 'شماره فرستنده IPPanel', 'text'],
     ['ippanel_pattern_code', '', 'sms', 'کد پترن OTP', 'text'],
+    ['ippanel_pattern_variable', 'code', 'sms', 'نام متغیر پترن (مثلاً: code)', 'text'],
     ['default_form_template', '1', 'recruitment', 'فرم پیش‌فرض استخدام', 'number'],
     ['mbti_enabled', '1', 'modules', 'فعال‌سازی آزمون MBTI', 'toggle'],
     ['registration_enabled', '1', 'general', 'امکان ثبت‌نام متقاضی', 'toggle'],

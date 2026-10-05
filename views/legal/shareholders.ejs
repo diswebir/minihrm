@@ -1,0 +1,35 @@
+<div class="page-header"><div><h1 class="page-title">سهامداران</h1>
+<p class="page-subtitle">مجموع سهام: <strong><%= totalShares %>%</strong></p></div>
+<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addShareholderModal"><i class="bi bi-plus-lg me-1"></i>سهامدار جدید</button></div>
+<div class="card"><div class="card-body p-0">
+<% if (shareholders && shareholders.length > 0) { %>
+<table class="table"><thead><tr><th>نام</th><th>کد ملی</th><th>درصد سهام</th><th>مبلغ سهام</th><th>سمت</th><th>تلفن</th><th>عملیات</th></tr></thead>
+<tbody><% shareholders.forEach(s => { %>
+<tr>
+<td class="fw-bold"><%= s.full_name %></td><td><%= s.national_code || '-' %></td>
+<td><div class="d-flex align-items-center gap-2"><div class="progress flex-grow-1" style="height:6px;"><div class="progress-bar" style="width:<%= s.share_percentage %>%"></div></div><span class="badge bg-primary"><%= s.share_percentage %>%</span></div></td>
+<td><%= (s.share_amount||0).toLocaleString('fa') %></td>
+<td><% const roles={shareholder:'سهامدار',board_member:'عضو هیئت مدیره',ceo:'مدیرعامل',managing_director:'مدیر اجرایی'}; %><span class="badge bg-info"><%= roles[s.role]||s.role %></span></td>
+<td><%= s.phone || '-' %></td>
+<td><form action="/legal/shareholders/<%= s.id %>/delete" method="POST"><button class="btn btn-sm btn-outline-danger" data-confirm="حذف شود؟"><i class="bi bi-trash"></i></button></form></td>
+</tr><% }); %></tbody></table>
+<% } else { %><div class="empty-state"><i class="bi bi-people"></i><h5>سهامداری ثبت نشده</h5></div><% } %>
+</div></div>
+
+<div class="modal fade" id="addShareholderModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+<form action="/legal/shareholders" method="POST">
+<div class="modal-header"><h5 class="modal-title">سهامدار جدید</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+<div class="modal-body">
+<div class="mb-3"><label class="form-label">نام کامل <span class="text-danger">*</span></label><input type="text" name="full_name" class="form-control" required></div>
+<div class="row">
+<div class="col-md-6 mb-3"><label class="form-label">کد ملی</label><input type="text" name="national_code" class="form-control"></div>
+<div class="col-md-3 mb-3"><label class="form-label">درصد سهام</label><input type="number" name="share_percentage" class="form-control" step="0.1"></div>
+<div class="col-md-3 mb-3"><label class="form-label">مبلغ سهام</label><input type="number" name="share_amount" class="form-control"></div>
+<div class="col-md-6 mb-3"><label class="form-label">سمت</label><select name="role" class="form-select"><option value="shareholder">سهامدار</option><option value="board_member">عضو هیئت مدیره</option><option value="ceo">مدیرعامل</option><option value="managing_director">مدیر اجرایی</option></select></div>
+<div class="col-md-6 mb-3"><label class="form-label">تلفن</label><input type="text" name="phone" class="form-control"></div>
+<div class="col-md-6 mb-3"><label class="form-label">ایمیل</label><input type="email" name="email" class="form-control"></div>
+</div>
+<div class="mb-3"><label class="form-label">آدرس</label><textarea name="address" class="form-control" rows="2"></textarea></div>
+</div>
+<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button><button type="submit" class="btn btn-primary">ثبت</button></div>
+</form></div></div></div>

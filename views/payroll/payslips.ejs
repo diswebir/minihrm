@@ -1,0 +1,25 @@
+<div class="page-header"><div><h1 class="page-title">فیش‌های حقوقی</h1></div>
+<div class="d-flex gap-2"><a href="/payroll" class="btn btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a></div></div>
+<div class="filter-bar"><form method="GET" class="d-flex gap-2 align-items-end">
+<div><label class="form-label small">سال</label><input type="number" name="year" class="form-control" value="<%= typeof filters !== 'undefined' && filters.year ? filters.year : '' %>" placeholder="1403"></div>
+<div><label class="form-label small">ماه</label><input type="number" name="month" class="form-control" value="<%= typeof filters !== 'undefined' && filters.month ? filters.month : '' %>" min="1" max="12" placeholder="1-12"></div>
+<button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
+</form></div>
+<div class="card"><div class="card-body p-0">
+<% if (payslips && payslips.length > 0) { %>
+<div class="table-container"><table class="table">
+<thead><tr><th>نام</th><th>دوره</th><th>پایه</th><th>مزایا</th><th>اضافه‌کاری</th><strong>کسورات</strong><th>خالص</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+<tbody><% payslips.forEach(p => { %>
+<tr>
+<td class="fw-bold"><%= p.first_name %> <%= p.last_name %></td>
+<td><%= p.period_year %>/<%= p.period_month %></td>
+<td><%= (p.base_salary||0).toLocaleString('fa') %></td>
+<td><%= (p.allowances_total||0).toLocaleString('fa') %></td>
+<td><%= (p.overtime_pay||0).toLocaleString('fa') %></td>
+<td class="text-danger"><%= (p.deductions_total||0).toLocaleString('fa') %></td>
+<td class="fw-bold text-success"><%= (p.net_salary||0).toLocaleString('fa') %></td>
+<td><% const sc={draft:'warning',approved:'info',paid:'success'}; %><span class="badge bg-<%= sc[p.status]||'secondary' %>"><%= p.status %></span></td>
+<td><a href="/payroll/payslips/<%= p.id %>" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a></td>
+</tr><% }); %></tbody></table></div>
+<% } else { %><div class="empty-state"><i class="bi bi-receipt"></i><h5>فیشی صادر نشده</h5></div><% } %>
+</div></div>

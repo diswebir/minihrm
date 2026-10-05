@@ -102,6 +102,70 @@
         </a>
       </li>
 
+      <!-- Training -->
+      <% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
+      <li class="nav-item">
+        <a href="/training" class="nav-link <%= currentPath.startsWith('/training') ? 'active' : '' %>">
+          <i class="bi bi-book"></i>
+          <span>آموزش</span>
+        </a>
+      </li>
+      <% } else if (userRole === 'employee') { %>
+      <li class="nav-item">
+        <a href="/training/my-courses" class="nav-link <%= currentPath.startsWith('/training') ? 'active' : '' %>">
+          <i class="bi bi-book"></i>
+          <span>دوره‌های آموزشی من</span>
+        </a>
+      </li>
+      <% } %>
+
+      <!-- Payroll -->
+      <% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
+      <li class="nav-item">
+        <a href="/payroll" class="nav-link <%= currentPath.startsWith('/payroll') ? 'active' : '' %>">
+          <i class="bi bi-cash-stack"></i>
+          <span>حقوق و دستمزد</span>
+        </a>
+      </li>
+      <% } else if (userRole === 'employee') { %>
+      <li class="nav-item">
+        <a href="/payroll/payslips" class="nav-link <%= currentPath.startsWith('/payroll') ? 'active' : '' %>">
+          <i class="bi bi-cash-stack"></i>
+          <span>فیش حقوقی من</span>
+        </a>
+      </li>
+      <% } %>
+
+      <!-- Offboarding -->
+      <% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
+      <li class="nav-item">
+        <a href="/offboarding" class="nav-link <%= currentPath.startsWith('/offboarding') ? 'active' : '' %>">
+          <i class="bi bi-box-arrow-right"></i>
+          <span>تسویه و ترک کار</span>
+        </a>
+      </li>
+      <% } %>
+
+      <!-- Welfare -->
+      <% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
+      <li class="nav-item">
+        <a href="/welfare" class="nav-link <%= currentPath.startsWith('/welfare') ? 'active' : '' %>">
+          <i class="bi bi-heart-pulse"></i>
+          <span>رفاهیات</span>
+        </a>
+      </li>
+      <% } %>
+
+      <!-- Legal -->
+      <% if (['super_admin', 'hr_manager'].includes(userRole)) { %>
+      <li class="nav-item">
+        <a href="/legal" class="nav-link <%= currentPath.startsWith('/legal') ? 'active' : '' %>">
+          <i class="bi bi-shield-check"></i>
+          <span>امور حقوقی</span>
+        </a>
+      </li>
+      <% } %>
+
       <!-- Reports -->
       <% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
       <li class="nav-item">

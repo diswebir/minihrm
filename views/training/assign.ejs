@@ -1,0 +1,17 @@
+<div class="page-header">
+  <div><h1 class="page-title">اختصاص دوره: <%= course.title %></h1></div>
+  <a href="/training" class="btn btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a>
+</div>
+<div class="card"><div class="card-body">
+<form action="/training/<%= course.id %>/assign" method="POST">
+<div class="mb-3"><label class="form-label">تاریخ مهلت</label><input type="date" name="due_date" class="form-control" style="max-width:250px;"></div>
+<div class="mb-3"><label class="form-label">کارکنان مورد نظر</label>
+<div class="row"><% employees.forEach(e => { %>
+<div class="col-md-4 col-6 mb-2">
+<div class="form-check">
+<input type="checkbox" name="user_ids" value="<%= e.id %>" class="form-check-input" id="emp_<%= e.id %>" <%= assignedIds.includes(e.id) ? 'checked disabled' : '' %>>
+<label class="form-check-label" for="emp_<%= e.id %>"><%= e.first_name %> <%= e.last_name %></label>
+</div>
+</div><% }); %></div></div>
+<button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>اختصاص</button>
+</form></div></div>

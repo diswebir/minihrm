@@ -1,0 +1,30 @@
+<div class="page-header">
+  <div><h1 class="page-title">دوره‌های آموزشی</h1></div>
+  <div class="d-flex gap-2">
+    <a href="/training/reports" class="btn btn-outline-info"><i class="bi bi-bar-chart me-1"></i>گزارش</a>
+    <a href="/training/new" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>دوره جدید</a>
+  </div>
+</div>
+<div class="card"><div class="card-body p-0">
+<% if (courses && courses.length > 0) { %>
+<div class="table-container"><table class="table">
+<thead><tr><th>عنوان</th><th>دسته‌بندی</th><th>نوع محتوا</th><th>مدت</th><th>اختصاص‌یافته</th><th>تکمیل‌شده</th><th>اجباری</th><th>عملیات</th></tr></thead>
+<tbody><% courses.forEach(c => { %>
+<tr>
+<td class="fw-bold"><i class="bi bi-book text-primary me-2"></i><%= c.title %></td>
+<td><span class="badge bg-info"><%= c.category %></span></td>
+<td><% const ct={video:'ویدیو',document:'سند',link:'لینک',text:'متن'}; %><%= ct[c.content_type]||c.content_type %></td>
+<td><%= c.duration_hours %> ساعت</td>
+<td><span class="badge bg-primary"><%= c.assigned_count %></span></td>
+<td><span class="badge bg-success"><%= c.completed_count %></span></td>
+<td><%= c.is_mandatory ? '<span class="badge bg-danger">اجباری</span>' : '<span class="badge bg-secondary">اختیاری</span>' %></td>
+<td><div class="d-flex gap-1">
+<a href="/training/<%= c.id %>/edit" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+<a href="/training/<%= c.id %>/assign" class="btn btn-sm btn-outline-success"><i class="bi bi-person-plus"></i></a>
+</div></td>
+</tr><% }); %></tbody>
+</table></div>
+<% } else { %>
+<div class="empty-state"><i class="bi bi-book"></i><h5>دوره‌ای تعریف نشده</h5></div>
+<% } %>
+</div></div>
