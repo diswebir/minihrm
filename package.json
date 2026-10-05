@@ -1,0 +1,14 @@
+{
+  "name": "minihrm",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A simple, modular Persian HRM focused on recruitment for cPanel Node.js hosting",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18.18"
+  }
+}
