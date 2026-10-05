@@ -86,8 +86,24 @@ let fails = 0;
 function check(cond, msg) { console.log((cond ? ' ok  ' : 'FAIL ') + msg); if (!cond) fails++; }
 
 (async () => {
-  const appsRes = await api('/applications?perPage=3');
-  const apps = appsRes.data.rows;
+  // طرح تازه، پرونده‌ای ندارد؛ برای اینکه این تست خودکفا باشد ابتدا جریان متقاضی را اجرا می‌کنیم.
+  let appsRes = await api('/applications?perPage=3');
+  if (!appsRes.data || !(appsRes.data.rows || []).length) {
+    console.log('هیچ پرونده استخدامی وجود ندارد → اجرای scripts/dev/e2e-portal.js برای ساخت داده اولیه…\n');
+    const { execFileSync } = require('child_process');
+    const path2 = require('path');
+    try {
+      execFileSync(process.execPath, [path2.join(__dirname, 'e2e-portal.js')], { env: process.env, stdio: 'inherit' });
+    } catch (e) {
+      console.log('اجرای e2e-portal با خطا تمام شد؛ ادامه تست‌ها ممکن است ناقص باشد.\n');
+    }
+    appsRes = await api('/applications?perPage=3');
+  }
+  const apps = (appsRes.data && appsRes.data.rows) || [];
+  if (!apps.length) {
+    console.log('✗ هیچ پرونده‌ای برای تست عملیات نوشتن موجود نیست.');
+    process.exit(1);
+  }
   const app = apps[0];
   console.log('پرونده آزمایشی:', app.code, '| وضعیت فعلی:', app.status);
 

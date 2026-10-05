@@ -19,6 +19,38 @@ const { HttpError } = require('./http/router');
 
 const STEPS = ['requirements', 'organization', 'modules', 'sms', 'finish'];
 
+/**
+ * داده ویزارد را برای قالب «بی‌خطر» می‌کند: کلیدهای تودرتویی که قالب مستقیم
+ * به آن‌ها دسترسی دارد (state.organization.companyName، state.admin.name، …)
+ * همیشه به‌صورت شیء موجود باشند تا نه خطای ارزیابی بدهد و نه مقدار «—» نمایش دهد.
+ */
+function normalizeWizardData(data) {
+  const src = data && typeof data === 'object' ? data : {};
+  const organization = Object.assign({ companyName: '', appName: 'مینی HRM', baseUrl: '' }, src.organization || {});
+  const admin = Object.assign({ name: '', mobile: '', email: '' }, src.admin || {});
+  // مقادیر تایپ‌شده در فرم (حتی وقتی اعتبارسنجی خطا داده) باید در فیلدها بمانند
+  const form = src.form && typeof src.form === 'object' ? src.form : {};
+  const fromForm = {
+    organization: { companyName: 'companyName', appName: 'appName', baseUrl: 'baseUrl' },
+    admin: { name: 'adminName', mobile: 'adminMobile', email: 'adminEmail' }
+  };
+  for (const [group, map] of Object.entries(fromForm)) {
+    const target = group === 'organization' ? organization : admin;
+    for (const [field, formKey] of Object.entries(map)) {
+      const v = form[formKey];
+      if (v !== undefined && v !== null) target[field] = String(v);
+    }
+  }
+  Object.keys(organization).forEach((k) => { if (organization[k] === undefined || organization[k] === null) organization[k] = ''; });
+  Object.keys(admin).forEach((k) => { if (admin[k] === undefined || admin[k] === null) admin[k] = ''; });
+  return Object.assign({}, src, {
+    organization,
+    admin,
+    modules: Object.assign({}, src.modules || {}),
+    sms: Object.assign({}, src.sms || {})
+  });
+}
+
 /** بررسی پیش‌نیازهای نصب */
 function checkRequirementsFor(app) {
   const checks = [];
@@ -73,22 +105,27 @@ function registerRoutes(router, app) {
 
   /** صفحه ویزارد */
   const renderWizard = (req, res, step, extra = {}) => {
-    const state = getState();
+    const stored = getState();
+    // اگر داده‌ای به‌صورت صریح پاس شده باشد (مثلاً صفحه پایان نصب)، اولویت دارد
+    const data = normalizeWizardData(extra.state !== undefined ? extra.state : stored.data);
+    const extras = Object.assign({}, extra);
+    delete extras.state;
     const modules = app.modules.info().map((m) => Object.assign({}, m, {
-      enabled: state.data.modules && state.data.modules[m.key] !== undefined ? !!state.data.modules[m.key] : m.defaultEnabled
+      enabled: data.modules[m.key] !== undefined ? !!data.modules[m.key] : m.defaultEnabled
     }));
     const html = app.view.render('install/wizard', Object.assign({
       step,
       stepIndex: STEPS.indexOf(step),
       STEPS,
-      state: state.data,
+      state: data,
       modules,
       requirements: checkRequirements(),
       app: app.config.get('app', {}),
       version: app.version,
       error: null,
+      fieldErrors: {},
       title: 'نصب سامانه'
-    }, extra), 'layouts/plain');
+    }, extras), 'layouts/plain');
     res.html(html);
   };
 
@@ -260,7 +297,12 @@ function registerRoutes(router, app) {
           title: 'نصب سامانه و ایجاد حساب مدیر ارشد', req
         });
 
-        return renderWizard(req, res, 'done', { installed: true, adminMobile: data.admin.mobile });
+        return renderWizard(req, res, 'done', {
+          installed: true,
+          adminMobile: data.admin.mobile,
+          state: data,
+          app: app.config.get('app', {})
+        });
       }
 
       throw new HttpError(400, 'مرحله ناشناخته');
@@ -272,8 +314,9 @@ function registerRoutes(router, app) {
   });
 
   const renderWizardValues = (req, res, step, values, error, fieldErrors) => {
+    values = normalizeWizardData(values);
     const modules = app.modules.info().map((m) => Object.assign({}, m, {
-      enabled: values.modules && values.modules[m.key] !== undefined ? !!values.modules[m.key] : m.defaultEnabled
+      enabled: values.modules[m.key] !== undefined ? !!values.modules[m.key] : m.defaultEnabled
     }));
     const html = app.view.render('install/wizard', {
       step,
