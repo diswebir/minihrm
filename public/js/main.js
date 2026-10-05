@@ -1,115 +1,139 @@
-// ═══════════════════════════════════════════════════════════
-//  MiniHRM - Main JavaScript
-// ═══════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════
+   MiniHRM v2.0 — Main JavaScript
+   Modern interactions, sidebar, mobile, utilities
+   ═══════════════════════════════════════════════════════════ */
 
-document.addEventListener('DOMContentLoaded', function() {
-
-  // ─── Sidebar Toggle ──────────────────────────────────
+document.addEventListener('DOMContentLoaded', function () {
+  // ── Sidebar Toggle ───────────────────────
   const sidebar = document.getElementById('sidebar');
   const sidebarToggle = document.getElementById('sidebarToggle');
   const sidebarClose = document.getElementById('sidebarClose');
   const sidebarOverlay = document.getElementById('sidebarOverlay');
 
-  if (sidebarToggle) {
-    sidebarToggle.addEventListener('click', () => {
-      sidebar.classList.toggle('show');
-      sidebarOverlay.classList.toggle('show');
-    });
+  function openSidebar() {
+    if (sidebar) sidebar.classList.add('show');
+    if (sidebarOverlay) sidebarOverlay.classList.add('show');
+    document.body.style.overflow = 'hidden';
   }
 
-  if (sidebarClose) {
-    sidebarClose.addEventListener('click', () => {
-      sidebar.classList.remove('show');
-      sidebarOverlay.classList.remove('show');
-    });
+  function closeSidebar() {
+    if (sidebar) sidebar.classList.remove('show');
+    if (sidebarOverlay) sidebarOverlay.classList.remove('show');
+    document.body.style.overflow = '';
   }
 
-  if (sidebarOverlay) {
-    sidebarOverlay.addEventListener('click', () => {
-      sidebar.classList.remove('show');
-      sidebarOverlay.classList.remove('show');
-    });
-  }
+  if (sidebarToggle) sidebarToggle.addEventListener('click', openSidebar);
+  if (sidebarClose) sidebarClose.addEventListener('click', closeSidebar);
+  if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
 
-  // ─── Auto-dismiss alerts ─────────────────────────────
-  document.querySelectorAll('.alert-custom').forEach(alert => {
-    setTimeout(() => {
-      const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-      bsAlert.close();
+  // Close sidebar on Escape
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeSidebar();
+  });
+
+  // ── Auto-dismiss alerts ──────────────────
+  document.querySelectorAll('.alert .btn-close').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const alert = btn.closest('.alert');
+      if (alert) {
+        alert.style.opacity = '0';
+        alert.style.transform = 'translateY(-8px)';
+        alert.style.transition = 'all 0.2s ease';
+        setTimeout(function () { alert.remove(); }, 200);
+      }
+    });
+  });
+
+  // Auto-hide alerts after 5s
+  document.querySelectorAll('.alert:not(.alert-persistent)').forEach(function (alert) {
+    setTimeout(function () {
+      if (alert.parentNode) {
+        alert.style.opacity = '0';
+        alert.style.transform = 'translateY(-8px)';
+        alert.style.transition = 'all 0.3s ease';
+        setTimeout(function () { alert.remove(); }, 300);
+      }
     }, 5000);
   });
 
-  // ─── Confirm delete actions ──────────────────────────
-  document.querySelectorAll('[data-confirm]').forEach(el => {
-    el.addEventListener('click', function(e) {
-      if (!confirm(this.dataset.confirm || 'آیا مطمئن هستید؟')) {
-        e.preventDefault();
-      }
-    });
-  });
-
-  // ─── Tooltip init ────────────────────────────────────
-  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-  [...tooltipTriggerList].map(el => new bootstrap.Tooltip(el));
-
-  // ─── Module toggle ───────────────────────────────────
-  document.querySelectorAll('.module-toggle').forEach(toggle => {
-    toggle.addEventListener('change', async function() {
-      const slug = this.dataset.module;
-      try {
-        const response = await fetch(`/settings/modules/${slug}/toggle`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        const data = await response.json();
-        if (data.success) {
-          showToast(data.enabled ? 'ماژول فعال شد' : 'ماژول غیرفعال شد', 'success');
+  // ── Fade-in observer ─────────────────────
+  if ('IntersectionObserver' in window) {
+    const fadeElements = document.querySelectorAll('.fade-in');
+    const observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.style.animationPlayState = 'running';
+          observer.unobserve(entry.target);
         }
-      } catch (err) {
-        showToast('خطا در تغییر وضعیت ماژول', 'danger');
-        this.checked = !this.checked;
-      }
+      });
+    }, { threshold: 0.1 });
+
+    fadeElements.forEach(function (el) {
+      el.style.animationPlayState = 'paused';
+      observer.observe(el);
     });
-  });
-
-  // ─── Toast notifications ─────────────────────────────
-  window.showToast = function(message, type = 'info') {
-    const toastContainer = document.getElementById('toastContainer') || createToastContainer();
-    const toast = document.createElement('div');
-    toast.className = `toast align-items-center text-bg-${type} border-0 show`;
-    toast.setAttribute('role', 'alert');
-    toast.innerHTML = `
-      <div class="d-flex">
-        <div class="toast-body">${message}</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
-    `;
-    toastContainer.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-  };
-
-  function createToastContainer() {
-    const container = document.createElement('div');
-    container.id = 'toastContainer';
-    container.className = 'toast-container position-fixed bottom-0 start-0 p-3';
-    container.style.zIndex = '9999';
-    document.body.appendChild(container);
-    return container;
   }
 
-  // ─── Copy to clipboard ───────────────────────────────
-  document.querySelectorAll('[data-copy]').forEach(el => {
-    el.addEventListener('click', function() {
-      const text = this.dataset.copy;
-      navigator.clipboard.writeText(text).then(() => {
-        showToast('کپی شد!', 'success');
-      });
+  // ── Delete confirmations ─────────────────
+  document.querySelectorAll('[data-confirm]').forEach(function (el) {
+    el.addEventListener('click', function (e) {
+      const message = el.getAttribute('data-confirm') || 'آیا مطمئن هستید؟';
+      if (!confirm(message)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     });
   });
 
-  // ─── Print QR code ───────────────────────────────────
-  window.printQR = function() {
-    window.print();
-  };
+  // ── Tooltip init ─────────────────────────
+  if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+      new bootstrap.Tooltip(el);
+    });
+  }
 
+  // ── Dropdown keyboard navigation ─────────
+  document.querySelectorAll('.dropdown-toggle').forEach(function (toggle) {
+    toggle.addEventListener('shown.bs.dropdown', function () {
+      const firstItem = toggle.closest('.dropdown').querySelector('.dropdown-item');
+      if (firstItem) firstItem.focus();
+    });
+  });
+
+  // ── Form validation styling ──────────────
+  document.querySelectorAll('.needs-validation').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      if (!form.checkValidity()) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      form.classList.add('was-validated');
+    });
+  });
+
+  // ── Smooth scroll for anchor links ───────
+  document.querySelectorAll('a[href^="#"]').forEach(function (link) {
+    link.addEventListener('click', function (e) {
+      const target = document.querySelector(link.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // ── Keyboard shortcuts ───────────────────
+  document.addEventListener('keydown', function (e) {
+    // Ctrl+K or / to focus search
+    if ((e.ctrlKey && e.key === 'k') || (e.key === '/' && !isInputFocused())) {
+      e.preventDefault();
+      const search = document.querySelector('.search-input-wrapper input, input[type="search"]');
+      if (search) search.focus();
+    }
+  });
+
+  function isInputFocused() {
+    const tag = document.activeElement.tagName;
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || document.activeElement.isContentEditable;
+  }
 });

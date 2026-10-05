@@ -1,57 +1,147 @@
 <div class="page-header">
-  <div><h1 class="page-title">مدیریت حقوق و دستمزد</h1></div>
+  <div>
+    <h1 class="page-title">مدیریت حقوق و دستمزد</h1>
+    <p class="page-subtitle">تنظیم ساختار حقوقی، صدور فیش و مدیریت وام‌ها</p>
+  </div>
   <div class="d-flex gap-2">
-    <a href="/payroll/payslips" class="btn btn-outline-info"><i class="bi bi-receipt me-1"></i>فیش‌های حقوقی</a>
-    <a href="/payroll/loans" class="btn btn-outline-warning"><i class="bi bi-bank me-1"></i>وام‌ها</a>
-    <a href="/payroll/generate" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>صدور فیش</a>
+    <a href="/payroll/payslips" class="btn btn-outline-secondary">
+      <i class="bi bi-receipt"></i>فیش‌های حقوقی
+    </a>
+    <a href="/payroll/loans" class="btn btn-outline-secondary">
+      <i class="bi bi-bank"></i>وام‌ها
+    </a>
+    <a href="/payroll/generate" class="btn btn-primary">
+      <i class="bi bi-plus-lg"></i>صدور فیش
+    </a>
   </div>
 </div>
-<div class="card"><div class="card-header">ساختار حقوق کارکنان</div><div class="card-body p-0">
-<% if (structures && structures.length > 0) { %>
-<div class="table-container"><table class="table">
-<thead><tr><th>نام</th><th>پایه حقوق</th><th>مسکن</th><th>ایاب‌وذهاب</th><th>خوراک</th><th>حق عائله</th><th>جمع کل</th><th>عملیات</th></tr></thead>
-<tbody><% structures.forEach(s => { %>
-<tr>
-<td class="fw-bold"><%= s.first_name %> <%= s.last_name %></td>
-<td><%= (s.base_salary||0).toLocaleString('fa') %></td>
-<td><%= (s.housing_allowance||0).toLocaleString('fa') %></td>
-<td><%= (s.transport_allowance||0).toLocaleString('fa') %></td>
-<td><%= (s.food_allowance||0).toLocaleString('fa') %></td>
-<td><%= (s.children_allowance||0).toLocaleString('fa') %></td>
-<td class="fw-bold text-primary"><%= ((s.base_salary||0)+(s.housing_allowance||0)+(s.transport_allowance||0)+(s.food_allowance||0)+(s.children_allowance||0)+(s.marriage_allowance||0)+(s.job_title_allowance||0)).toLocaleString('fa') %></td>
-<td><button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editSalary_<%= s.user_id %>"><i class="bi bi-pencil"></i></button></td>
-</tr><% }); %></tbody>
-</table></div>
-<% } else { %>
-<div class="empty-state"><i class="bi bi-cash-stack"></i><h5>ساختار حقوقی تعریف نشده</h5><p class="text-muted">از فرم زیر برای تنظیم حقوق کارکنان استفاده کنید</p></div>
-<% } %>
-</div></div>
 
-<!-- Add/Edit Salary Modal -->
-<div class="modal fade" id="addSalaryModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
-<form action="/payroll/structure" method="POST">
-<div class="modal-header"><h5 class="modal-title">تنظیم ساختار حقوق</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-<div class="modal-body">
-<div class="mb-3"><label class="form-label">کارمند <span class="text-danger">*</span></label>
-<select name="user_id" class="form-select" required><option value="">انتخاب کنید</option>
-<% employees.forEach(e => { %><option value="<%= e.id %>"><%= e.first_name %> <%= e.last_name %></option><% }); %>
-</select></div>
-<div class="row">
-<div class="col-md-4 mb-3"><label class="form-label">پایه حقوق (ریال)</label><input type="number" name="base_salary" class="form-control" value="0"></div>
-<div class="col-md-4 mb-3"><label class="form-label">کمک هزینه مسکن</label><input type="number" name="housing_allowance" class="form-control" value="0"></div>
-<div class="col-md-4 mb-3"><label class="form-label">کمک هزینه ایاب‌وذهاب</label><input type="number" name="transport_allowance" class="form-control" value="0"></div>
-<div class="col-md-4 mb-3"><label class="form-label">کمک هزینه خوراک</label><input type="number" name="food_allowance" class="form-control" value="0"></div>
-<div class="col-md-4 mb-3"><label class="form-label">حق عائله</label><input type="number" name="children_allowance" class="form-control" value="0"></div>
-<div class="col-md-4 mb-3"><label class="form-label">حق ازدواج</label><input type="number" name="marriage_allowance" class="form-control" value="0"></div>
-<div class="col-md-4 mb-3"><label class="form-label">حق شغل</label><input type="number" name="job_title_allowance" class="form-control" value="0"></div>
-<div class="col-md-4 mb-3"><label class="form-label">نرخ اضافه‌کاری (ساعتی)</label><input type="number" name="overtime_rate" class="form-control" value="0"></div>
-<div class="col-md-4 mb-3"><label class="form-label">سهم بیمه کارمند</label><input type="number" name="insurance_employee_share" class="form-control" value="0"></div>
-<div class="col-md-4 mb-3"><label class="form-label">سهم بیمه کارفرما</label><input type="number" name="insurance_employer_share" class="form-control" value="0"></div>
-<div class="col-md-4 mb-3"><label class="form-label">نرخ مالیات (%)</label><input type="number" name="tax_rate" class="form-control" value="0" step="0.1"></div>
-</div></div>
-<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button><button type="submit" class="btn btn-primary">ذخیره</button></div>
-</form></div></div></div>
+<div class="card fade-in">
+  <div class="card-header">
+    <span><i class="bi bi-table me-2"></i>ساختار حقوق کارکنان</span>
+    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addSalaryModal">
+      <i class="bi bi-plus-lg"></i>افزودن
+    </button>
+  </div>
+  <div class="card-body p-0">
+    <% if (structures && structures.length > 0) { %>
+    <div class="table-container">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>نام</th>
+            <th>پایه حقوق</th>
+            <th>مسکن</th>
+            <th>ایاب‌وذهاب</th>
+            <th>خوراک</th>
+            <th>حق عائله</th>
+            <th>جمع کل</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% structures.forEach(s => { %>
+          <tr>
+            <td class="fw-bold"><%= s.first_name %> <%= s.last_name %></td>
+            <td><%= (s.base_salary||0).toLocaleString('fa') %></td>
+            <td><%= (s.housing_allowance||0).toLocaleString('fa') %></td>
+            <td><%= (s.transport_allowance||0).toLocaleString('fa') %></td>
+            <td><%= (s.food_allowance||0).toLocaleString('fa') %></td>
+            <td><%= (s.children_allowance||0).toLocaleString('fa') %></td>
+            <td class="fw-bold text-accent"><%= ((s.base_salary||0)+(s.housing_allowance||0)+(s.transport_allowance||0)+(s.food_allowance||0)+(s.children_allowance||0)+(s.marriage_allowance||0)+(s.job_title_allowance||0)).toLocaleString('fa') %></td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editSalary_<%= s.user_id %>" title="ویرایش">
+                <i class="bi bi-pencil"></i>
+              </button>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <% } else { %>
+    <div class="empty-state">
+      <div class="empty-state-icon"><i class="bi bi-cash-stack"></i></div>
+      <h5>ساختار حقوقی تعریف نشده</h5>
+      <p>از دکمه «افزودن» برای تنظیم حقوق کارکنان استفاده کنید</p>
+    </div>
+    <% } %>
+  </div>
+</div>
 
-<div class="position-fixed" style="bottom:2rem;left:2rem;z-index:100;">
-<button class="btn btn-primary btn-lg rounded-circle shadow" data-bs-toggle="modal" data-bs-target="#addSalaryModal" style="width:56px;height:56px;"><i class="bi bi-plus-lg"></i></button>
+<!-- Add Salary Modal -->
+<div class="modal fade" id="addSalaryModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form action="/payroll/structure" method="POST">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-cash-stack me-2"></i>تنظیم ساختار حقوق</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">کارمند <span class="text-danger">*</span></label>
+            <select name="user_id" class="form-select" required>
+              <option value="">انتخاب کنید</option>
+              <% employees.forEach(e => { %>
+              <option value="<%= e.id %>"><%= e.first_name %> <%= e.last_name %></option>
+              <% }); %>
+            </select>
+          </div>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">پایه حقوق (ریال)</label>
+              <input type="number" name="base_salary" class="form-control" value="0">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">کمک هزینه مسکن</label>
+              <input type="number" name="housing_allowance" class="form-control" value="0">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">کمک هزینه ایاب‌وذهاب</label>
+              <input type="number" name="transport_allowance" class="form-control" value="0">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">کمک هزینه خوراک</label>
+              <input type="number" name="food_allowance" class="form-control" value="0">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">حق عائله</label>
+              <input type="number" name="children_allowance" class="form-control" value="0">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">حق ازدواج</label>
+              <input type="number" name="marriage_allowance" class="form-control" value="0">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">حق شغل</label>
+              <input type="number" name="job_title_allowance" class="form-control" value="0">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">نرخ اضافه‌کاری (ساعتی)</label>
+              <input type="number" name="overtime_rate" class="form-control" value="0">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">سهم بیمه کارمند</label>
+              <input type="number" name="insurance_employee_share" class="form-control" value="0">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">سهم بیمه کارفرما</label>
+              <input type="number" name="insurance_employer_share" class="form-control" value="0">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">نرخ مالیات (%)</label>
+              <input type="number" name="tax_rate" class="form-control" value="0" step="0.1">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-lg"></i>ذخیره
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>

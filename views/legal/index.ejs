@@ -1,15 +1,69 @@
-<div class="page-header"><div><h1 class="page-title">امور حقوقی</h1></div></div>
-<div class="stats-grid mb-3">
-<div class="stat-card"><div class="stat-icon primary"><i class="bi bi-file-earmark-check"></i></div><div class="stat-info"><h3><%= stats.permits %></h3><p>مجوز فعال</p></div></div>
-<div class="stat-card"><div class="stat-icon danger"><i class="bi bi-exclamation-triangle"></i></div><div class="stat-info"><h3><%= stats.expiringPermits %></h3><p>در شرف انقضا</p></div></div>
-<div class="stat-card"><div class="stat-icon info"><i class="bi bi-people"></i></div><div class="stat-info"><h3><%= stats.shareholders %></h3><p>سهامدار</p></div></div>
-<div class="stat-card"><div class="stat-icon success"><i class="bi bi-building"></i></div><div class="stat-info"><h3><%= stats.registrations %></h3><p>ثبت شرکت</p></div></div>
+<div class="page-header">
+  <div>
+    <h1 class="page-title">امور حقوقی</h1>
+    <p class="page-subtitle">مدیریت مجوزها، سهامداران و امور ثبتی شرکت</p>
+  </div>
 </div>
-<div class="row">
-<div class="col-md-4 mb-3"><a href="/legal/permits" class="card text-decoration-none"><div class="card-body text-center py-4">
-<i class="bi bi-file-earmark-check text-primary" style="font-size:2.5rem;"></i><h5 class="mt-2 mb-0">مجوزها</h5><p class="text-muted small">مدیریت مجوزها و پروانه‌ها</p></div></a></div>
-<div class="col-md-4 mb-3"><a href="/legal/shareholders" class="card text-decoration-none"><div class="card-body text-center py-4">
-<i class="bi bi-people text-info" style="font-size:2.5rem;"></i><h5 class="mt-2 mb-0">سهامداران</h5><p class="text-muted small">مدیریت سهامداران و هیئت مدیره</p></div></a></div>
-<div class="col-md-4 mb-3"><a href="/legal/registration" class="card text-decoration-none"><div class="card-body text-center py-4">
-<i class="bi bi-building text-success" style="font-size:2.5rem;"></i><h5 class="mt-2 mb-0">امور ثبتی</h5><p class="text-muted small">ثبت شرکت و اطلاعات قانونی</p></div></a></div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card stat-primary fade-in">
+    <div class="stat-icon primary"><i class="bi bi-file-earmark-check"></i></div>
+    <div class="stat-info">
+      <h3><%= stats.permits %></h3>
+      <p>مجوز فعال</p>
+    </div>
+  </div>
+  <div class="stat-card stat-danger fade-in fade-in-delay-1">
+    <div class="stat-icon danger"><i class="bi bi-exclamation-triangle"></i></div>
+    <div class="stat-info">
+      <h3><%= stats.expiringPermits %></h3>
+      <p>در شرف انقضا</p>
+    </div>
+  </div>
+  <div class="stat-card stat-info fade-in fade-in-delay-2">
+    <div class="stat-icon info"><i class="bi bi-people"></i></div>
+    <div class="stat-info">
+      <h3><%= stats.shareholders %></h3>
+      <p>سهامدار</p>
+    </div>
+  </div>
+  <div class="stat-card stat-success fade-in fade-in-delay-3">
+    <div class="stat-icon success"><i class="bi bi-building"></i></div>
+    <div class="stat-info">
+      <h3><%= stats.registrations %></h3>
+      <p>ثبت شرکت</p>
+    </div>
+  </div>
+</div>
+
+<!-- Section Cards -->
+<div class="section-grid">
+  <a href="/legal/permits" class="section-card fade-in">
+    <div class="section-card-icon primary"><i class="bi bi-file-earmark-check"></i></div>
+    <h5>مجوزها</h5>
+    <p>مدیریت مجوزها، پروانه‌ها و تاریخ انقضای آن‌ها</p>
+    <div class="section-card-stat">
+      <i class="bi bi-arrow-left"></i>
+      <%= stats.permits %> مجوز فعال
+    </div>
+  </a>
+  <a href="/legal/shareholders" class="section-card fade-in fade-in-delay-1">
+    <div class="section-card-icon info"><i class="bi bi-people"></i></div>
+    <h5>سهامداران</h5>
+    <p>مدیریت سهامداران، درصد سهام و هیئت مدیره</p>
+    <div class="section-card-stat">
+      <i class="bi bi-arrow-left"></i>
+      <%= stats.shareholders %> سهامدار
+    </div>
+  </a>
+  <a href="/legal/registration" class="section-card fade-in fade-in-delay-2">
+    <div class="section-card-icon success"><i class="bi bi-building"></i></div>
+    <h5>امور ثبتی</h5>
+    <p>ثبت شرکت، شناسه ملی و اطلاعات قانونی</p>
+    <div class="section-card-stat">
+      <i class="bi bi-arrow-left"></i>
+      <%= stats.registrations %> رکورد
+    </div>
+  </a>
 </div>

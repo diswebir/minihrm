@@ -5,10 +5,15 @@
   <!-- Logo -->
   <div class="sidebar-header">
     <div class="sidebar-logo">
-      <i class="bi bi-building"></i>
-      <span>MiniHRM</span>
+      <div class="sidebar-logo-icon">
+        <i class="bi bi-building"></i>
+      </div>
+      <div class="sidebar-logo-text">
+        <span class="brand-name">MiniHRM</span>
+        <span class="brand-sub">Human Resource Management</span>
+      </div>
     </div>
-    <button class="sidebar-close d-lg-none" id="sidebarClose">
+    <button class="sidebar-close" id="sidebarClose">
       <i class="bi bi-x-lg"></i>
     </button>
   </div>
@@ -24,7 +29,10 @@
         </a>
       </li>
 
-      <!-- Users (super_admin, hr_manager) -->
+      <!-- ── Section: منابع انسانی ─── -->
+      <li class="nav-divider"></li>
+      <li class="nav-section-title">منابع انسانی</li>
+
       <% if (['super_admin', 'hr_manager'].includes(userRole)) { %>
       <li class="nav-item">
         <a href="/users" class="nav-link <%= currentPath.startsWith('/users') ? 'active' : '' %>">
@@ -34,17 +42,15 @@
       </li>
       <% } %>
 
-      <!-- Departments (super_admin, hr_manager) -->
       <% if (['super_admin', 'hr_manager'].includes(userRole)) { %>
       <li class="nav-item">
         <a href="/departments" class="nav-link <%= currentPath.startsWith('/departments') ? 'active' : '' %>">
-          <i class="bi bi-building"></i>
+          <i class="bi bi-diagram-3"></i>
           <span>بخش‌ها</span>
         </a>
       </li>
       <% } %>
 
-      <!-- Positions -->
       <% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
       <li class="nav-item">
         <a href="/positions" class="nav-link <%= currentPath.startsWith('/positions') ? 'active' : '' %>">
@@ -54,7 +60,17 @@
       </li>
       <% } %>
 
-      <!-- Candidates -->
+      <li class="nav-item">
+        <a href="/employees" class="nav-link <%= currentPath.startsWith('/employees') ? 'active' : '' %>">
+          <i class="bi bi-person-badge"></i>
+          <span><%= userRole === 'employee' ? 'پروفایل من' : 'کارمندان' %></span>
+        </a>
+      </li>
+
+      <!-- ── Section: استخدام ─── -->
+      <li class="nav-divider"></li>
+      <li class="nav-section-title">استخدام و گزینش</li>
+
       <% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
       <li class="nav-item">
         <a href="/recruitment" class="nav-link <%= currentPath.startsWith('/recruitment') ? 'active' : '' %>">
@@ -64,7 +80,6 @@
       </li>
       <% } %>
 
-      <!-- Form Builder -->
       <% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
       <li class="nav-item">
         <a href="/form-builder" class="nav-link <%= currentPath.startsWith('/form-builder') ? 'active' : '' %>">
@@ -74,7 +89,6 @@
       </li>
       <% } %>
 
-      <!-- MBTI -->
       <% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
       <li class="nav-item">
         <a href="/mbti" class="nav-link <%= currentPath.startsWith('/mbti') ? 'active' : '' %>">
@@ -84,7 +98,6 @@
       </li>
       <% } %>
 
-      <!-- Assessments -->
       <% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
       <li class="nav-item">
         <a href="/assessments/results" class="nav-link <%= currentPath.startsWith('/assessments') ? 'active' : '' %>">
@@ -94,15 +107,10 @@
       </li>
       <% } %>
 
-      <!-- Employees -->
-      <li class="nav-item">
-        <a href="/employees" class="nav-link <%= currentPath.startsWith('/employees') ? 'active' : '' %>">
-          <i class="bi bi-person-badge"></i>
-          <span><%= userRole === 'employee' ? 'پروفایل من' : 'کارمندان' %></span>
-        </a>
-      </li>
+      <!-- ── Section: عملیات ─── -->
+      <li class="nav-divider"></li>
+      <li class="nav-section-title">عملیات سازمانی</li>
 
-      <!-- Training -->
       <% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
       <li class="nav-item">
         <a href="/training" class="nav-link <%= currentPath.startsWith('/training') ? 'active' : '' %>">
@@ -119,7 +127,6 @@
       </li>
       <% } %>
 
-      <!-- Payroll -->
       <% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
       <li class="nav-item">
         <a href="/payroll" class="nav-link <%= currentPath.startsWith('/payroll') ? 'active' : '' %>">
@@ -136,7 +143,6 @@
       </li>
       <% } %>
 
-      <!-- Offboarding -->
       <% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
       <li class="nav-item">
         <a href="/offboarding" class="nav-link <%= currentPath.startsWith('/offboarding') ? 'active' : '' %>">
@@ -146,7 +152,6 @@
       </li>
       <% } %>
 
-      <!-- Welfare -->
       <% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
       <li class="nav-item">
         <a href="/welfare" class="nav-link <%= currentPath.startsWith('/welfare') ? 'active' : '' %>">
@@ -156,7 +161,6 @@
       </li>
       <% } %>
 
-      <!-- Legal -->
       <% if (['super_admin', 'hr_manager'].includes(userRole)) { %>
       <li class="nav-item">
         <a href="/legal" class="nav-link <%= currentPath.startsWith('/legal') ? 'active' : '' %>">
@@ -166,7 +170,10 @@
       </li>
       <% } %>
 
-      <!-- Reports -->
+      <!-- ── Section: گزارش و تنظیمات ─── -->
+      <li class="nav-divider"></li>
+      <li class="nav-section-title">ابزارها</li>
+
       <% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
       <li class="nav-item">
         <a href="/reports" class="nav-link <%= currentPath.startsWith('/reports') ? 'active' : '' %>">
@@ -176,7 +183,6 @@
       </li>
       <% } %>
 
-      <!-- Settings (super_admin only) -->
       <% if (userRole === 'super_admin') { %>
       <li class="nav-item">
         <a href="/settings" class="nav-link <%= currentPath.startsWith('/settings') ? 'active' : '' %>">
@@ -186,10 +192,8 @@
       </li>
       <% } %>
 
-      <!-- Divider -->
       <li class="nav-divider"></li>
 
-      <!-- Public Link -->
       <li class="nav-item">
         <a href="/apply" class="nav-link" target="_blank">
           <i class="bi bi-box-arrow-up-left"></i>
@@ -201,9 +205,10 @@
 
   <!-- Sidebar Footer -->
   <div class="sidebar-footer">
-      <a href="/logout" class="nav-link logout-link">
+    <a href="/logout" class="nav-link">
       <i class="bi bi-box-arrow-right"></i>
       <span>خروج</span>
     </a>
+    <div class="sidebar-version">MiniHRM v2.0</div>
   </div>
 </aside>

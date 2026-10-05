@@ -1,24 +1,99 @@
-<div class="page-header"><div><h1 class="page-title">نگهبانی</h1></div>
-<a href="/welfare" class="btn btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a></div>
-<% for (let d = 0; d < 7; d++) { %>
-<div class="card mb-2"><div class="card-header"><%= days[d] %></div><div class="card-body p-0">
-<% if (grouped[d] && grouped[d].length > 0) { %>
-<table class="table mb-0"><thead><tr><th>نگهبان</th><th>تلفن</th><th>ساعت شروع</th><th>ساعت پایان</th><th>محل</th><th>عملیات</th></tr></thead>
-<tbody><% grouped[d].forEach(s => { %>
-<tr><td class="fw-bold"><%= s.guard_name %></td><td><%= s.guard_phone || '-' %></td>
-<td><%= s.shift_start %></td><td><%= s.shift_end %></td><td><%= s.location || '-' %></td>
-<td><form action="/welfare/security/shift/<%= s.id %>/delete" method="POST"><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form></td></tr>
-<% }); %></tbody></table>
-<% } else { %><p class="text-muted small mb-0 px-3 py-2">شیفتی تعریف نشده</p><% } %>
-</div></div><% } %>
+<div class="page-header">
+  <div>
+    <h1 class="page-title">نگهبانی</h1>
+    <p class="page-subtitle">
+      <a href="/welfare" class="text-muted-custom text-decoration-none"><i class="bi bi-arrow-right me-1"></i>بازگشت به رفاهیات</a>
+    </p>
+  </div>
+</div>
 
-<div class="card mt-3"><div class="card-header">افزودن شیفت</div><div class="card-body">
-<form action="/welfare/security/shift" method="POST" class="row g-2">
-<div class="col-md-3"><select name="day_of_week" class="form-select"><% days.forEach((d,i) => { %><option value="<%= i %>"><%= d %></option><% }); %></select></div>
-<div class="col-md-3"><input type="text" name="guard_name" class="form-control" placeholder="نام نگهبان" required></div>
-<div class="col-md-2"><input type="text" name="guard_phone" class="form-control" placeholder="تلفن"></div>
-<div class="col-md-2"><input type="time" name="shift_start" class="form-control" required></div>
-<div class="col-md-2"><input type="time" name="shift_end" class="form-control" required></div>
-<div class="col-md-3"><input type="text" name="location" class="form-control" placeholder="محل"></div>
-<div class="col-md-2"><button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus me-1"></i>افزودن</button></div>
-</form></div></div>
+<!-- Weekly Shifts -->
+<% for (let d = 0; d < 7; d++) { %>
+<div class="card mb-3 fade-in" style="animation-delay: <%= d * 0.03 %>s;">
+  <div class="card-header">
+    <span><i class="bi bi-shield me-2 text-warning"></i><%= days[d] %></span>
+  </div>
+  <div class="card-body p-0">
+    <% if (grouped[d] && grouped[d].length > 0) { %>
+    <div class="table-container">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th>نگهبان</th>
+            <th>تلفن</th>
+            <th>ساعت شروع</th>
+            <th>ساعت پایان</th>
+            <th>محل</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% grouped[d].forEach(s => { %>
+          <tr>
+            <td class="fw-bold"><%= s.guard_name %></td>
+            <td><%= s.guard_phone || '-' %></td>
+            <td><span class="badge bg-info"><%= s.shift_start %></span></td>
+            <td><span class="badge bg-secondary"><%= s.shift_end %></span></td>
+            <td><%= s.location || '-' %></td>
+            <td>
+              <form action="/welfare/security/shift/<%= s.id %>/delete" method="POST">
+                <button class="btn btn-sm btn-outline-danger" title="حذف">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <% } else { %>
+    <p class="text-muted-custom text-center mb-0 py-3" style="font-size:0.8rem;">شیفتی تعریف نشده</p>
+    <% } %>
+  </div>
+</div>
+<% } %>
+
+<!-- Add Shift Form -->
+<div class="card mt-3 fade-in">
+  <div class="card-header">
+    <span><i class="bi bi-plus-circle me-2"></i>افزودن شیفت</span>
+  </div>
+  <div class="card-body">
+    <form action="/welfare/security/shift" method="POST" class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label">روز</label>
+        <select name="day_of_week" class="form-select">
+          <% days.forEach((d, i) => { %>
+          <option value="<%= i %>"><%= d %></option>
+          <% }); %>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">نام نگهبان</label>
+        <input type="text" name="guard_name" class="form-control" placeholder="نام نگهبان" required>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">تلفن</label>
+        <input type="text" name="guard_phone" class="form-control" placeholder="تلفن">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">ساعت شروع</label>
+        <input type="time" name="shift_start" class="form-control" required>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">ساعت پایان</label>
+        <input type="time" name="shift_end" class="form-control" required>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">محل</label>
+        <input type="text" name="location" class="form-control" placeholder="ورودی، پارکینگ، ...">
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bi bi-plus-lg"></i>افزودن
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

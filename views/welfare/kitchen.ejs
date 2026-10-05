@@ -1,23 +1,77 @@
-<div class="page-header"><div><h1 class="page-title">آشپزخانه - منوی هفتگی</h1></div>
-<a href="/welfare" class="btn btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a></div>
-<% for (let d = 0; d < 7; d++) { %>
-<div class="card mb-2"><div class="card-body">
-<div class="d-flex justify-content-between align-items-center">
-<h6 class="fw-bold mb-0"><i class="bi bi-calendar-day me-2 text-primary"></i><%= days[d] %></h6>
-<div class="d-flex gap-2 flex-wrap">
-<% if (grouped[d] && grouped[d].length > 0) { grouped[d].forEach(m => { %>
-<span class="badge bg-<%= m.meal_type==='lunch'?'success':'info' %> px-3 py-2">
-<%= m.food_name %>
-<form action="/welfare/kitchen/menu/<%= m.id %>/delete" method="POST" class="d-inline"><button class="btn-close btn-close-white ms-2" style="font-size:0.6rem;"></button></form>
-</span>
-<% }); } else { %><span class="text-muted small">تعریف نشده</span><% } %>
-</div></div></div></div>
-<% } %>
+<div class="page-header">
+  <div>
+    <h1 class="page-title">آشپزخانه — منوی هفتگی</h1>
+    <p class="page-subtitle">
+      <a href="/welfare" class="text-muted-custom text-decoration-none"><i class="bi bi-arrow-right me-1"></i>بازگشت به رفاهیات</a>
+    </p>
+  </div>
+</div>
 
-<div class="card mt-3"><div class="card-header">افزودن غذا</div><div class="card-body">
-<form action="/welfare/kitchen/menu" method="POST" class="row g-2">
-<div class="col-md-3"><select name="day_of_week" class="form-select"><% days.forEach((d,i) => { %><option value="<%= i %>"><%= d %></option><% }); %></select></div>
-<div class="col-md-2"><select name="meal_type" class="form-select"><option value="lunch">ناهار</option><option value="breakfast">صبحانه</option><option value="dinner">شام</option></select></div>
-<div class="col-md-4"><input type="text" name="food_name" class="form-control" placeholder="نام غذا" required></div>
-<div class="col-md-3"><button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus me-1"></i>افزودن</button></div>
-</form></div></div>
+<!-- Weekly Menu -->
+<div class="row">
+  <% for (let d = 0; d < 7; d++) { %>
+  <div class="col-md-6 col-lg-4 mb-3">
+    <div class="menu-day-card fade-in" style="animation-delay: <%= d * 0.03 %>s;">
+      <div class="menu-day-header">
+        <i class="bi bi-calendar-day me-2"></i><%= days[d] %>
+      </div>
+      <div class="menu-day-body">
+        <% if (grouped[d] && grouped[d].length > 0) { %>
+          <% grouped[d].forEach(m => { %>
+          <div class="menu-item">
+            <i class="bi bi-<%= m.meal_type === 'lunch' ? 'sun' : m.meal_type === 'breakfast' ? 'brightness-high' : 'moon' %>"></i>
+            <span class="flex-grow-1"><%= m.food_name %></span>
+            <span class="badge bg-<%= m.meal_type === 'lunch' ? 'success' : m.meal_type === 'breakfast' ? 'info' : 'secondary' %>" style="font-size:0.65rem;">
+              <%= m.meal_type === 'lunch' ? 'ناهار' : m.meal_type === 'breakfast' ? 'صبحانه' : 'شام' %>
+            </span>
+            <form action="/welfare/kitchen/menu/<%= m.id %>/delete" method="POST" class="d-inline">
+              <button class="btn btn-sm btn-link text-danger p-0 ms-1" title="حذف" style="font-size:0.75rem;">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </form>
+          </div>
+          <% }); %>
+        <% } else { %>
+          <p class="text-muted-custom text-center mb-0" style="font-size:0.8rem;">تعریف نشده</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  <% } %>
+</div>
+
+<!-- Add Food Form -->
+<div class="card mt-3 fade-in">
+  <div class="card-header">
+    <span><i class="bi bi-plus-circle me-2"></i>افزودن غذا</span>
+  </div>
+  <div class="card-body">
+    <form action="/welfare/kitchen/menu" method="POST" class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label">روز</label>
+        <select name="day_of_week" class="form-select">
+          <% days.forEach((d, i) => { %>
+          <option value="<%= i %>"><%= d %></option>
+          <% }); %>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">وعده</label>
+        <select name="meal_type" class="form-select">
+          <option value="lunch">ناهار</option>
+          <option value="breakfast">صبحانه</option>
+          <option value="dinner">شام</option>
+        </select>
+      </div>
+      <div class="col-md-5">
+        <label class="form-label">نام غذا</label>
+        <input type="text" name="food_name" class="form-control" placeholder="مثال: قرمه‌سبزی با برنج" required>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bi bi-plus-lg"></i>افزودن
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

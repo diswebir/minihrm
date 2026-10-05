@@ -3,8 +3,8 @@
     <div class="logo-icon">
       <i class="bi bi-building"></i>
     </div>
-    <h2 class="mb-1">نصب و راه‌اندازی</h2>
-    <p class="mb-0 opacity-75">سامانه مدیریت منابع انسانی MiniHRM</p>
+    <h2>نصب و راه‌اندازی</h2>
+    <p>سامانه مدیریت منابع انسانی MiniHRM</p>
   </div>
 
   <div class="auth-body">
@@ -13,14 +13,14 @@
       <% if (step === 1) { %>
         <!-- Step 1: Company Info -->
         <div class="text-center mb-4">
-          <div class="d-inline-flex align-items-center gap-2 text-primary">
-            <span class="badge bg-primary rounded-circle p-2">۱</span>
+          <div class="d-inline-flex align-items-center gap-2" style="color:var(--accent);">
+            <span class="badge rounded-pill" style="background:var(--accent); width:28px; height:28px; display:flex; align-items:center; justify-content:center;">۱</span>
             <span class="fw-bold">اطلاعات شرکت</span>
           </div>
           <div class="d-flex justify-content-center gap-1 mt-2">
-            <span class="badge bg-primary" style="width:40px; height:4px;"></span>
-            <span class="badge bg-light" style="width:40px; height:4px;"></span>
-            <span class="badge bg-light" style="width:40px; height:4px;"></span>
+            <span style="width:40px; height:4px; background:var(--accent); border-radius:2px;"></span>
+            <span style="width:40px; height:4px; background:var(--navy-200); border-radius:2px;"></span>
+            <span style="width:40px; height:4px; background:var(--navy-200); border-radius:2px;"></span>
           </div>
         </div>
 
@@ -42,21 +42,21 @@
             <textarea name="company_address" class="form-control" rows="2" placeholder="آدرس کامل"></textarea>
           </div>
           <button type="submit" class="btn btn-primary w-100">
-            <i class="bi bi-arrow-left me-2"></i>مرحله بعد
+            <i class="bi bi-arrow-left"></i>مرحله بعد
           </button>
         </form>
 
       <% } else if (step === 2) { %>
         <!-- Step 2: Admin Account -->
         <div class="text-center mb-4">
-          <div class="d-inline-flex align-items-center gap-2 text-primary">
-            <span class="badge bg-primary rounded-circle p-2">۲</span>
+          <div class="d-inline-flex align-items-center gap-2" style="color:var(--accent);">
+            <span class="badge rounded-pill" style="background:var(--accent); width:28px; height:28px; display:flex; align-items:center; justify-content:center;">۲</span>
             <span class="fw-bold">حساب مدیر سیستم</span>
           </div>
           <div class="d-flex justify-content-center gap-1 mt-2">
-            <span class="badge bg-success" style="width:40px; height:4px;"></span>
-            <span class="badge bg-primary" style="width:40px; height:4px;"></span>
-            <span class="badge bg-light" style="width:40px; height:4px;"></span>
+            <span style="width:40px; height:4px; background:var(--success); border-radius:2px;"></span>
+            <span style="width:40px; height:4px; background:var(--accent); border-radius:2px;"></span>
+            <span style="width:40px; height:4px; background:var(--navy-200); border-radius:2px;"></span>
           </div>
         </div>
 
@@ -82,36 +82,30 @@
           <div class="mb-3">
             <label class="form-label">رمز عبور <span class="text-danger">*</span></label>
             <input type="password" name="password" class="form-control" required minlength="6" autocomplete="new-password">
-            <small class="text-muted">حداقل ۶ کاراکتر</small>
+            <div class="form-text">حداقل ۶ کاراکتر</div>
           </div>
           <div class="mb-3">
             <label class="form-label">تکرار رمز عبور <span class="text-danger">*</span></label>
             <input type="password" name="password_confirm" class="form-control" required minlength="6">
           </div>
           <button type="submit" class="btn btn-primary w-100">
-            <i class="bi bi-check-lg me-2"></i>نصب و راه‌اندازی
+            <i class="bi bi-check-lg"></i>نصب و راه‌اندازی
           </button>
         </form>
 
       <% } else if (step === 3 && success) { %>
         <!-- Step 3: Complete -->
         <div class="text-center">
-          <div class="d-inline-flex align-items-center gap-2 text-success mb-4">
-            <span class="badge bg-success rounded-circle p-2"><i class="bi bi-check-lg"></i></span>
-            <span class="fw-bold">نصب با موفقیت انجام شد!</span>
+          <div class="success-icon" style="width:72px; height:72px; background:var(--success-soft); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:2rem; color:var(--success);">
+            <i class="bi bi-check-lg"></i>
           </div>
 
-          <div class="mb-4">
-            <div class="p-4 rounded-3 bg-success bg-opacity-10">
-              <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
-              <h5 class="mt-3 text-success">تبریک!</h5>
-              <p class="text-muted mb-0">سامانه MiniHRM با موفقیت نصب و راه‌اندازی شد.</p>
-            </div>
-          </div>
+          <h4 style="font-weight:800; margin-bottom:8px;">تبریک!</h4>
+          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">سامانه MiniHRM با موفقیت نصب و راه‌اندازی شد.</p>
 
-          <div class="alert alert-info text-start">
-            <h6><i class="bi bi-info-circle me-2"></i>مراحل بعدی:</h6>
-            <ul class="mb-0 ps-3">
+          <div class="alert alert-info text-start" style="font-size:0.8rem;">
+            <h6 style="font-weight:700; margin-bottom:8px;"><i class="bi bi-info-circle me-2"></i>مراحل بعدی:</h6>
+            <ul style="margin:0; padding-right:20px;">
               <li>تنظیمات پیامک (IPPanel) را انجام دهید</li>
               <li>بخش‌ها و موقعیت‌های شغلی را تعریف کنید</li>
               <li>فرم استخدام را سفارشی‌سازی کنید</li>
@@ -120,7 +114,7 @@
           </div>
 
           <a href="/login" class="btn btn-primary w-100">
-            <i class="bi bi-box-arrow-in-left me-2"></i>ورود به سامانه
+            <i class="bi bi-box-arrow-in-left"></i>ورود به سامانه
           </a>
         </div>
       <% } %>

@@ -1,40 +1,156 @@
-<div class="page-header"><div><h1 class="page-title"><%= vehicle.route_name || vehicle.plate_number %></h1></div>
-<a href="/welfare/transport" class="btn btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a></div>
-<div class="row">
-<div class="col-md-4 mb-3"><div class="card"><div class="card-body">
-<p><strong>نوع:</strong> <%= vehicle.vehicle_type %></p>
-<p><strong>پلاک:</strong> <%= vehicle.plate_number %></p>
-<p><strong>مدل:</strong> <%= vehicle.model || '-' %></p>
-<p><strong>ظرفیت:</strong> <%= vehicle.capacity %> نفر</p>
-<p><strong>راننده:</strong> <%= vehicle.driver_name || '-' %> <%= vehicle.driver_phone || '' %></p>
-<% if (vehicle.route_description) { %><p><strong>مسیر:</strong> <%= vehicle.route_description %></p><% } %>
-</div></div></div>
-<div class="col-md-8 mb-3">
-<div class="card mb-3"><div class="card-header d-flex justify-content-between"><span>مسافران (<%= passengers.length %>/<%= vehicle.capacity %>)</span>
-<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#assignModal"><i class="bi bi-plus me-1"></i>افزودن</button></div>
-<div class="card-body p-0">
-<% if (passengers && passengers.length > 0) { %>
-<table class="table mb-0"><thead><tr><th>نام</th><th>نقطه سوار شدن</th><th>ساعت</th><th>شیفت</th><th>عملیات</th></tr></thead>
-<tbody><% passengers.forEach(p => { %>
-<tr><td class="fw-bold"><%= p.first_name %> <%= p.last_name %></td>
-<td><%= p.pickup_point || '-' %></td><td><%= p.pickup_time || '-' %></td>
-<td><% const shifts={morning:'صبح',evening:'عصر',night:'شب'}; %><%= shifts[p.shift_type]||p.shift_type %></td>
-<td><form action="/welfare/transport/<%= vehicle.id %>/remove/<%= p.user_id %>" method="POST"><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form></td></tr>
-<% }); %></tbody></table>
-<% } else { %><div class="empty-state py-3"><p class="text-muted mb-0">مسافری اختصاص داده نشده</p></div><% } %>
-</div></div>
-</div></div>
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><%= vehicle.route_name || vehicle.plate_number %></h1>
+    <p class="page-subtitle">
+      <a href="/welfare/transport" class="text-muted-custom text-decoration-none"><i class="bi bi-arrow-right me-1"></i>بازگشت به ناوگان</a>
+    </p>
+  </div>
+</div>
 
-<div class="modal fade" id="assignModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
-<form action="/welfare/transport/<%= vehicle.id %>/assign" method="POST">
-<div class="modal-header"><h5 class="modal-title">اختصاص مسافر</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-<div class="modal-body">
-<div class="mb-3"><label class="form-label">کارکنان</label>
-<div class="row"><% employees.forEach(e => { %><div class="col-md-6"><div class="form-check"><input type="checkbox" name="user_ids" value="<%= e.id %>" class="form-check-input" id="e_<%= e.id %>"><label class="form-check-label" for="e_<%= e.id %>"><%= e.first_name %> <%= e.last_name %></label></div></div><% }); %></div></div>
 <div class="row">
-<div class="col-md-4 mb-3"><label class="form-label">نقطه سوار شدن</label><input type="text" name="pickup_point" class="form-control"></div>
-<div class="col-md-4 mb-3"><label class="form-label">ساعت</label><input type="time" name="pickup_time" class="form-control"></div>
-<div class="col-md-4 mb-3"><label class="form-label">شیفت</label><select name="shift_type" class="form-select"><option value="morning">صبح</option><option value="evening">عصر</option><option value="night">شب</option></select></div>
-</div></div>
-<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button><button type="submit" class="btn btn-primary">اختصاص</button></div>
-</form></div></div></div>
+  <!-- Vehicle Info -->
+  <div class="col-md-4 mb-3">
+    <div class="card fade-in">
+      <div class="card-header">
+        <span><i class="bi bi-truck me-2"></i>مشخصات وسیله</span>
+      </div>
+      <div class="card-body">
+        <div class="info-grid" style="grid-template-columns:1fr;">
+          <div class="info-item">
+            <div class="info-label">نوع</div>
+            <div class="info-value"><%= vehicle.vehicle_type %></div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">پلاک</div>
+            <div class="info-value" dir="ltr"><%= vehicle.plate_number %></div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">مدل</div>
+            <div class="info-value"><%= vehicle.model || '-' %></div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">ظرفیت</div>
+            <div class="info-value"><%= vehicle.capacity %> نفر</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">راننده</div>
+            <div class="info-value"><%= vehicle.driver_name || '-' %> <%= vehicle.driver_phone || '' %></div>
+          </div>
+          <% if (vehicle.route_description) { %>
+          <div class="info-item">
+            <div class="info-label">مسیر</div>
+            <div class="info-value"><%= vehicle.route_description %></div>
+          </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Passengers -->
+  <div class="col-md-8 mb-3">
+    <div class="card fade-in fade-in-delay-1">
+      <div class="card-header">
+        <span><i class="bi bi-people me-2"></i>مسافران (<%= passengers.length %>/<%= vehicle.capacity %>)</span>
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#assignModal">
+          <i class="bi bi-plus-lg"></i>افزودن
+        </button>
+      </div>
+      <div class="card-body p-0">
+        <% if (passengers && passengers.length > 0) { %>
+        <div class="table-container">
+          <table class="table mb-0">
+            <thead>
+              <tr>
+                <th>نام</th>
+                <th>نقطه سوار شدن</th>
+                <th>ساعت</th>
+                <th>شیفت</th>
+                <th>عملیات</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% passengers.forEach(p => { %>
+              <tr>
+                <td class="fw-bold"><%= p.first_name %> <%= p.last_name %></td>
+                <td><%= p.pickup_point || '-' %></td>
+                <td><%= p.pickup_time || '-' %></td>
+                <td>
+                  <% const shifts = {morning:'صبح', evening:'عصر', night:'شب'}; %>
+                  <span class="badge bg-info"><%= shifts[p.shift_type] || p.shift_type %></span>
+                </td>
+                <td>
+                  <form action="/welfare/transport/<%= vehicle.id %>/remove/<%= p.user_id %>" method="POST">
+                    <button class="btn btn-sm btn-outline-danger" title="حذف">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+        <% } else { %>
+        <div class="empty-state py-3">
+          <div class="empty-state-icon"><i class="bi bi-people"></i></div>
+          <p>مسافری اختصاص داده نشده</p>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Assign Modal -->
+<div class="modal fade" id="assignModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/welfare/transport/<%= vehicle.id %>/assign" method="POST">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>اختصاص مسافر</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">کارکنان</label>
+            <div class="row">
+              <% employees.forEach(e => { %>
+              <div class="col-md-6">
+                <div class="form-check">
+                  <input type="checkbox" name="user_ids" value="<%= e.id %>" class="form-check-input" id="e_<%= e.id %>">
+                  <label class="form-check-label" for="e_<%= e.id %>"><%= e.first_name %> <%= e.last_name %></label>
+                </div>
+              </div>
+              <% }); %>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">نقطه سوار شدن</label>
+              <input type="text" name="pickup_point" class="form-control">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">ساعت</label>
+              <input type="time" name="pickup_time" class="form-control">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">شیفت</label>
+              <select name="shift_type" class="form-select">
+                <option value="morning">صبح</option>
+                <option value="evening">عصر</option>
+                <option value="night">شب</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-lg"></i>اختصاص
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

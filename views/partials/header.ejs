@@ -1,14 +1,14 @@
 <header class="top-header">
   <div class="header-right">
     <!-- Mobile Menu Toggle -->
-    <button class="btn btn-link sidebar-toggle" id="sidebarToggle">
+    <button class="sidebar-toggle" id="sidebarToggle">
       <i class="bi bi-list"></i>
     </button>
 
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="d-none d-md-block">
       <ol class="breadcrumb mb-0">
-        <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house"></i></a></li>
+        <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door"></i></a></li>
         <li class="breadcrumb-item active"><%= title %></li>
       </ol>
     </nav>
@@ -17,12 +17,12 @@
   <div class="header-left">
     <!-- User Dropdown -->
     <div class="dropdown">
-      <button class="btn btn-link user-dropdown" data-bs-toggle="dropdown">
+      <button class="user-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
         <div class="user-avatar">
           <% if (user && user.avatar) { %>
             <img src="/uploads/avatars/<%= user.avatar %>" alt="<%= user.firstName %>">
           <% } else { %>
-            <i class="bi bi-person-circle"></i>
+            <i class="bi bi-person-fill"></i>
           <% } %>
         </div>
         <div class="user-info d-none d-md-block">
@@ -59,7 +59,9 @@
     <div class="modal-content">
       <form action="/change-password" method="POST">
         <div class="modal-header">
-          <h5 class="modal-title">تغییر رمز عبور</h5>
+          <h5 class="modal-title">
+            <i class="bi bi-key me-2"></i>تغییر رمز عبور
+          </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
@@ -70,6 +72,7 @@
           <div class="mb-3">
             <label class="form-label">رمز عبور جدید</label>
             <input type="password" name="new_password" class="form-control" required minlength="6">
+            <div class="form-text">حداقل ۶ کاراکتر</div>
           </div>
           <div class="mb-3">
             <label class="form-label">تکرار رمز عبور جدید</label>
@@ -78,7 +81,9 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
-          <button type="submit" class="btn btn-primary">ذخیره</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-lg me-1"></i>ذخیره
+          </button>
         </div>
       </form>
     </div>

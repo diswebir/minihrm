@@ -1,64 +1,22 @@
 /* ═══════════════════════════════════════════════════════════
-   MiniHRM - Candidate-Facing Styles
+   MiniHRM v2.0 — Candidate Portal (Public Application)
+   Modern, clean, professional candidate experience
    ═══════════════════════════════════════════════════════════ */
 
 .candidate-body {
-  background: linear-gradient(135deg, #f0f4ff 0%, #e8edf5 100%);
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 50%, #BFDBFE 100%);
   min-height: 100vh;
-  margin: 0;
-}
-
-.candidate-container {
-  max-width: 700px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
-}
-
-.candidate-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.candidate-logo {
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  border-radius: 50%;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  margin: 0 auto 1rem;
-  box-shadow: 0 8px 25px rgba(79,70,229,0.3);
+  padding: 0;
 }
 
-.candidate-logo i {
-  font-size: 2.5rem;
-  color: white;
-}
-
-.candidate-title {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.candidate-content {
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 4px 25px rgba(0,0,0,0.08);
-  padding: 2rem;
-}
-
-/* ─── Progress Bar ────────────────────────────────────── */
+/* ── Progress Bar ───────────────────────── */
 .candidate-progress-bar {
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 4px 25px rgba(0,0,0,0.08);
-  padding: 1.5rem 2rem;
-  margin-bottom: 1.5rem;
+  width: 100%;
+  padding: 24px 20px 0;
   max-width: 700px;
-  margin: 0 auto 1.5rem;
 }
 
 .progress-steps {
@@ -72,47 +30,47 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
   position: relative;
 }
 
 .step-circle {
   width: 36px;
   height: 36px;
-  border-radius: 50%;
-  background: var(--bg-body);
-  border: 2px solid var(--border-color);
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.835rem;
+  font-weight: 700;
+  background: var(--bg-card);
   color: var(--text-light);
-  transition: all 0.3s ease;
+  border: 2px solid var(--border);
+  transition: all var(--duration) var(--ease-out);
 }
 
 .progress-step.active .step-circle {
-  background: var(--primary);
-  border-color: var(--primary);
+  background: var(--accent);
   color: white;
-  box-shadow: 0 4px 12px rgba(79,70,229,0.3);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(37,99,235,0.15);
 }
 
 .progress-step.completed .step-circle {
   background: var(--success);
-  border-color: var(--success);
   color: white;
+  border-color: var(--success);
 }
 
 .progress-step span {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 600;
   color: var(--text-light);
   white-space: nowrap;
 }
 
 .progress-step.active span {
-  color: var(--primary);
-  font-weight: 600;
+  color: var(--accent);
 }
 
 .progress-step.completed span {
@@ -120,257 +78,276 @@
 }
 
 .progress-line {
-  width: 40px;
+  width: 50px;
   height: 2px;
-  background: var(--border-color);
-  margin: 0 0.5rem;
-  margin-bottom: 1.5rem;
+  background: var(--border);
+  margin: 0 8px;
+  margin-bottom: 22px;
 }
 
-@media (max-width: 576px) {
-  .progress-step span {
-    font-size: 0.65rem;
-  }
-  .progress-line {
-    width: 20px;
-  }
-  .step-circle {
-    width: 30px;
-    height: 30px;
-    font-size: 0.75rem;
-  }
+.progress-step.completed + .progress-line,
+.progress-line.completed {
+  background: var(--success);
 }
 
-/* ─── Position Cards ──────────────────────────────────── */
-.position-cards {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
+/* ── Container ──────────────────────────── */
+.candidate-container {
+  width: 100%;
+  max-width: 700px;
+  padding: 24px 20px 40px;
 }
 
-.position-card {
+/* ── Header ─────────────────────────────── */
+.candidate-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.candidate-logo {
+  width: 64px;
+  height: 64px;
+  background: var(--accent-gradient);
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.25rem;
-  border: 2px solid var(--border-color);
+  justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 1.75rem;
+  color: white;
+  box-shadow: 0 8px 24px rgba(37,99,235,0.25);
+}
+
+.candidate-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-heading);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+/* ── Content Card ───────────────────────── */
+.candidate-content {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-light);
+  padding: 32px;
+  animation: fadeInUp 0.4s var(--ease-out) both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Position Cards ─────────────────────── */
+.candidate-positions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.candidate-position-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
   border-radius: var(--radius);
+  padding: 20px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  color: var(--text-primary);
+  transition: all var(--duration) var(--ease-out);
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
-.position-card:hover,
-.position-card.selected {
-  border-color: var(--primary);
-  background: rgba(79,70,229,0.03);
+.candidate-position-card:hover {
+  border-color: var(--accent-100);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
-.position-card.selected {
-  box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+.candidate-position-card.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
 }
 
-.position-card input[type="radio"] {
-  accent-color: var(--primary);
+.candidate-position-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--accent-soft);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.candidate-position-info h5 {
+  font-weight: 700;
+  font-size: 1rem;
+  margin: 0 0 4px;
+  color: var(--text-heading);
+}
+
+.candidate-position-info p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ── OTP Input ──────────────────────────── */
+.otp-input-group {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  direction: ltr;
+  margin: 24px 0;
+}
+
+.otp-input {
+  width: 48px;
+  height: 56px;
+  text-align: center;
+  font-size: 1.35rem;
+  font-weight: 700;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-heading);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.otp-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+  outline: none;
+}
+
+/* ── Assessment Questions ───────────────── */
+.assessment-question {
+  background: var(--navy-50);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border-light);
+}
+
+.assessment-question h6 {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-heading);
+  margin: 0 0 12px;
+}
+
+.assessment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.assessment-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.assessment-option:hover {
+  border-color: var(--accent-100);
+  background: var(--accent-soft);
+}
+
+.assessment-option.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.assessment-option input[type="radio"] {
+  accent-color: var(--accent);
   width: 18px;
   height: 18px;
 }
 
-.position-card .position-info h4 {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0 0 0.25rem;
-}
-
-.position-card .position-info p {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+.assessment-option label {
+  font-size: 0.835rem;
+  color: var(--text-body);
+  cursor: pointer;
+  flex: 1;
   margin: 0;
 }
 
-.position-card .position-badge {
-  margin-right: auto;
-  font-size: 0.75rem;
-  padding: 0.2rem 0.6rem;
-  border-radius: 12px;
-  background: var(--bg-body);
-  color: var(--text-secondary);
-}
-
-/* ─── OTP Input ───────────────────────────────────────── */
-.otp-input-group {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-  direction: ltr;
-  margin: 1.5rem 0;
-}
-
-.otp-input {
-  width: 52px;
-  height: 60px;
+/* ── Success Page ───────────────────────── */
+.success-container {
   text-align: center;
-  font-size: 1.5rem;
-  font-weight: 700;
-  border: 2px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-.otp-input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
-}
-
-/* ─── Form Wizard ─────────────────────────────────────── */
-.form-step-indicator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 2rem;
-}
-
-.step-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--border-color);
-  transition: all 0.2s ease;
-}
-
-.step-dot.active {
-  background: var(--primary);
-  width: 30px;
-  border-radius: 5px;
-}
-
-.step-dot.completed {
-  background: var(--success);
-}
-
-.form-section-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--primary);
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid rgba(79,70,229,0.1);
-}
-
-.form-navigation {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border-color);
-}
-
-/* ─── MBTI Test ───────────────────────────────────────── */
-.mbti-question-card {
-  background: var(--bg-body);
-  border-radius: var(--radius);
-  padding: 1.25rem;
-  margin-bottom: 1rem;
-  border: 1px solid var(--border-color);
-}
-
-.mbti-question-number {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--primary);
-  color: white;
-  font-size: 0.8rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-
-.mbti-question-text {
-  font-weight: 500;
-  margin-bottom: 0.75rem;
-  font-size: 0.95rem;
-}
-
-.mbti-options {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.mbti-option {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border: 2px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 0.9rem;
-}
-
-.mbti-option:hover {
-  border-color: var(--primary-light);
-  background: rgba(79,70,229,0.03);
-}
-
-.mbti-option.selected {
-  border-color: var(--primary);
-  background: rgba(79,70,229,0.05);
-}
-
-.mbti-option input[type="radio"] {
-  accent-color: var(--primary);
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-}
-
-/* ─── Success Page ────────────────────────────────────── */
-.success-page {
-  text-align: center;
-  padding: 2rem 0;
+  padding: 40px 20px;
 }
 
 .success-icon {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--success), #34D399);
+  width: 80px;
+  height: 80px;
+  background: var(--success-soft);
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1.5rem;
-  animation: scaleIn 0.5s ease;
-}
-
-.success-icon i {
-  font-size: 3rem;
-  color: white;
-}
-
-@keyframes scaleIn {
-  from { transform: scale(0); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-.success-page h2 {
-  font-size: 1.5rem;
-  font-weight: 700;
+  margin: 0 auto 20px;
+  font-size: 2.5rem;
   color: var(--success);
-  margin-bottom: 0.75rem;
 }
 
-.success-page p {
-  color: var(--text-secondary);
-  font-size: 0.95rem;
+.success-container h3 {
+  font-weight: 800;
+  font-size: 1.5rem;
+  margin: 0 0 8px;
+  color: var(--text-heading);
+}
+
+.success-container p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
   max-width: 400px;
   margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* ── Responsive ─────────────────────────── */
+@media (max-width: 575.98px) {
+  .candidate-container {
+    padding: 16px 12px 32px;
+  }
+
+  .candidate-content {
+    padding: 20px;
+    border-radius: var(--radius);
+  }
+
+  .candidate-progress-bar {
+    padding: 16px 12px 0;
+  }
+
+  .progress-line {
+    width: 30px;
+  }
+
+  .step-circle {
+    width: 32px;
+    height: 32px;
+    font-size: 0.75rem;
+  }
+
+  .progress-step span {
+    font-size: 0.6rem;
+  }
 }

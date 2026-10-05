@@ -1,33 +1,119 @@
-<div class="page-header"><div><h1 class="page-title">امور ثبتی</h1></div>
-<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRegModal"><i class="bi bi-plus-lg me-1"></i>ثبت جدید</button></div>
-<div class="card"><div class="card-body p-0">
-<% if (registrations && registrations.length > 0) { %>
-<table class="table"><thead><tr><th>شماره ثبت</th><th>کد اقتصادی</th><th>نوع شرکت</th><th>سرمایه ثبتی</th><th>تاریخ ثبت</th><th>وضعیت</th></tr></thead>
-<tbody><% registrations.forEach(r => { %>
-<tr>
-<td class="fw-bold"><%= r.registration_number %></td><td><%= r.economic_code || '-' %></td>
-<td><% const types={llc:'مسئولیت محدود',joint_stock:'سهامی',cooperative:'تعاونی',partnership:'تضامنی',other:'سایر'}; %><%= types[r.company_type]||r.company_type %></td>
-<td><%= (r.registered_capital||0).toLocaleString('fa') %> ریال</td>
-<td><%= r.registration_date || '-' %></td>
-<td><span class="badge bg-<%= r.status==='active'?'success':'danger' %>"><%= r.status %></span></td>
-</tr><% }); %></tbody></table>
-<% } else { %><div class="empty-state"><i class="bi bi-building"></i><h5>اطلاعات ثبتی وارد نشده</h5></div><% } %>
-</div></div>
+<div class="page-header">
+  <div>
+    <h1 class="page-title">امور ثبتی</h1>
+    <p class="page-subtitle">
+      <a href="/legal" class="text-muted-custom text-decoration-none"><i class="bi bi-arrow-right me-1"></i>بازگشت به امور حقوقی</a>
+    </p>
+  </div>
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRegModal">
+    <i class="bi bi-plus-lg"></i>ثبت جدید
+  </button>
+</div>
 
-<div class="modal fade" id="addRegModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
-<form action="/legal/registration" method="POST">
-<div class="modal-header"><h5 class="modal-title">ثبت شرکت</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-<div class="modal-body">
-<div class="row">
-<div class="col-md-4 mb-3"><label class="form-label">شماره ثبت <span class="text-danger">*</span></label><input type="text" name="registration_number" class="form-control" required></div>
-<div class="col-md-4 mb-3"><label class="form-label">کد اقتصادی</label><input type="text" name="economic_code" class="form-control"></div>
-<div class="col-md-4 mb-3"><label class="form-label">نوع شرکت</label><select name="company_type" class="form-select"><option value="llc">مسئولیت محدود</option><option value="joint_stock">سهامی</option><option value="cooperative">تعاونی</option><option value="partnership">تضامنی</option><option value="other">سایر</option></select></div>
-<div class="col-md-6 mb-3"><label class="form-label">سرمایه ثبتی (ریال)</label><input type="number" name="registered_capital" class="form-control"></div>
-<div class="col-md-6 mb-3"><label class="form-label">سرمایه پرداختی (ریال)</label><input type="number" name="paid_capital" class="form-control"></div>
-<div class="col-md-6 mb-3"><label class="form-label">تاریخ ثبت</label><input type="date" name="registration_date" class="form-control"></div>
-<div class="col-md-6 mb-3"><label class="form-label">اداره ثبت</label><input type="text" name="registration_office" class="form-control"></div>
+<div class="card fade-in">
+  <div class="card-body p-0">
+    <% if (registrations && registrations.length > 0) { %>
+    <div class="table-container">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>شماره ثبت</th>
+            <th>کد اقتصادی</th>
+            <th>نوع شرکت</th>
+            <th>سرمایه ثبتی</th>
+            <th>تاریخ ثبت</th>
+            <th>وضعیت</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% registrations.forEach(r => { %>
+          <tr>
+            <td class="fw-bold"><i class="bi bi-building text-accent me-2"></i><%= r.registration_number %></td>
+            <td><%= r.economic_code || '-' %></td>
+            <td>
+              <% const types = {llc:'مسئولیت محدود', joint_stock:'سهامی', cooperative:'تعاونی', partnership:'تضامنی', other:'سایر'}; %>
+              <span class="badge bg-info"><%= types[r.company_type] || r.company_type %></span>
+            </td>
+            <td class="fw-bold"><%= (r.registered_capital||0).toLocaleString('fa') %> ریال</td>
+            <td><%= r.registration_date || '-' %></td>
+            <td>
+              <span class="badge bg-<%= r.status === 'active' ? 'success' : 'danger' %>">
+                <%= r.status === 'active' ? 'فعال' : 'غیرفعال' %>
+              </span>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <% } else { %>
+    <div class="empty-state">
+      <div class="empty-state-icon"><i class="bi bi-building"></i></div>
+      <h5>اطلاعات ثبتی وارد نشده</h5>
+      <p>از دکمه «ثبت جدید» برای ورود اطلاعات ثبتی شرکت استفاده کنید</p>
+    </div>
+    <% } %>
+  </div>
 </div>
-<div class="mb-3"><label class="form-label">آدرس</label><textarea name="address" class="form-control" rows="2"></textarea></div>
+
+<!-- Add Registration Modal -->
+<div class="modal fade" id="addRegModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form action="/legal/registration" method="POST">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-building me-2"></i>ثبت شرکت</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">شماره ثبت <span class="text-danger">*</span></label>
+              <input type="text" name="registration_number" class="form-control" required>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">کد اقتصادی</label>
+              <input type="text" name="economic_code" class="form-control">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">نوع شرکت</label>
+              <select name="company_type" class="form-select">
+                <option value="llc">مسئولیت محدود</option>
+                <option value="joint_stock">سهامی</option>
+                <option value="cooperative">تعاونی</option>
+                <option value="partnership">تضامنی</option>
+                <option value="other">سایر</option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">سرمایه ثبتی (ریال)</label>
+              <input type="number" name="registered_capital" class="form-control">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">سرمایه پرداختی (ریال)</label>
+              <input type="number" name="paid_capital" class="form-control">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">تاریخ ثبت</label>
+              <input type="date" name="registration_date" class="form-control">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">اداره ثبت</label>
+              <input type="text" name="registration_office" class="form-control">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">آدرس</label>
+            <textarea name="address" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-lg"></i>ثبت
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
-<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button><button type="submit" class="btn btn-primary">ثبت</button></div>
-</form></div></div></div>

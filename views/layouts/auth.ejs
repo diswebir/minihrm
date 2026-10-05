@@ -12,7 +12,7 @@
 
   <style>
     body {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 50%, #BFDBFE 100%);
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -20,42 +20,66 @@
     }
     .auth-container {
       width: 100%;
-      max-width: 480px;
+      max-width: 440px;
       padding: 1rem;
     }
     .auth-card {
       background: white;
       border-radius: 20px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      box-shadow: 0 20px 60px rgba(15,23,42,0.1);
       overflow: hidden;
+      border: 1px solid rgba(226,232,240,0.8);
     }
     .auth-header {
-      background: linear-gradient(135deg, #4F46E5, #7C3AED);
+      background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%);
       color: white;
       padding: 2.5rem 2rem;
       text-align: center;
     }
     .auth-header .logo-icon {
-      width: 70px;
-      height: 70px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 50%;
+      width: 64px;
+      height: 64px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
       margin: 0 auto 1rem;
-      font-size: 2rem;
+      font-size: 1.75rem;
+      backdrop-filter: blur(8px);
+    }
+    .auth-header h2 {
+      font-weight: 800;
+      font-size: 1.35rem;
+      margin: 0;
+    }
+    .auth-header p {
+      font-size: 0.8rem;
+      opacity: 0.8;
+      margin: 6px 0 0;
     }
     .auth-body {
       padding: 2rem;
     }
     .auth-body .form-control {
-      border-radius: 12px;
-      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.835rem;
+      border: 1.5px solid #E2E8F0;
+    }
+    .auth-body .form-control:focus {
+      border-color: #2563EB;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
     }
     .auth-body .btn {
-      border-radius: 12px;
-      padding: 0.75rem;
+      border-radius: 10px;
+      padding: 10px;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .auth-body .form-label {
+      font-weight: 600;
+      font-size: 0.8rem;
     }
   </style>
 </head>
