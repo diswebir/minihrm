@@ -1,6 +1,8 @@
 const SID = process.env.SID;
+
+const BASE = (process.env.HRM_BASE || 'http://localhost:3000').replace(/\/+$/, '');
 async function get(p) {
-  const r = await fetch('http://localhost:3000' + p, { headers: { Cookie: 'hrm_sid=' + SID, 'X-Requested-With': 'HRM' } });
+  const r = await fetch(BASE + p, { headers: { Cookie: 'hrm_sid=' + SID, 'X-Requested-With': 'HRM' } });
   const j = await r.json().catch(() => null);
   if (!j || j.ok === false) return { __error: (j && j.error) || 'HTTP ' + r.status };
   return j.data;

@@ -66,6 +66,12 @@ class Api {
   async _run(req, res, opts, handler, params) {
     const app = this.app;
 
+    // --- ماژول باید فعال باشد (خاموش/روشن کردن بی‌درنگ از پنل اثر می‌کند)
+    if (opts.module && app.modules && !app.modules.isEnabled(opts.module)) {
+      const def = app.modules.get(opts.module) || {};
+      throw new HttpError(404, `ماژول «${def.title || opts.module}» غیرفعال است. برای فعال‌سازی به تنظیمات ← ماژول‌ها بروید.`, { code: 'module_disabled' });
+    }
+
     // --- محافظت CSRF برای درخواست‌های تغییردهنده (هدر اختصاصی لازم است)
     if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
       const hasAuthCookie = !!(this.app.auth.parseCookies(req).hrm_sid || this.app.auth.parseCookies(req).hrm_apply);

@@ -1,6 +1,6 @@
 /* تست تعاملی (نوشتن/عملیات) پنل مدیریت با jsdom — فقط توسعه */
 const { JSDOM, requestInterceptor } = require(process.env.JSDOM_PATH || 'jsdom');
-const BASE = 'http://localhost:3000';
+const BASE = (process.env.HRM_BASE || 'http://localhost:3000').replace(/\/+$/, '');
 const SID = process.env.SID;
 if (!SID) { console.error('SID لازم است'); process.exit(1); }
 const COOKIE = 'hrm_sid=' + SID;
@@ -9,7 +9,7 @@ process.on('unhandledRejection', (e) => console.log('  (unhandled rejection در
 
 const loader = requestInterceptor(async (request) => {
   try {
-    const res = await fetch(request.url.replace('http://localhost:3000', BASE), { method: request.method, headers: { Cookie: COOKIE, 'X-Requested-With': 'HRM' } });
+    const res = await fetch(request.url.replace(/^https?:\/\/localhost:3000/, BASE), { method: request.method, headers: { Cookie: COOKIE, 'X-Requested-With': 'HRM' } });
     const buf = Buffer.from(await res.arrayBuffer());
     return new Response(buf, { status: res.status, headers: { 'Content-Type': res.headers.get('content-type') || 'application/octet-stream' } });
   } catch (e) { return new Response('', { status: 502 }); }
@@ -38,7 +38,8 @@ async function page(route) {
       window.__netlog = [];
       window.fetch = async (input, init = {}) => {
         const raw = String(input);
-        const target = raw.startsWith('http') ? raw : BASE + raw;
+        // BASE ممکن است پیشوند مسیر داشته باشد؛ URL را مثل مرورگر حل می‌کنیم
+        const target = new URL(raw, BASE + '/').href;
         const res = await fetch(target, { method: init.method || 'GET', headers: Object.assign({ Cookie: COOKIE }, init.headers || {}), body: init.body, redirect: 'manual' });
         const buf = Buffer.from(await res.arrayBuffer());
         window.__netlog.push((init.method || 'GET') + ' ' + raw + ' → ' + res.status);

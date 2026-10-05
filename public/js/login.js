@@ -50,7 +50,7 @@
         login: formPassword.login.value.trim(),
         password: formPassword.password.value
       });
-      location.href = '/admin';
+      location.href = window.hrmUrl ? window.hrmUrl('/admin') : '/admin';
     } catch (err) {
       showError(err.message);
       btn.disabled = false;
@@ -114,7 +114,7 @@
     btn.textContent = 'در حال بررسی…';
     try {
       await post('/auth/otp/verify', { mobile, code });
-      location.href = '/admin';
+      location.href = window.hrmUrl ? window.hrmUrl('/admin') : '/admin';
     } catch (err) {
       showError(err.message);
       btn.disabled = false;

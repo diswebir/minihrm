@@ -23,8 +23,10 @@ const { OtpService } = require('../otp');
 const { View } = require('../view');
 const { Api, HttpError } = require('../api');
 const { Router } = require('./router');
+const { detectBasePath, stripBasePath, withBasePath } = require('./basePath');
 const { ModuleRegistry } = require('../moduleRegistry');
 const installer = require('../installer');
+const diagnostics = require('../diagnostics');
 const upload = require('../upload');
 const utils = require('../utils');
 const jalali = require('../jalali');
@@ -123,6 +125,43 @@ function createServer({ root }) {
 
       server.headersTimeout = 60000;
       server.requestTimeout = 120000;
+
+      // --- ابزارهای راه‌اندازی/عیب‌یابی
+      server.hrmApp = app;
+
+      /** بررسی فایل‌های ضروری و گزارش هشدار در لاگ راه‌اندازی */
+      app.logBootCheck = () => {
+        const files = diagnostics.fileReport(app.root);
+        const missing = files.filter((f) => !f.ok);
+        const critical = missing.filter((f) => f.critical);
+        for (const f of missing) {
+          if (f.critical) logger.error(`فایل ضروری موجود نیست: ${f.rel}`);
+          else logger.warn(`فایل جانبی موجود نیست: ${f.rel}`);
+        }
+        const bp = require('./basePath').detectBasePath(null, config);
+        if (bp) logger.info(`اجرا در زیرمسیر تشخیص داده شد: ${bp} (PASSENGER_BASE_URI)`);
+        if (!app.config.get('installed', false)) logger.info('سامانه هنوز نصب نشده است؛ ویزارد نصب در آدرس /install فعال است.');
+        if (critical.length) logger.error('راهنمای رفع: کل محتوای پروژه (views و public) را کامل آپلود کنید. صفحه /diag وضعیت را نشان می‌دهد.');
+        return { missing, critical };
+      };
+
+      /** ترمیم خودکار داده‌های اولیه ماژول‌های فعالی که نصب نشده‌اند */
+      app.runBootRepair = async () => {
+        try {
+          if (!app.config.get('installed', false)) return;   // نصب اولیه توسط ویزارد انجام می‌شود
+          const pending = app.modules.all().filter((m) => app.modules.isEnabled(m.key)
+            && typeof m.install === 'function' && !app.config.get(`modules.${m.key}.installed`, false));
+          if (!pending.length) return;
+          logger.warn('داده‌های اولیه این ماژول‌ها ناقص است و اکنون ترمیم می‌شود: ' + pending.map((m) => m.title).join('، '));
+          const res = await app.modules.installAll(null, { reason: 'boot-repair' });
+          const failed = res.filter((r) => !r.ok);
+          if (failed.length) logger.error('ترمیم داده‌های اولیه ناموفق بود: ' + failed.map((r) => `${r.key} (${r.error})`).join('، '));
+          else logger.info(`ترمیم داده‌های اولیه ${res.length} ماژول انجام شد.`);
+        } catch (err) {
+          logger.error('ترمیم خودکار داده‌های اولیه با خطا مواجه شد:', err && err.message ? err.message : err);
+        }
+      };
+
       resolve(server);
     } catch (err) {
       reject(err);
@@ -139,6 +178,14 @@ async function handleRequest(app, req, res) {
   const parsed = new URL(req.url, 'http://localhost');
   req.pathname = decodeURIComponent(parsed.pathname).replace(/\/{2,}/g, '/');
   req.query = Object.fromEntries(parsed.searchParams.entries());
+
+  // --- پیشوند نصب (cPanel/Passenger یا پروکسی معکوس): مثلاً /hrm
+  const basePath = detectBasePath(req, config);
+  req.basePath = basePath;
+  if (basePath) {
+    req.pathname = stripBasePath(req.pathname, basePath);
+    req.url = req.pathname + (parsed.search || '');   // مسیرها یکدست شوند
+  }
   req.ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress || '';
   req.isSecure = (req.headers['x-forwarded-proto'] || '').split(',')[0] === 'https' || !!req.socket.encrypted;
 
@@ -170,8 +217,10 @@ async function handleRequest(app, req, res) {
   const installed = !!config.get('installed', false);
   const isInstallPath = req.pathname === '/install' || req.pathname.startsWith('/install/');
   const isAssetPath = /^\/(assets|fonts|vendor|uploads)\//.test(req.pathname);
+  // صفحه عیب‌یابی پیش از نصب هم باید در دسترس باشد (وقتی ویزارد کار نمی‌کند)
+  const isDiagPath = req.pathname === '/diag' || req.pathname === '/api/system/diagnostics';
 
-  if (!installed && !isInstallPath && !isAssetPath) {
+  if (!installed && !isInstallPath && !isDiagPath && !isAssetPath) {
     if (req.pathname.startsWith('/api/')) {
       res.json(503, { ok: false, error: 'سامانه هنوز نصب نشده است', code: 'not_installed', installUrl: '/install' });
       return;
@@ -218,7 +267,11 @@ function attachResponseHelpers(app, req, res) {
   };
   res.html = (html, status = 200) => {
     if (res.writableEnded) return;
-    sendBody(app, req, res, status, Buffer.from(html, 'utf8'), 'text/html; charset=utf-8', 'no-store');
+    let out = String(html);
+    const base = req.basePath || '';
+    if (base) out = rewriteHtmlUrls(out, base);
+    out = injectBaseAttribute(out, base);
+    sendBody(app, req, res, status, Buffer.from(out, 'utf8'), 'text/html; charset=utf-8', 'no-store');
   };
   res.text = (text, status = 200, type = 'text/plain; charset=utf-8') => {
     sendBody(app, req, res, status, Buffer.from(String(text), 'utf8'), type, 'no-store');
@@ -245,7 +298,7 @@ function attachResponseHelpers(app, req, res) {
   };
   res.redirect = (location, status = 302) => {
     if (res.writableEnded) return;
-    res.writeHead(status, { Location: location, 'Cache-Control': 'no-store' });
+    res.writeHead(status, { Location: withBasePath(location, req.basePath || ''), 'Cache-Control': 'no-store' });
     res.end();
   };
   res.setCookie = (cookie) => {
@@ -270,6 +323,19 @@ function attachResponseHelpers(app, req, res) {
       throw err;
     }
   };
+}
+
+/** افزودن پیشوند به لینک‌های مطلق داخل HTML (href/src/action/content/poster) */
+function rewriteHtmlUrls(html, base) {
+  return String(html).replace(/\b(href|src|action|poster|data-src|data-href|content)=(["'])\/(?!\/)/gi,
+    (m, attr, q) => `${attr}=${q}${base}/`);
+}
+
+/** درج data-base روی تگ <html> تا کلاینت پیشوند را بداند (بدون اسکریپت درون‌خطی/CSP) */
+function injectBaseAttribute(html, base) {
+  if (/<html[^>]*\sdata-base=/i.test(html)) return html;
+  if (/<html[^>]*>/i.test(html)) return html.replace(/<html([^>]*)>/i, `<html$1 data-base="${base}">`);
+  return html;
 }
 
 function sendBody(app, req, res, status, buffer, type, cacheControl = 'no-store') {
@@ -351,10 +417,15 @@ async function tryStatic(app, req, res) {
     file = path.join(app.root, 'public', 'favicon.svg');
     cacheControl = 'public, max-age=86400';
   } else if (urlPath === '/robots.txt') {
-    res.text(`User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\n`, 200);
+    const bp = req.basePath || '';
+    const site = app.config.baseUrl(req) || '';
+    res.text(`User-agent: *\nAllow: /\nDisallow: ${bp}/admin\nDisallow: ${bp}/api/\n` + (site ? `\nSitemap: ${site}/sitemap.xml\n` : ''), 200);
     return true;
   } else if (urlPath === '/_health') {
-    res.json(200, { ok: true, status: 'up', installed: !!app.config.get('installed', false), time: new Date().toISOString(), node: process.version });
+    res.json(200, {
+      ok: true, status: 'up', installed: !!app.config.get('installed', false),
+      time: new Date().toISOString(), node: process.version, basePath: req.basePath || ''
+    });
     return true;
   } else {
     return false;
@@ -386,7 +457,11 @@ async function tryStatic(app, req, res) {
     res.end();
     return true;
   }
-  const buffer = fs.readFileSync(resolved);
+  let buffer = fs.readFileSync(resolved);
+  // در نصب زیرمسیری، آدرس‌های مطلق داخل CSS (مثل فونت‌ها) هم پیشوند می‌گیرند
+  if (ext === '.css' && req.basePath) {
+    buffer = Buffer.from(buffer.toString('utf8').replace(/url\(\s*(["']?)\/(?!\/)/g, (m, q) => `url(${q}${req.basePath}/`), 'utf8');
+  }
   const isHashed = /-[0-9a-f]{8}\.\w+$/.test(resolved);
   sendBody(app, req, res, 200, buffer, type, isHashed ? 'public, max-age=31536000, immutable' : cacheControl);
   return true;
@@ -430,6 +505,53 @@ function serveAdminShell(app, req, res) {
 // ------------------------------------------------------------------ مسیرهای پایه
 
 function registerCoreRoutes(router, app) {
+  // ---------------------------------------------------------------- عیب‌یابی
+  const canDiagnose = (req, res) => {
+    if (!app.config.get('installed', false)) return true;   // قبل از نصب، فقط راه‌اندازی در جریان است
+    const user = app.auth.currentUser(req, app.rbac);
+    if (user && app.rbac.can(user, '*')) return true;
+    res.redirect('/admin');
+    return false;
+  };
+
+  const renderDiag = async (req, res, extra = {}) => {
+    const report = await diagnostics.collect(app, req);
+    const html = app.view.render('admin/diag', Object.assign({
+      title: 'عیب‌یابی سامانه',
+      report,
+      repaired: req.query && req.query.repaired === '1',
+      repairResult: extra.repairResult || null,
+      app: app.config.get('app', {}),
+      version: app.version
+    }, extra), 'layouts/plain');
+    res.html(html);
+  };
+
+  router.get('/diag', async (req, res) => {
+    if (!canDiagnose(req, res)) return;
+    await renderDiag(req, res);
+  });
+
+  router.post('/diag/repair', async (req, res) => {
+    if (!canDiagnose(req, res)) return;
+    const user = app.auth.currentUser(req, app.rbac);
+    let repairResult = [];
+    try {
+      repairResult = await diagnostics.repair(app, user);
+      if (app.audit) app.audit.log({ actor: user, action: 'system.repair', entity: 'system', entityId: null, title: 'ترمیم داده‌های اولیه ماژول‌ها', req });
+    } catch (err) {
+      app.logger.error('ترمیم داده‌های اولیه ناموفق بود:', err.message);
+    }
+    await renderDiag(req, res, { repairResult });
+  });
+
+  // پاسخ JSON برای ابزارهای خودکار
+  router.get('/api/system/diagnostics', async (req, res) => {
+    if (!canDiagnose(req, res)) return;
+    const report = await diagnostics.collect(app, req);
+    res.json(200, { ok: true, data: report });
+  });
+
   /** صفحه فعال‌سازی حساب با لینک دعوت (تعیین رمز عبور) */
   router.get('/invite/:token', (req, res) => {
     const invite = app.auth.getInvite(req.params.token);
@@ -462,8 +584,9 @@ function registerCoreRoutes(router, app) {
 
   router.get('/sitemap.xml', (req, res) => {
     const base = app.config.baseUrl(req);
+    const bp = req.basePath || '';
     const jobs = app.db.col('jobs').all().filter((j) => j.status === 'open' && j.showInPortal !== false);
-    const urls = [`${base}/careers`, ...jobs.map((j) => `${base}/careers/jobs/${j.slug}`)];
+    const urls = [`${base}${bp}/careers`, ...jobs.map((j) => `${base}${bp}/careers/jobs/${j.slug}`)];
     const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
       urls.map((u) => `  <url><loc>${u}</loc></url>`).join('\n') + `\n</urlset>`;
     res.text(xml, 200, 'application/xml; charset=utf-8');

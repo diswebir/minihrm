@@ -29,6 +29,26 @@ export SID=$(scripts/session.sh)
 | `e2e-portal.js` | مسیر کامل متقاضی: انتخاب موقعیت → ورود با کد پیامکی (کد از لاگ پیامک خوانده می‌شود) → ۱۲ مرحله فرم → ثبت نهایی → آزمون ۲۸ سؤالی → بررسی، آزمون و پیگیری وضعیت (`/track`). |
 | `api-shape.js` | شکل پاسخ APIهای اصلی را چاپ می‌کند (برای توسعه کلاینت). |
 | `routes.js` | وضعیت مسیرهای عمومی و ایستا را بدون مرورگر بررسی می‌کند. |
+| `proxy-subpath.js` | شبیه‌ساز نصب در زیرمسیر (cPanel/Passenger): پروکسی `BASE=/hrm` روی پورت ۳۲۰۰. |
+| `cleanup-test-data.js` | گزارش/حذف داده‌های آزمایشی ساخته‌شده توسط تست‌ها (با `--yes`). |
+
+### تست حالت cPanel (زیرمسیر)
+
+```bash
+# ۱) برنامه را با پیشوند واقعی Passenger بالا بیاورید (روی یک کپی تازه)
+cd /tmp/hrm-test-app && PORT=3300 PASSENGER_BASE_URI=/hrm node app.js
+# ۲) یا با پروکسی شبیه‌ساز روی برنامه اصلی
+node scripts/dev/proxy-subpath.js            # → http://localhost:3200/hrm
+
+# اجرای تست‌ها روی همان پیشوند:
+export HRM_BASE=http://localhost:3300/hrm      # یا http://localhost:3200/hrm
+export HRM_APP_ROOT=/tmp/hrm-test-app          # برای خواندن کد پیامکی e2e (اختیاری)
+export SID=$(HRM_LOGIN=0912... HRM_PASS=... scripts/session.sh)
+node scripts/dev/routes.js $HRM_BASE
+JSDOM_PATH=... node scripts/dev/smoke-admin.js
+JSDOM_PATH=... node scripts/dev/tx-admin.js
+JSDOM_PATH=... node scripts/dev/e2e-portal.js
+```
 
 ## نمونه اجرا
 

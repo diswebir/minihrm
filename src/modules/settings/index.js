@@ -137,9 +137,22 @@ module.exports = {
       return { key, enabled, modules: modules.info(), installResult: res.installResult };
     });
 
-    api.put('/settings/modules/:key', { perm: 'settings.modules', module: 'settings' }, (ctx) => {
+    // تنظیم مقادیر ماژول؛ برای جلوگیری از «بی‌اثر بودن خاموش/روشن»، کلید enabled هم پذیرفته می‌شود
+    api.put('/settings/modules/:key', { perm: 'settings.modules', module: 'settings' }, async (ctx) => {
+      let toggleResult = null;
+      if (ctx.body.enabled !== undefined) {
+        toggleResult = await modules.toggle(ctx.params.key, !!ctx.body.enabled, ctx.user);
+        ctx.log(ctx.body.enabled ? 'module.enable' : 'module.disable',
+          `${ctx.body.enabled ? 'فعال‌سازی' : 'غیرفعال‌سازی'} ماژول ${ctx.params.key}`,
+          { entity: 'module', entityId: ctx.params.key, level: 'warn' });
+      }
       const values = modules.setSettings(ctx.params.key, ctx.body.settings || {}, ctx.user);
-      return { settings: values, modules: modules.info() };
+      return {
+        settings: values,
+        enabled: modules.isEnabled(ctx.params.key),
+        installResult: toggleResult ? toggleResult.installResult : null,
+        modules: modules.info()
+      };
     });
 
     // ---------------------------------------------------------- سیستم و نگهداری

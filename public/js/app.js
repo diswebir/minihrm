@@ -411,7 +411,7 @@
     let json = null;
     try { json = await res.json(); } catch (e) { json = null; }
     if (res.status === 401) {
-      if (!opts.silent) window.location.href = '/admin?next=' + encodeURIComponent(location.hash || '');
+      if (!opts.silent) window.location.href = (window.hrmUrl ? window.hrmUrl('/admin') : '/admin') + '?next=' + encodeURIComponent(location.hash || '');
       throw Object.assign(new Error('نشست شما منقضی شده است'), { status: 401 });
     }
     if (res.status === 428 && json && json.code === 'must_change_password') {
@@ -1167,7 +1167,7 @@
       dropdown.querySelector('[data-logout]').addEventListener('click', async (e) => {
         e.preventDefault();
         await HRM.post('/auth/logout').catch(() => {});
-        location.href = '/admin';
+        location.href = window.hrmUrl ? window.hrmUrl('/admin') : '/admin';
       });
     });
   }
@@ -1291,7 +1291,7 @@
   function loadScript(src) {
     return new Promise((resolve) => {
       const s = document.createElement('script');
-      s.src = '/assets/admin/modules/' + src;
+      s.src = (window.hrmUrl ? window.hrmUrl('/assets/admin/modules/') : '/assets/admin/modules/') + src;
       s.onload = resolve;
       s.onerror = () => { console.warn('ماژول کلاینت بارگذاری نشد:', src); resolve(); };
       document.head.appendChild(s);

@@ -213,7 +213,9 @@ class ConfigStore {
     if (req) {
       const proto = (req.headers['x-forwarded-proto'] || '').split(',')[0] || (req.socket && req.socket.encrypted ? 'https' : 'http');
       const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost';
-      return `${proto}://${host}`;
+      // در نصب زیرمسیری (cPanel/Passenger) پیشوند هم بخشی از آدرس پایه است
+      const base = req.basePath || '';
+      return `${proto}://${host}${base}`;
     }
     return '';
   }

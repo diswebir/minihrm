@@ -1,7 +1,7 @@
 /* هارنس تست دودی پنل مدیریت با jsdom (فقط توسعه — داخل ریپو نیست) */
 const { JSDOM, requestInterceptor } = require(process.env.JSDOM_PATH || 'jsdom');
 const fs = require('fs');
-const BASE = 'http://localhost:3000';
+const BASE = (process.env.HRM_BASE || 'http://localhost:3000').replace(/\/+$/, '');
 const SID = process.env.SID;
 if (!SID) { console.error('SID لازم است'); process.exit(1); }
 const COOKIE = 'hrm_sid=' + SID;
@@ -36,7 +36,8 @@ const loader = requestInterceptor(async (request) => {
       window.scrollTo = () => {};
       window.fetch = async (input, init = {}) => {
         const raw = String(input);
-        const url = raw.startsWith('http') ? raw : BASE + raw;
+        // BASE ممکن است پیشوند مسیر داشته باشد؛ URL را مثل مرورگر حل می‌کنیم
+        const url = new URL(raw, BASE + '/').href;
         const headers = Object.assign({}, init.headers || {}, { Cookie: COOKIE });
         const res = await fetch(url, { method: init.method || 'GET', headers, body: init.body, redirect: 'manual' });
         const buf = Buffer.from(await res.arrayBuffer());

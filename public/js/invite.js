@@ -26,7 +26,7 @@
       if (!res.ok || json.ok === false) throw new Error(json.error || 'خطا در انجام عملیات');
       successBox.textContent = 'حساب شما فعال شد. در حال انتقال به پنل…';
       successBox.classList.remove('hidden');
-      setTimeout(() => { location.href = '/admin'; }, 900);
+      setTimeout(() => { location.href = window.hrmUrl ? window.hrmUrl('/admin') : '/admin'; }, 900);
     } catch (err) {
       errorBox.textContent = err.message;
       errorBox.classList.remove('hidden');

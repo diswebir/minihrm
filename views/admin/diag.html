@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>عیب‌یابی سامانه — {{ app.name || 'مینی HRM' }}</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/app.css">
+  <style>
+    .diag-wrap { max-width: 1080px; margin: 0 auto; padding: 24px 16px 64px; }
+    .diag-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+    .diag-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+    .diag-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 1px dashed var(--border); }
+    .diag-row:last-child { border-bottom: 0; }
+    .diag-row .grow { min-width: 0; }
+    .diag-row .t { font-size: 13.5px; font-weight: 500; }
+    .diag-row .s { font-size: 12px; color: var(--muted); word-break: break-all; }
+    .diag-badge { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 8px; display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+    .diag-badge.ok { background: var(--success-soft, #e7f7ee); color: #16885a; }
+    .diag-badge.bad { background: var(--danger-soft, #fdecec); color: #c0392b; }
+    .diag-note { font-size: 12px; color: var(--muted); }
+    .diag-kv { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; font-size: 13px; border-bottom: 1px dashed var(--border); }
+    .diag-kv:last-child { border-bottom: 0; }
+    .diag-kv b { font-weight: 500; color: var(--muted); }
+    .diag-kv span { font-family: ui-monospace, monospace; direction: ltr; text-align: left; word-break: break-all; }
+    .diag-counts { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+    .diag-count { background: var(--surface-2, #f6f5fb); border-radius: 12px; padding: 10px; text-align: center; }
+    .diag-count .n { font-size: 18px; font-weight: 700; }
+    .diag-count .l { font-size: 11.5px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="diag-wrap">
+    <div class="diag-head">
+      <span class="brand-logo">HR</span>
+      <div class="grow">
+        <div class="bold">عیب‌یابی سامانه مینی HRM</div>
+        <div class="text-xs muted">نسخه {{ version }} — این صفحه وضعیت فایل‌ها، دارایی‌ها، پیشوند مسیر و ماژول‌ها را بررسی می‌کند.</div>
+      </div>
+      <a class="btn btn-ghost" href="/admin">پنل مدیریت</a>
+      <a class="btn btn-primary" href="/diag">بررسی مجدد</a>
+    </div>
+
+    {{#if report.ok}}
+    <div class="card mb-4" style="border-inline-start:4px solid #16885a">
+      <div class="bold">✔ همه بررسی‌ها موفق بود</div>
+      <div class="text-sm muted">سامانه آماده استفاده است. اگر باز هم ظاهر یا کارکرد مشکل داشت، صفحه را با Ctrl+F5 (بدون کش) باز کنید.</div>
+    </div>
+    {{else}}
+    <div class="card mb-4" style="border-inline-start:4px solid #c0392b">
+      <div class="bold">⚠ مواردی نیاز به رسیدگی دارند ({{ report.warnings.length }})</div>
+      {{#each report.warnings}}
+      <div class="text-sm" style="margin-top:6px">• {{ this }}</div>
+      {{/each}}
+    </div>
+    {{/if}}
+
+    {{#if repairResult}}
+    <div class="card mb-4">
+      <div class="bold mb-2">نتیجه ترمیم داده‌های اولیه</div>
+      {{#each repairResult}}
+      <div class="diag-row">
+        <span class="diag-badge {{#if this.ok}}ok{{else}}bad{{/if}}">{{#if this.ok}}✓{{else}}✘{{/if}}</span>
+        <div class="grow"><div class="t">{{ this.title }}</div>{{#if this.error}}<div class="s">{{ this.error }}</div>{{/if}}</div>
+      </div>
+      {{/each}}
+    </div>
+    {{/if}}
+
+    <div class="diag-grid">
+      <div class="card">
+        <div class="bold mb-2">۱) محیط اجرا</div>
+        <div class="diag-kv"><b>نسخه Node</b><span>{{ report.env.node }}</span></div>
+        <div class="diag-kv"><b>سیستم</b><span>{{ report.env.platform }}</span></div>
+        <div class="diag-kv"><b>مسیر پروژه</b><span>{{ report.env.root }}</span></div>
+        <div class="diag-kv"><b>PORT</b><span>{{ report.env.port }}</span></div>
+        <div class="diag-kv"><b>PASSENGER_BASE_URI</b><span>{{ report.env.passenger || '—' }}</span></div>
+        <div class="diag-kv"><b>پیشوند تشخیص‌داده‌شده</b><span>{{ report.env.basePath || '— (ریشه)' }}</span></div>
+        <div class="diag-kv"><b>آدرس پایه سایت</b><span>{{ report.env.baseUrl || '— تنظیم نشده' }}</span></div>
+        <div class="diag-kv"><b>وضعیت نصب</b><span>{{#if report.env.installed}}نصب‌شده{{else}}نصب‌نشده{{/if}}</span></div>
+        <div class="diag-kv"><b>نوشتن در data</b><span>{{#if report.env.dataWritable}}✔ مجاز{{else}}✘ غیرمجاز{{/if}}{{#if report.env.dataError}} ({{ report.env.dataError }}){{/if}}</span></div>
+      </div>
+
+      <div class="card">
+        <div class="bold mb-2">۲) فایل‌های پروژه</div>
+        {{#each report.files}}
+        <div class="diag-row">
+          <span class="diag-badge {{#if this.ok}}ok{{else}}bad{{/if}}">{{#if this.ok}}✓{{else}}✘{{/if}}</span>
+          <div class="grow">
+            <div class="t">{{ this.label }}{{#if this.critical}} <span class="diag-note">(ضروری)</span>{{/if}}</div>
+            <div class="s">{{ this.rel }}{{#if this.ok}} — {{ this.size }} بایت{{/if}}</div>
+          </div>
+        </div>
+        {{/each}}
+      </div>
+
+      <div class="card" style="grid-column: 1 / -1">
+        <div class="bold mb-2">۳) بررسی زنده دارایی‌ها (درخواست واقعی HTTP)</div>
+        <div class="text-xs muted mb-2">این بخش همان درخواست‌هایی را می‌فرستد که مرورگر برای بارگذاری CSS، JS و فونت انجام می‌دهد.</div>
+        {{#each report.httpChecks}}
+        <div class="diag-row">
+          <span class="diag-badge {{#if this.ok}}ok{{else}}bad{{/if}}">{{#if this.ok}}✓{{else}}✘{{/if}}</span>
+          <div class="grow">
+            <div class="t">{{ this.label }} <span class="diag-note">{{ this.url }}</span></div>
+            <div class="s">کد پاسخ: {{ this.status }}{{#if this.note}} — {{ this.note }}{{/if}}</div>
+          </div>
+        </div>
+        {{/each}}
+      </div>
+
+      <div class="card" style="grid-column: 1 / -1">
+        <div class="bold mb-2">۴) ماژول‌ها و داده‌های اولیه</div>
+        {{#each report.modules}}
+        <div class="diag-row">
+          <span class="diag-badge {{#if this.enabled}}ok{{else}}bad{{/if}}">{{#if this.enabled}}✓{{else}}✘{{/if}}</span>
+          <div class="grow">
+            <div class="t">{{ this.title }} <span class="diag-note">({{ this.key }})</span></div>
+            <div class="s">
+              {{#if this.enabled}}فعال{{else}}غیرفعال{{/if}}
+              — نصب داده اولیه: {{#if this.hasSeed}}{{#if this.installed}}انجام‌شده{{else}}انجام‌نشده{{/if}}{{else}}ندارد{{/if}}
+              {{#if this.records.length}}
+              — رکوردها:
+              {{#each this.records}}{{ this.label }}: {{ this.value }}{{#unless @last}}، {{/unless}}{{/each}}
+              {{/if}}
+            </div>
+          </div>
+        </div>
+        {{/each}}
+      </div>
+
+      <div class="card" style="grid-column: 1 / -1">
+        <div class="bold mb-2">۵) آمار داده‌ها</div>
+        <div class="diag-counts">
+          <div class="diag-count"><div class="n">{{ report.counts.users }}</div><div class="l">کاربر</div></div>
+          <div class="diag-count"><div class="n">{{ report.counts.roles }}</div><div class="l">نقش</div></div>
+          <div class="diag-count"><div class="n">{{ report.counts.jobs }}</div><div class="l">موقعیت شغلی</div></div>
+          <div class="diag-count"><div class="n">{{ report.counts.applicants }}</div><div class="l">متقاضی</div></div>
+          <div class="diag-count"><div class="n">{{ report.counts.applications }}</div><div class="l">پرونده</div></div>
+          <div class="diag-count"><div class="n">{{ report.counts.form_schemas }}</div><div class="l">نسخه فرم</div></div>
+          <div class="diag-count"><div class="n">{{ report.counts.interview_questions }}</div><div class="l">سؤال مصاحبه</div></div>
+          <div class="diag-count"><div class="n">{{ report.counts.assessment_results }}</div><div class="l">نتیجه آزمون</div></div>
+          <div class="diag-count"><div class="n">{{ report.counts.sms_logs }}</div><div class="l">پیامک</div></div>
+          <div class="diag-count"><div class="n">{{ report.counts.audit_logs }}</div><div class="l">رویداد</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mt-4">
+      <div class="bold mb-2">ترمیم خودکار</div>
+      <div class="text-sm muted mb-3">اگر داده‌های اولیه ماژول‌ها (فرم استخدام، سؤالات مصاحبه، آزمون، نقش‌ها، قالب‌های پیامک) ناقص باشد، با این دکمه بازسازی می‌شوند. این عملیات داده‌های موجود شما را پاک نمی‌کند.</div>
+      <form method="post" action="/diag/repair">
+        <button class="btn btn-primary" type="submit">ترمیم داده‌های اولیه ماژول‌ها</button>
+      </form>
+      <div class="text-xs muted mt-3">
+        راهنمای سریع: اگر CSS بارگذاری نمی‌شود، بررسی کنید که پوشه <span dir="ltr">public/</span> کامل آپلود شده باشد و آدرس پایه سایت در تنظیمات با پیشوند نصب (مثلاً <span dir="ltr">https://example.com/hrm</span>) یکی باشد.
+      </div>
+    </div>
+  </div>
+</body>
+</html>

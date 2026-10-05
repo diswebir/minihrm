@@ -562,3 +562,134 @@ table.table td.actions-cell { white-space: nowrap; }
 .splash { position: fixed; inset: 0; display: grid; place-items: center; background: var(--bg); z-index: 300; }
 .splash .logo-big { width: 76px; height: 76px; border-radius: 26px; background: linear-gradient(135deg, var(--violet-400), var(--violet-600)); display: grid; place-items: center; color: #fff; font-size: 1.6rem; font-weight: 700; margin: 0 auto 16px; box-shadow: 0 16px 36px rgba(124,108,240,.3); }
 .fade-out { opacity: 0; transition: opacity .3s ease; pointer-events: none; }
+
+/* ==================================================================
+   تکمیل کلاس‌های به‌کاررفته اما تعریف‌نشده (رفع ظاهر ناقص)
+   ================================================================== */
+
+/* --- ابزارهای چیدمان --- */
+.block { display: block; }
+.text-left { text-align: left; }
+.text-start { text-align: start; }
+.text-right { text-align: right; }
+.self-center { align-self: center; }
+.justify-end { justify-content: flex-end; }
+.justify-center { justify-content: center; }
+.items-center { align-items: center; }
+
+/* --- نقطه‌های رنگی وضعیت (کانبان/برچسب‌ها) --- */
+.dot-color { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: 0 0 9px; }
+.bg-violet { background: var(--violet-500); }
+.bg-sky { background: var(--sky-500); }
+.bg-mint { background: var(--mint-500); }
+.bg-lemon { background: var(--lemon-500); }
+.bg-peach { background: var(--peach-500); }
+.bg-rose { background: var(--rose-500); }
+.bg-gray { background: var(--text-3); }
+
+/* --- بدنه کارت (HRM.card) --- */
+.card-body { margin-top: 4px; }
+.card > .card-head + .card-body { margin-top: 0; }
+
+/* --- آیکون اعلان‌ها (toast) --- */
+.t-icon { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; flex: 0 0 34px; background: var(--primary-soft); color: var(--primary-700); }
+.toast.success .t-icon { background: var(--mint-50); color: var(--mint-600); }
+.toast.error .t-icon { background: var(--rose-50); color: var(--rose-600); }
+.toast.warning .t-icon { background: var(--lemon-50); color: var(--lemon-600); }
+
+/* --- صفحه خطا --- */
+.big-icon {
+  width: 84px; height: 84px; margin: 0 auto 16px; border-radius: 26px;
+  display: grid; place-items: center; font-size: 2rem; font-weight: 700;
+  background: var(--violet-50); color: var(--violet-600);
+}
+
+/* --- کانبان: بدنه ستون --- */
+.kanban-col-body { min-height: 60px; display: flex; flex-direction: column; }
+.kanban-col-body.drop-active { background: var(--violet-50); border-radius: var(--radius); outline: 1px dashed var(--violet-300); }
+.kanban-col-body:empty::after {
+  content: 'موردی در این مرحله نیست'; display: block; text-align: center;
+  color: var(--text-3); font-size: .78rem; padding: 18px 4px;
+}
+
+/* --- پروفایل: تصویر کاربر --- */
+.avatar-wrap { display: inline-block; }
+.avatar-wrap .avatar { width: 76px; height: 76px; border-radius: 24px; flex-basis: 76px; font-size: 1.4rem; }
+.avatar-edit {
+  position: absolute; inset-inline-end: -6px; bottom: -6px; width: 30px; height: 30px;
+  border-radius: 11px; background: #fff; border: 1px solid var(--border-strong);
+  display: grid; place-items: center; cursor: pointer; color: var(--text-2);
+  box-shadow: var(--shadow-xs); transition: var(--transition);
+}
+.avatar-edit:hover { color: var(--primary); border-color: var(--violet-300); background: var(--violet-50); }
+
+/* ==================================================================
+   ویزارد نصب — چیدمان کامل (قبلاً بدون استایل بود)
+   ================================================================== */
+.install-wrap {
+  max-width: 1140px; margin: 0 auto; padding: 28px 18px 72px;
+  display: grid; grid-template-columns: 296px minmax(0, 1fr); gap: 22px; align-items: start;
+}
+.install-side {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm); padding: 20px; position: sticky; top: 20px;
+}
+.install-steps { display: flex; flex-direction: column; gap: 4px; }
+.install-step {
+  display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 12px;
+  font-size: .85rem; color: var(--text-2); transition: var(--transition);
+}
+.install-step .num {
+  width: 26px; height: 26px; flex: 0 0 26px; border-radius: 9px; display: grid; place-items: center;
+  background: var(--surface-2); color: var(--text-3); font-size: .76rem; font-weight: 700;
+}
+.install-step.active { background: var(--violet-50); color: var(--violet-700); font-weight: 600; }
+.install-step.active .num { background: var(--primary); color: #fff; }
+.install-step.done { color: var(--mint-600); }
+.install-step.done .num { background: var(--mint-50); color: var(--mint-600); }
+.install-main { min-width: 0; }
+.install-main h2 { font-size: 1.15rem; margin-bottom: 6px; }
+.install-main h4 { font-size: .92rem; margin: 18px 0 4px; color: var(--text-2); }
+
+/* کارت ماژول در ویزارد */
+.module-card {
+  display: flex; align-items: flex-start; gap: 12px; padding: 13px 15px; cursor: pointer;
+  border: 1px solid var(--border-strong); border-radius: 14px; background: #fff; transition: var(--transition);
+}
+.module-card:hover { border-color: var(--violet-200); }
+.module-card.selected { border-color: var(--violet-400); background: var(--violet-50); }
+.module-card.locked { cursor: default; opacity: .75; background: var(--surface-2); }
+.module-card input { margin-top: 3px; accent-color: var(--primary); width: 17px; height: 17px; }
+.module-card .mc-icon {
+  width: 34px; height: 34px; flex: 0 0 34px; border-radius: 11px; display: grid; place-items: center;
+  background: var(--surface-2); font-size: 1rem;
+}
+.module-card.selected .mc-icon { background: #fff; }
+.module-card .grow { min-width: 0; }
+.module-card .bold { display: block; }
+
+/* نتیجه بررسی پیش‌نیازها */
+.check-result {
+  display: flex; align-items: flex-start; gap: 10px; padding: 11px 13px;
+  border: 1px solid var(--border); border-radius: 13px; background: #fff;
+}
+.check-result .ic {
+  width: 24px; height: 24px; flex: 0 0 24px; border-radius: 8px; display: grid; place-items: center;
+  font-size: .82rem; font-weight: 700; background: var(--surface-2); color: var(--text-3);
+}
+.check-result.ok { border-color: var(--mint-200); background: var(--mint-50); }
+.check-result.ok .ic { background: #fff; color: var(--mint-600); }
+.check-result.fail { border-color: var(--rose-200); background: var(--rose-50); }
+.check-result.fail .ic { background: #fff; color: var(--rose-600); }
+
+/* خلاصه نصب نهایی */
+.review-box {
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 13px;
+  padding: 12px 14px; display: flex; flex-direction: column; gap: 3px;
+}
+.review-box .text-xs { line-height: 1.7; }
+
+@media (max-width: 940px) {
+  .install-wrap { grid-template-columns: 1fr; gap: 14px; }
+  .install-side { position: static; }
+}

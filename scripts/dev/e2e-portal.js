@@ -1,8 +1,9 @@
 /* E2E مرورگرگونه پورتال متقاضی با jsdom (فقط توسعه) */
 const { JSDOM, requestInterceptor } = require(process.env.JSDOM_PATH || 'jsdom');
 const fs = require('fs');
-const BASE = 'http://localhost:3000';
-const ROOT = '/home/user/minihrm';
+const BASE = (process.env.HRM_BASE || 'http://localhost:3000').replace(/\/+$/, '');
+const path = require('path');
+const ROOT = process.env.HRM_APP_ROOT || path.resolve(__dirname, '..', '..');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 process.on('unhandledRejection', (e) => console.log('  (unhandled rejection در صفحه):', (e && e.message) || e));
 const jar = new Map();
@@ -28,7 +29,7 @@ async function localFetch(url, init = {}) {
 }
 const loader = requestInterceptor(async (request) => {
   try {
-    const url = request.url.replace('http://localhost:3000', BASE);
+    const url = request.url.replace(/^https?:\/\/localhost:3000/, BASE);
     const res = await localFetch(url, { method: request.method });
     const buf = Buffer.from(await res.arrayBuffer());
     return new Response(buf, { status: res.status, headers: { 'Content-Type': res.headers.get('content-type') || 'application/octet-stream' } });
@@ -48,7 +49,8 @@ function makePage(html, url) {
       window.__netlog = [];
       window.fetch = async (input, init = {}) => {
         const raw = String(input);
-        const target = raw.startsWith('http') ? raw : 'http://localhost:3000' + raw;
+        // BASE ممکن است پیشوند مسیر داشته باشد؛ URL را مثل مرورگر حل می‌کنیم
+        const target = new URL(raw, BASE + '/').href;
         const headers = Object.assign({}, init.headers || {});
         const ck = cookieHeader();
         if (ck) headers.Cookie = ck;

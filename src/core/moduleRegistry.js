@@ -20,6 +20,14 @@ const fs = require('fs');
 const path = require('path');
 const { deepMerge } = require('./utils');
 
+/** خطای قابل‌نمایش برای کاربر (لایه API آن را با پیام روشن برمی‌گرداند) */
+function userError(message, status = 400) {
+  const err = new Error(message);
+  err.isHttpError = true;
+  err.status = status;
+  return err;
+}
+
 class ModuleRegistry {
   constructor(app) {
     this.app = app;
@@ -170,7 +178,9 @@ class ModuleRegistry {
   }
 
   initApi(api) {
-    for (const def of this.active()) {
+    // همه ماژول‌ها ثبت می‌شوند تا فعال/غیرفعال‌سازی در زمان اجرا (بدون ری‌استارت) اثر کند؛
+    // غیرفعال بودن ماژول در لایه API بررسی و پاسخ روشن برگردانده می‌شود.
+    for (const def of this.all()) {
       if (typeof def.api === 'function') {
         try {
           def.api(api, this.app);
@@ -182,15 +192,34 @@ class ModuleRegistry {
   }
 
   initRoutes(router) {
-    for (const def of this.active()) {
+    for (const def of this.all()) {
       if (typeof def.routes === 'function') {
         try {
-          def.routes(router, this.app);
+          def.routes(this.guardedRouter(router, def), this.app);
         } catch (err) {
           this.app.logger.error(`ثبت مسیرهای ماژول «${def.key}» ناموفق بود:`, err.message);
         }
       }
     }
+  }
+
+  /**
+   * روتری که پیش از هر هندلر بررسی می‌کند ماژول فعال است یا نه.
+   * این‌گونه خاموش/روشن کردن ماژول از پنل، بی‌درنگ و بدون ری‌استارت اثر می‌کند.
+   */
+  guardedRouter(router, def) {
+    const self = this;
+    const guard = (handler) => async (req, res, app, params) => {
+      if (!self.isEnabled(def.key)) {
+        throw userError(`ماژول «${def.title}» غیرفعال است. برای فعال‌سازی به تنظیمات ← ماژول‌ها بروید.`, 404);
+      }
+      return handler(req, res, app, params);
+    };
+    const api = {};
+    for (const m of ['get', 'post', 'put', 'patch', 'delete', 'all']) {
+      if (typeof router[m] === 'function') api[m] = (p, h, o) => router[m](p, guard(h), o);
+    }
+    return api;
   }
 
   /** اجرای داده‌های اولیه همه ماژول‌های فعال */
@@ -215,13 +244,13 @@ class ModuleRegistry {
   /** فعال/غیرفعال کردن ماژول */
   async toggle(key, enabled, actor = null) {
     const def = this.map.get(key);
-    if (!def) throw new Error('ماژول یافت نشد');
-    if (def.core && !enabled) throw new Error('این ماژول پایه است و قابل غیرفعال‌سازی نیست');
+    if (!def) throw userError('ماژول یافت نشد', 404);
+    if (def.core && !enabled) throw userError(`ماژول «${def.title}» پایه است و قابل غیرفعال‌سازی نیست`);
     if (enabled) {
       for (const dep of def.depends || []) {
         if (!this.isEnabled(dep)) {
           const depDef = this.map.get(dep);
-          throw new Error(`برای فعال‌سازی این ماژول ابتدا ماژول «${depDef ? depDef.title : dep}» را فعال کنید`);
+          throw userError(`برای فعال‌سازی این ماژول ابتدا ماژول «${depDef ? depDef.title : dep}» را فعال کنید`);
         }
       }
     }
@@ -246,7 +275,7 @@ class ModuleRegistry {
 
   setSettings(key, values, actor = null) {
     const def = this.map.get(key);
-    if (!def) throw new Error('ماژول یافت نشد');
+    if (!def) throw userError('ماژول یافت نشد', 404);
     const allowed = {};
     for (const s of def.settings || []) {
       if (values[s.key] === undefined) continue;
