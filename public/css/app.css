@@ -533,6 +533,32 @@ img { max-width: 100%; }
 }
 .repeater-add:hover { border-color: var(--primary); background: var(--primary-softer); }
 
+/* ---- حالت خالی بخش‌های تکرارشونده ---- */
+.repeater-empty { margin-bottom: 10px; }
+.repeater-empty-box {
+  padding: 18px 14px; border: 1.5px dashed var(--border); border-radius: var(--radius-md);
+  text-align: center; color: var(--muted); font-size: .82rem; background: var(--surface);
+  display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;
+}
+
+/* ---- بخش جمع‌شدنی فیلدهای اختیاری ---- */
+.optional-details {
+  grid-column: 1 / -1; margin-top: 6px;
+  border: 1.5px solid var(--border); border-radius: var(--radius-md); background: var(--surface);
+}
+.optional-summary {
+  cursor: pointer; list-style: none; padding: 14px 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  font-weight: 700; font-size: .87rem; color: var(--primary-2); user-select: none;
+}
+.optional-summary::-webkit-details-marker { display: none; }
+.optional-summary:hover { color: var(--primary); }
+.optional-summary-title { display: inline-flex; align-items: center; gap: 7px; }
+.optional-details[open] .optional-summary { border-bottom: 1px dashed var(--border); }
+.optional-details[open] .optional-summary-title::after { content: '▲'; font-size: .7rem; opacity: .6; }
+.optional-details:not([open]) .optional-summary-title::after { content: '▼'; font-size: .7rem; opacity: .6; }
+.optional-details > .form-grid { padding: 0 16px 16px; }
+
 /* ================= سایر ================= */
 .flex { display: flex; }
 .flex-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }

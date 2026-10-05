@@ -71,6 +71,15 @@ function sanitizePatternVar(v) {
 }
 
 /**
+ * «نمایش کد OTP در حالت آزمایشی» (sms_mock_show) کلید قطع ارسال پیامک از پنل است:
+ * وقتی فعال باشد (پیش‌فرض)، هیچ پیامکی — کد تایید، اطلاع‌رسانی یا تاییدیه —
+ * از طریق پنل پیامکی ارسال نمی‌شود و همه ارسال‌ها به‌صورت آزمایشی انجام می‌شوند.
+ */
+function isTestMode(cfg) {
+  return (cfg.sms_mock_show === undefined ? '1' : String(cfg.sms_mock_show)) === '1';
+}
+
+/**
  * ارسال عمومی پیامک الگو (Pattern) با نگاشت متغیرها به نام‌های تعریف‌شده کاربر
  * @param {string} phone شماره مقصد
  * @param {string} patternCode کد الگوی تأییدشده در پنل پیامکی
@@ -79,7 +88,8 @@ function sanitizePatternVar(v) {
  */
 async function sendPattern(phone, patternCode, params, varMap) {
   const cfg = getSmsConfig();
-  const driver = cfg.sms_driver || 'mock';
+  // حالت آزمایشی ⇒ مسیر درگاه کلاً قطع می‌شود
+  const driver = isTestMode(cfg) ? 'mock' : (cfg.sms_driver || 'mock');
   const to = normalizePhone(phone);
   if (!to) throw new Error('شماره موبایل نامعتبر است');
 
@@ -129,7 +139,8 @@ async function sendOtp(phone, code) {
   const pattern = (cfg.sms_ippanel_pattern_code || '').trim();
   const patternVar = sanitizePatternVar(cfg.sms_pattern_var);
   const res = await sendPattern(phone, pattern, { [patternVar]: String(code) }, {});
-  if (res.driver === 'mock' && cfg.sms_mock_show === '1') {
+  if (res.driver === 'mock') {
+    // در حالت آزمایشی/درایور تست، کد OTP برای نمایش روی صفحه برمی‌گردد
     res.code = String(code);
     res.message = 'پیامک آزمایشی (درایور تست). کد OTP: ' + code;
   }
@@ -193,7 +204,8 @@ async function notifyApplicantConfirmation(applicant, positionTitle) {
 /** ارسال پیامک متن ساده (اعلان‌ها) */
 async function sendText(phone, text) {
   const cfg = getSmsConfig();
-  const driver = cfg.sms_driver || 'mock';
+  // حالت آزمایشی ⇒ مسیر درگاه کلاً قطع می‌شود
+  const driver = isTestMode(cfg) ? 'mock' : (cfg.sms_driver || 'mock');
   const to = normalizePhone(phone);
   if (!to) throw new Error('شماره موبایل نامعتبر است');
   if (driver === 'ippanel') {

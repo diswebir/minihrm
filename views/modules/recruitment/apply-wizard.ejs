@@ -222,8 +222,12 @@
     <% } else { %>
       <!-- ===== مراحل عادی فرم ===== -->
       <form method="post" action="/apply/wizard/<%= step.key %>" enctype="multipart/form-data">
-        <div class="form-grid">
-          <% fields.forEach(function(f) {
+        <%
+          /* فیلدهای سادهٔ اختیاری در یک بخش جمع‌شدنی قرار می‌گیرند تا فرم کوتاه‌تر و سبک‌تر شود */
+          function isCollapsible(f) {
+            return !f.required && ['text', 'textarea', 'number', 'date', 'phone', 'email', 'select', 'radio', 'file'].indexOf(f.type) >= 0;
+          }
+          function renderField(f) {
             var v = data[f.field_key];
           %>
             <% if (f.type === 'repeater') { %>
@@ -234,7 +238,7 @@
 
                 <div class="repeater-container" id="rep-<%= f.field_key %>">
                   <%
-                    var rows = (Array.isArray(v) && v.length) ? v : [{}];
+                    var rows = (Array.isArray(v) && v.length) ? v : [];
                     var repCols = repeaterCols[f.field_key] || parseJson(f.options, []);
                     var rowPrefix = f.builtin ? 'rows' : ('rows_' + f.field_key);
                   %>
@@ -263,6 +267,13 @@
                       </div>
                     </div>
                   <% }) %>
+                </div>
+
+                <div class="repeater-empty" <%= rows.length ? 'style="display:none"' : '' %>>
+                  <div class="repeater-empty-box">
+                    <%- icon('plus', 18) %>
+                    هنوز موردی اضافه نشده است — تا زمانی که خودتان اضافه نکنید، چیزی ثبت نمی‌شود.
+                  </div>
                 </div>
 
                 <button type="button" class="repeater-add" data-target="rep-<%= f.field_key %>">
@@ -428,8 +439,25 @@
                 <% if (f.help) { %><div class="help"><%= f.help %></div><% } %>
               </div>
             <% } %>
-          <% }) %>
+        <% } %>
+        <div class="form-grid">
+          <% fields.forEach(function(f) { if (isCollapsible(f)) return; renderField(f); }); %>
         </div>
+
+        <%
+          var collapsibles = fields.filter(isCollapsible);
+        %>
+        <% if (collapsibles.length) { %>
+          <details class="optional-details" id="optional-fields">
+            <summary class="optional-summary">
+              <span class="optional-summary-title"><%- icon('plus', 16) %> فیلدهای اختیاری</span>
+              <span class="text-xs text-muted"><%= faNum(collapsibles.length) %> فیلد — در صورت تمایل تکمیل کنید</span>
+            </summary>
+            <div class="form-grid" style="margin-top:14px">
+              <% collapsibles.forEach(function(f) { renderField(f); }); %>
+            </div>
+          </details>
+        <% } %>
 
         <div class="wizard-nav">
           <% if (step.key !== 'personal') { %>

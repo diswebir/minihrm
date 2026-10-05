@@ -75,6 +75,8 @@
       const first = row.querySelector('input, select, textarea');
       if (first) first.focus();
       reindexRows(container, targetId);
+      const emptyBox = container.parentElement.querySelector('.repeater-empty');
+      if (emptyBox) emptyBox.style.display = 'none';
       return;
     }
     const removeBtn = e.target.closest('.row-remove');
@@ -84,6 +86,8 @@
       const targetId = container.id;
       row.remove();
       reindexRows(container, targetId);
+      const emptyBox = container.parentElement.querySelector('.repeater-empty');
+      if (emptyBox) emptyBox.style.display = container.querySelectorAll('.repeater-row').length ? 'none' : '';
     }
   });
 
@@ -103,6 +107,25 @@
   document.querySelectorAll('.repeater-container').forEach(function (c) {
     reindexRows(c, c.id);
   });
+
+  /* ---------- بخش فیلدهای اختیاری (جمع‌شدنی) ---------- */
+  const optDetails = document.getElementById('optional-fields');
+  if (optDetails) {
+    // اگر مقداری از قبل ذخیره شده باشد، بخش باز می‌شود
+    const hasVal = Array.prototype.some.call(optDetails.querySelectorAll('input, select, textarea'), function (el) {
+      if (el.type === 'checkbox' || el.type === 'radio') return el.checked;
+      return !!(el.value && el.value.trim());
+    });
+    if (hasVal) optDetails.open = true;
+    // با انتخاب «متاهل»، فیلدهای همسر (داخل بخش اختیاری) در دسترس قرار می‌گیرند
+    const marital = document.querySelector('select[name="f_marital_status"]');
+    if (marital) {
+      marital.addEventListener('change', function () {
+        if (marital.value === 'married') optDetails.open = true;
+      });
+      if (marital.value === 'married') optDetails.open = true;
+    }
+  }
 
   /* ---------- تب‌ها (با پشتیبانی کیبورد و ARIA) ---------- */
   function activateTab(tab) {

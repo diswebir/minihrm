@@ -102,7 +102,7 @@ router.post('/api/otp/send', rateLimit({
 
     const payload = { ok: true, message: 'کد تایید ارسال شد.', driver: result.driver };
     // در حالت آزمایشی، کد برای تست نمایش داده می‌شود
-    if (result.driver === 'mock' && result.code && helpers.getSetting('sms_mock_show', '1') === '1') {
+    if (result.driver === 'mock' && result.code) {
       payload.devCode = result.code;
     }
     res.json(payload);

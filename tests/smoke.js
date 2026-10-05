@@ -196,6 +196,7 @@ async function main() {
 
   r = await cand('GET', '/apply/wizard/personal');
   ok('ویزارد چندمرحله‌ای فرم', r.status === 200 && r.text.includes('مشخصات متقاضی') && r.text.includes('آزمون‌های روان‌شناختی'));
+  ok('فیلدهای اختیاری در بخش جمع‌شدنی', r.text.includes('فیلدهای اختیاری') && r.text.includes('id="optional-fields"') && r.text.includes('name="f_email"'));
 
   /* ═══════ 5. تکمیل فرم استخدام ═══════ */
   console.log('▸ تکمیل فرم چندمرحله‌ای');
@@ -207,6 +208,9 @@ async function main() {
 
   r = await cand('POST', '/apply/wizard/personal', { form: { f_first_name: 'علی', f_last_name: 'رضایی', f_father_name: 'محمد', f_national_id: '1234567890', f_birth_date: '1370/05/12', f_gender: 'male', f_marital_status: 'single', f_phone_mobile: '09121112233', f_email: 'ali@test.ir', f_address: 'اصفهان', f_has_insurance: 'yes', f_military_status: 'finished' } });
   ok('مرحله مشخصات', r.status === 302 && r.redirect.includes('/experience'));
+
+  r = await cand('GET', '/apply/wizard/experience');
+  ok('بخش سوابق بدون ردیف از پیش آماده', !r.text.includes('name="rows[0]') && r.text.includes('هنوز موردی اضافه نشده'));
 
   r = await cand('POST', '/apply/wizard/experience', { form: { 'rows[0][company]': 'آریا', 'rows[0][position]': 'توسعه‌دهنده', 'rows[0][period]': '1398-1402', 'rows[0][duration]': '4 سال', 'rows[0][last_salary]': '25M', 'rows[0][leave_reason]': 'پایان قرارداد', 'rows[0][work_phone]': '0313222' } });
   ok('مرحله سوابق کاری', r.status === 302 && r.redirect.includes('/education'));
@@ -516,6 +520,28 @@ async function main() {
   r = await admin('GET', '/admin/settings');
   ok('نام متغیر نامعتبر → بازگشت به code',
     /name="sms_pattern_var"[^>]*value="code"/.test(r.text) && r.text.includes('params = { "code"'));
+
+  ok('برچسب حالت آزمایشی با توضیح قطع ارسال', (await admin('GET', '/admin/settings')).text.includes('قطع ارسال پیامک از پنل'));
+
+  // «نمایش کد OTP در حالت آزمایشی» ⇒ کلید قطع کامل ارسال از پنل پیامکی
+  r = await admin('POST', '/admin/settings/sms', { form: { sms_driver: 'ippanel', sms_ippanel_apikey: '', sms_ippanel_from: '+983000505', sms_ippanel_pattern_code: 'pat123', sms_pattern_var: 'code', sms_mock_show: '1' } });
+  ok('ذخیره درایور واقعی با حالت آزمایشی فعال', r.status === 302);
+
+  let otpKill = await cand('POST', '/api/otp/send', { json: { phone: '09120007777' } });
+  const killOn = JSON.parse(otpKill.text);
+  ok('حالت آزمایشی ⇒ کد OTP روی صفحه و عدم ارسال از پنل',
+    otpKill.status === 200 && killOn.ok === true && killOn.driver === 'mock' && !!killOn.devCode, otpKill.text);
+
+  r = await admin('POST', '/admin/settings/sms', { form: { sms_driver: 'ippanel', sms_ippanel_apikey: '', sms_ippanel_from: '+983000505', sms_ippanel_pattern_code: 'pat123', sms_pattern_var: 'code', sms_mock_show: '0' } });
+  ok('ذخیره تنظیمات با حالت آزمایشی غیرفعال', r.status === 302);
+
+  otpKill = await cand('POST', '/api/otp/send', { json: { phone: '09120006666' } });
+  const killOff = JSON.parse(otpKill.text);
+  ok('حالت آزمایشی غیرفعال ⇒ تلاش برای ارسال از پنل',
+    otpKill.status === 400 && killOff.ok === false && killOff.message.includes('IPPanel'), otpKill.text);
+
+  r = await admin('POST', '/admin/settings/sms', { form: { sms_driver: 'mock', sms_ippanel_apikey: '', sms_ippanel_from: '+983000505', sms_ippanel_pattern_code: 'pat123', sms_pattern_var: 'otp', sms_mock_show: '1' } });
+  ok('بازگشت به حالت آزمایشی', r.status === 302);
 
   r = await admin('GET', '/admin/settings/backup');
   ok('دانلود پشتیبان دیتابیس', r.status === 200 && r.headers.get('content-type').includes('octet-stream'));

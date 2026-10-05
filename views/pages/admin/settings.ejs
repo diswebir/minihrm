@@ -108,8 +108,9 @@
             <div class="field">
               <label class="check-row">
                 <input type="checkbox" name="sms_mock_show" value="1" <%= (settings.sms_mock_show || '1') === '1' ? 'checked' : '' %>>
-                نمایش کد OTP در حالت آزمایشی
+                حالت آزمایشی — نمایش کد OTP و قطع ارسال پیامک از پنل
               </label>
+              <div class="help">تا زمانی که این گزینه فعال است، هیچ پیامکی (کد تایید، اطلاع‌رسانی، تاییدیه) از طریق پنل پیامکی ارسال نمی‌شود و کد OTP مستقیماً روی صفحه نمایش داده می‌شود. برای ارسال واقعی، تیک را بردارید.</div>
             </div>
           </div>
         </div>
