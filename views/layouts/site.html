@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title || (careersTitle || 'فرصت‌های شغلی') }}{{#if brand.companyName}} — {{ brand.companyName }}{{/if}}</title>
+  <meta name="description" content="{{ portal.welcomeText || '' }}">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/app.css">
+  <link rel="stylesheet" href="/assets/css/portal.css">
+  <style>
+    :root { --primary: {{ brand.primaryColor || '#7C6CF0' }}; }
+  </style>
+</head>
+<body class="portal">
+  <header class="portal-header">
+    <div class="portal-container row between wrap gap-2">
+      <a class="brand" href="/careers" style="padding:0">
+        <span class="brand-logo">
+          {{#if brand.logo}}<img src="{{ brand.logo }}" alt="لوگو">{{else}}{{ (brand.companyName || brand.name || 'HR').substring(0,2) }}{{/if}}
+        </span>
+        <span>
+          <span class="brand-name">{{ brand.companyName || brand.name }}</span>
+          <span class="brand-sub">فرصت‌های شغلی</span>
+        </span>
+      </a>
+      <nav class="portal-nav">
+        <a href="/careers">فرصت‌های شغلی</a>
+        <a href="/track">پیگیری درخواست</a>
+        {{#if contact.phone}}<a href="tel:{{ contact.phone }}">{{ contact.phone }}</a>{{/if}}
+        <a class="btn btn-primary btn-sm" href="/apply">شروع فرم استخدام</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="portal-main">
+    {{{ body }}}
+  </main>
+
+  <footer class="portal-footer">
+    <div class="portal-container row between wrap gap-2">
+      <div>
+        <div class="bold">{{ brand.companyName || brand.name }}</div>
+        <div class="text-sm muted">{{ portal.footerText || '' }}</div>
+      </div>
+      <div class="text-sm muted">
+        {{#if contact.email}}<div>ایمیل: {{ contact.email }}</div>{{/if}}
+        {{#if contact.phone}}<div>تلفن: {{ contact.phone }}</div>{{/if}}
+        {{#if contact.address}}<div>{{ contact.address }}</div>{{/if}}
+        <div class="mt-1">© {{ h.fa(year) }} — تمامی حقوق محفوظ است.</div>
+      </div>
+    </div>
+  </footer>
+  <script src="/assets/js/portal.js" defer></script>
+</body>
+</html>

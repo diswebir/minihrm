@@ -1,0 +1,27 @@
+{
+  "name": "minihrm",
+  "version": "1.0.0",
+  "description": "مینی HRM ماژولار — سامانه منابع انسانی با فرم استخدام، آزمون شخصیت‌شناسی MBTI و داشبورد مدیریتی (قابل نصب روی هاست cPanel بدون SSH)",
+  "main": "app.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node app.js",
+    "test": "node test/run.js"
+  },
+  "dependencies": {},
+  "keywords": [
+    "hrm",
+    "hr",
+    "recruitment",
+    "mbti",
+    "cpanel",
+    "nodejs",
+    "persian"
+  ],
+  "author": "Erfan Sanat Isfahan",
+  "license": "MIT",
+  "private": true
+}

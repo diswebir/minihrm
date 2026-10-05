@@ -1,0 +1,23 @@
+# --- داده‌های اجرایی (روی هاست ساخته می‌شوند و نباید در گیت باشند) ---
+data/
+!data/.gitkeep
+*.log
+logs/
+
+# --- Node ---
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.npm/
+
+# --- سیستمی / ادیتور ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
+
+# --- آپلودهای موقت ---
+tmp/
+.tmp/

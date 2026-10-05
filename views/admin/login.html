@@ -1,0 +1,97 @@
+<div class="auth-wrap">
+  <div class="auth-panel">
+    <div class="auth-card">
+      <div class="brand mb-4" style="padding:0">
+        <span class="brand-logo">{{ (brand.companyName || brand.name).substring(0,2) }}</span>
+        <span>
+          <span class="brand-name">{{ brand.companyName || brand.name }}</span>
+          <span class="brand-sub">{{ brand.name }} — سامانه منابع انسانی</span>
+        </span>
+      </div>
+
+      <h2>ورود به سامانه</h2>
+      <p class="muted text-sm">برای ورود، روش مورد نظر خود را انتخاب کنید.</p>
+
+      <div class="tabs" id="login-tabs">
+        {{#if passwordEnabled}}<button class="tab active" data-method="password">ورود با رمز عبور</button>{{/if}}
+        {{#if otpEnabled}}<button class="tab {{#if passwordEnabled}}{{else}}active{{/if}}" data-method="otp">ورود با کد پیامکی</button>{{/if}}
+      </div>
+
+      <div id="login-error" class="hidden" style="background:var(--rose-50);border:1px solid var(--rose-100);border-radius:14px;padding:12px;color:var(--rose-600);font-size:.84rem;margin-bottom:14px"></div>
+
+      <form id="form-password" class="{{#if passwordEnabled}}{{else}}hidden{{/if}}" autocomplete="on">
+        <div class="field">
+          <label class="label">نام کاربری / موبایل / ایمیل</label>
+          <input class="input" name="login" id="login-field" placeholder="09123456789" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label class="label">رمز عبور</label>
+          <input class="input" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg" type="submit" id="btn-password">ورود به پنل</button>
+      </form>
+
+      <form id="form-otp" class="{{#if otpEnabled}}{{else}}hidden{{/if}}" autocomplete="off">
+        <div id="otp-step-mobile">
+          <div class="field">
+            <label class="label">شماره موبایل</label>
+            <input class="input" name="mobile" id="otp-mobile" placeholder="09123456789" inputmode="numeric" autocomplete="tel" required>
+            <div class="hint">کد یکبارمصرف به این شماره پیامک می‌شود.</div>
+          </div>
+          <button class="btn btn-primary btn-block btn-lg" type="submit" id="btn-otp-request">ارسال کد ورود</button>
+        </div>
+        <div id="otp-step-code" class="hidden">
+          <div class="field">
+            <label class="label">کد پیامکی</label>
+            <div class="otp-inputs" id="otp-inputs">
+              <input inputmode="numeric" maxlength="1" aria-label="رقم ۱">
+              <input inputmode="numeric" maxlength="1" aria-label="رقم ۲">
+              <input inputmode="numeric" maxlength="1" aria-label="رقم ۳">
+              <input inputmode="numeric" maxlength="1" aria-label="رقم ۴">
+              <input inputmode="numeric" maxlength="1" aria-label="رقم ۵">
+            </div>
+            <div class="hint text-center" id="otp-hint"></div>
+          </div>
+          <button class="btn btn-primary btn-block btn-lg" type="submit" id="btn-otp-verify">تأیید و ورود</button>
+          <div class="row between mt-2">
+            <button class="btn btn-sm btn-ghost" type="button" id="btn-otp-back">تغییر شماره</button>
+            <button class="btn btn-sm btn-soft" type="button" id="btn-otp-resend" disabled>ارسال مجدد کد</button>
+          </div>
+        </div>
+      </form>
+
+      <div class="divider"></div>
+      <div class="text-center text-sm muted">
+        <div>اگر حساب کاربری ندارید، با مدیر سامانه تماس بگیرید.</div>
+        <div class="mt-1"><a href="/careers">مشاهده فرصت‌های شغلی</a></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-visual">
+    <div style="max-width:520px;position:relative;z-index:1">
+      <span class="badge badge-violet mb-2">سامانه منابع انسانی</span>
+      <h2>استخدام هوشمند، از اولین تماس تا اولین روز کاری</h2>
+      <p class="muted">فرم استخدام آنلاین، آزمون شخصیت‌شناسی، مصاحبه ساختارمند و داشبورد تحلیلی — همه در یک سامانه ساده و ماژولار.</p>
+      <div class="col mt-4">
+        <div class="feature">
+          <span class="ic">📝</span>
+          <div><div class="bold">فرم استخدام چندمرحله‌ای</div><div class="text-sm muted">طراحی فرم‌ساز، تعیین فیلدهای اجباری و دریافت آنلاین اطلاعات متقاضیان</div></div>
+        </div>
+        <div class="feature">
+          <span class="ic">🧠</span>
+          <div><div class="bold">تحلیل شخصیت‌شناسی (MBTI)</div><div class="text-sm muted">گزارش تحلیلی جامع و محاسبه تناسب هر متقاضی با موقعیت شغلی</div></div>
+        </div>
+        <div class="feature">
+          <span class="ic">📊</span>
+          <div><div class="bold">قیف جذب و گزارش‌های مدیریتی</div><div class="text-sm muted">پایش مرحله‌به‌مرحله متقاضیان و شاخص‌های کلیدی استخدام</div></div>
+        </div>
+        <div class="feature">
+          <span class="ic">📱</span>
+          <div><div class="bold">ورود متقاضی با کد پیامکی</div><div class="text-sm muted">QR اختصاصی هر موقعیت شغلی و شروع فرم با یک اسکن</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/assets/js/login.js"></script>

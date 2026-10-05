@@ -1,0 +1,107 @@
+<section class="portal-hero">
+  <div class="portal-container">
+    <span class="badge badge-violet mb-2">به تیم ما بپیوندید</span>
+    <h1>{{ portal.pageTitle || 'فرصت‌های شغلی' }}</h1>
+    <p>{{ portal.welcomeText || ('ما در ' + (brand.companyName || brand.name) + ' به دنبال افراد بااستعداد و علاقه‌مند هستیم. موقعیت مناسب خود را انتخاب کنید و فرم استخدام را در چند دقیقه تکمیل کنید.') }}</p>
+    <div class="row gap-2 wrap mt-3">
+      <span class="badge badge-outline">{{ h.num(jobs.length) }} موقعیت فعال</span>
+      <span class="badge badge-outline">فرم استخدام آنلاین</span>
+      {{#if portal.showApplyCount}}<span class="badge badge-outline">بدون نیاز به حساب کاربری</span>{{/if}}
+    </div>
+  </div>
+</section>
+
+<div class="portal-container">
+  {{#if portal.aboutCompany}}
+  <div class="card mb-3">
+    <div class="row gap-2" style="align-items:flex-start">
+      <span style="font-size:1.4rem">🏢</span>
+      <div>
+        <div class="bold">درباره ما</div>
+        <div class="text-sm muted" style="white-space:pre-line">{{ portal.aboutCompany }}</div>
+      </div>
+    </div>
+  </div>
+  {{/if}}
+
+  <form class="filters-bar" method="get" action="/careers">
+    <div class="grow" style="min-width:220px">
+      <input class="input" name="q" value="{{ filters.q }}" placeholder="جست‌وجو در عنوان، مهارت یا واحد…">
+    </div>
+    <select class="select" name="department">
+      <option value="">همه واحدها</option>
+      {{#each departments}}
+      <option value="{{ this }}" {{#if (h.eq(this, ../filters.department))}}selected{{/if}}>{{ this }}</option>
+      {{/each}}
+    </select>
+    <select class="select" name="type">
+      <option value="">همه انواع همکاری</option>
+      {{#each ['تمام‌وقت', 'پاره‌وقت', 'دورکاری', 'پروژه‌ای', 'کارآموزی']}}
+      <option value="{{ this }}" {{#if (h.eq(this, ../filters.type))}}selected{{/if}}>{{ this }}</option>
+      {{/each}}
+    </select>
+    <button class="btn btn-primary">اعمال فیلتر</button>
+    {{#if (h.or(filters.q, filters.department))}}<a class="btn btn-ghost" href="/careers">حذف فیلترها</a>{{/if}}
+  </form>
+
+  <div class="section-title">
+    <h2>{{#if (h.or(filters.q, filters.department, filters.type))}}نتایج جست‌وجو{{else}}موقعیت‌های شغلی باز{{/if}}</h2>
+    <span class="muted text-sm">{{ h.num(jobs.length) }} مورد</span>
+  </div>
+
+  {{#if jobs.length}}
+  <div class="job-grid">
+    {{#each jobs}}
+    <article class="job-card">
+      <div class="job-top">
+        <div>
+          <h3><a href="/careers/jobs/{{ slug }}" style="color:inherit">{{ title }}</a></h3>
+          <div class="muted text-sm">{{ department || '—' }}</div>
+        </div>
+        <span class="badge badge-{{ h.color(@index) }}">{{ type || 'نامشخص' }}</span>
+      </div>
+      <div class="job-meta">
+        {{#if location}}<span class="item">📍 {{ location }}</span>{{/if}}
+        {{#if level}}<span class="item">🎯 {{ level }}</span>{{/if}}
+        {{#if openings}}<span class="item">👥 {{ h.num(openings) }} نفر</span>{{/if}}
+        {{#if (h.eq(assessmentEnabled, true))}}<span class="item">🧠 آزمون شخصیت</span>{{/if}}
+      </div>
+      <p class="job-desc">{{ h.truncate(summary || description || 'برای مشاهده شرح کامل موقعیت شغلی، روی عنوان کلیک کنید.', 130) }}</p>
+      <div class="row gap-1 wrap">
+        {{#if ../portal.showSalary}}{{#if salaryRange}}<span class="badge badge-mint">{{ salaryRange }}</span>{{/if}}{{/if}}
+        {{#each tags}}
+        <span class="badge">{{ this }}</span>
+        {{/each}}
+      </div>
+      <div class="job-foot">
+        <a class="btn btn-primary" href="/apply?job={{ slug }}">تکمیل فرم استخدام</a>
+        <a class="btn btn-ghost btn-sm" href="/careers/jobs/{{ slug }}">جزئیات</a>
+      </div>
+    </article>
+    {{/each}}
+  </div>
+  {{else}}
+  <div class="card">
+    <div class="empty">
+      <div class="icon-wrap">🔍</div>
+      <h3>موقعیت شغلی فعالی یافت نشد</h3>
+      <p>در حال حاضر هیچ موقعیت بازی با این مشخصات وجود ندارد. می‌توانید بعداً دوباره سر بزنید یا رزومه خود را برای ما ارسال کنید.</p>
+      <a class="btn btn-ghost" href="/careers">مشاهده همه موقعیت‌ها</a>
+    </div>
+  </div>
+  {{/if}}
+
+  <div class="card mt-4">
+    <div class="row gap-3 wrap between">
+      <div>
+        <div class="bold">سؤالی دارید؟</div>
+        <div class="text-sm muted">کارشناسان منابع انسانی ما آماده پاسخ‌گویی هستند.</div>
+      </div>
+      <div class="row gap-2 wrap">
+        {{#if contact.phone}}<a class="btn btn-soft" href="tel:{{ contact.phone }}">📞 {{ contact.phone }}</a>{{/if}}
+        {{#if contact.email}}<a class="btn btn-soft" href="mailto:{{ contact.email }}">✉️ {{ contact.email }}</a>{{/if}}
+        <a class="btn btn-ghost" href="/track">پیگیری درخواست</a>
+      </div>
+    </div>
+  </div>
+</div>

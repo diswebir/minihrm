@@ -1,0 +1,122 @@
+<div class="portal-container" style="padding-top:24px" id="apply-root"
+     data-job-slug="{{#if job}}{{ job.slug }}{{/if}}" data-sid="{{ sid || '' }}">
+
+  <div class="row between wrap gap-2 mb-3">
+    <div>
+      <h1 style="margin-bottom:2px">فرم استخدام {{#if job}}— {{ job.title }}{{/if}}</h1>
+      <div class="muted text-sm">پاسخ‌های شما به‌صورت خودکار ذخیره می‌شود؛ می‌توانید بعداً نیز آن را تکمیل کنید.</div>
+    </div>
+    <a class="btn btn-ghost btn-sm" href="/careers">بازگشت به فرصت‌های شغلی</a>
+  </div>
+
+  <!-- حالت ۱: انتخاب موقعیت شغلی -->
+  <section id="state-job" class="hidden">
+    <div class="card">
+      <div class="card-title mb-1">۱. موقعیت شغلی مورد نظر خود را انتخاب کنید</div>
+      <p class="text-sm muted">فرم استخدام بر اساس موقعیت شغلی انتخابی شما نمایش داده می‌شود.</p>
+      <div class="job-grid mt-2" id="job-options"></div>
+    </div>
+  </section>
+
+  <!-- حالت ۲: ورود با کد پیامکی -->
+  <section id="state-login" class="hidden">
+    <div class="card" style="max-width:520px;margin:0 auto">
+      <div class="card-title mb-1">۲. تأیید شماره موبایل</div>
+      <p class="text-sm muted">برای شروع فرم، شماره موبایل خود را وارد کنید. کد یکبارمصرف پیامک می‌شود.</p>
+
+      <div id="login-alert" class="hidden insight rose mt-2"><span class="ic">⚠️</span><div class="text-sm"></div></div>
+
+      <div id="login-step-mobile" class="mt-2">
+        <div class="field">
+          <label class="label">شماره موبایل <span class="req">*</span></label>
+          <input class="input" id="apply-mobile" inputmode="numeric" placeholder="09123456789" autocomplete="tel">
+        </div>
+        <div class="field">
+          <label class="label">نام و نام خانوادگی (اختیاری)</label>
+          <input class="input" id="apply-name" placeholder="مثال: علی محمدی">
+        </div>
+        <button class="btn btn-primary btn-block btn-lg" id="btn-send-otp">ارسال کد تأیید</button>
+      </div>
+
+      <div id="login-step-code" class="hidden mt-2">
+        <div class="field">
+          <label class="label">کد پیامکی ۵ رقمی <span class="req">*</span></label>
+          <input class="input" id="apply-code" inputmode="numeric" maxlength="5" placeholder="- - - - -" style="text-align:center;letter-spacing:.5em;font-weight:700">
+          <div class="hint" id="otp-hint"></div>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg" id="btn-verify-otp">تأیید و ادامه</button>
+        <div class="row between mt-2">
+          <button class="btn btn-sm btn-ghost" id="btn-change-mobile">تغییر شماره</button>
+          <button class="btn btn-sm btn-soft" id="btn-resend" disabled>ارسال مجدد کد</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- حالت ۳: تکمیل فرم -->
+  <section id="state-form" class="hidden">
+    <div class="apply-shell">
+      <aside class="steps-panel">
+        <div class="card">
+          <div class="progress-line"><div class="fill" id="form-progress" style="width:0%"></div></div>
+          <div class="row between text-xs muted mb-2">
+            <span id="progress-label">شروع</span>
+            <span id="save-state">ذخیره‌شده</span>
+          </div>
+          <div class="step-list" id="step-list"></div>
+          <div class="divider"></div>
+          <div class="text-xs muted">📎 حداکثر حجم فایل: {{ h.num(portal.maxFileSizeMB || 5) }} مگابایت</div>
+        </div>
+      </aside>
+      <div>
+        <div class="card" id="step-card"></div>
+        <div class="form-nav">
+          <button class="btn btn-ghost btn-lg" id="btn-prev">مرحله قبل</button>
+          <button class="btn btn-primary btn-lg" id="btn-next">مرحله بعد</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- حالت ۴: تکمیل موفق -->
+  <section id="state-done" class="hidden">
+    <div class="card text-center" style="max-width:640px;margin:0 auto;padding:36px">
+      <div class="success-circle">✓</div>
+      <h2>فرم استخدام شما ثبت شد</h2>
+      <p class="muted" id="done-message"></p>
+      <div class="muted-box mt-2">
+        <div class="text-sm muted">کد رهگیری شما</div>
+        <div class="bold" style="font-size:1.5rem;letter-spacing:.08em" id="done-code">—</div>
+        <div class="text-xs muted mt-1">این کد را نزد خود نگه دارید؛ برای پیگیری وضعیت به آن نیاز دارید.</div>
+      </div>
+      <div class="row center gap-2 wrap mt-3">
+        <button class="btn btn-primary" id="btn-start-assessment">شروع آزمون شخصیت‌شناسی</button>
+        <a class="btn btn-ghost" href="/track">پیگیری درخواست</a>
+      </div>
+      <div id="assessment-note" class="text-xs muted mt-2"></div>
+    </div>
+  </section>
+
+  <!-- حالت ۵: آزمون -->
+  <section id="state-assessment" class="hidden">
+    <div class="assessment-shell">
+      <div class="card mb-3">
+        <div class="row between wrap gap-2">
+          <div>
+            <div class="card-title" id="assess-title">آزمون شناخت سبک کاری و شخصیتی</div>
+            <div class="text-sm muted" id="assess-intro"></div>
+          </div>
+          <span class="badge badge-violet" id="assess-counter">۰ از ۰</span>
+        </div>
+        <div class="progress-line mt-2"><div class="fill" id="assess-progress" style="width:0%"></div></div>
+      </div>
+      <div id="assess-questions"></div>
+      <div class="card">
+        <div class="row between wrap gap-2">
+          <div class="text-sm muted">پس از تکمیل همه سؤالات، دکمه ثبت نهایی فعال می‌شود.</div>
+          <button class="btn btn-primary btn-lg" id="btn-submit-assessment" disabled>ثبت نهایی آزمون</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

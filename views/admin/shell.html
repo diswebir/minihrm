@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{{ title }} — {{ brand.name }}</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/app.css">
+  <style>:root { --primary: {{ brand.primaryColor }}; }</style>
+</head>
+<body>
+  <div id="splash" class="splash">
+    <div class="text-center">
+      <div class="logo-big">{{ (brand.companyName || brand.name).substring(0,2) }}</div>
+      <div class="bold">{{ brand.companyName || brand.name }}</div>
+      <div class="muted text-sm mt-1">در حال آماده‌سازی پنل مدیریت…</div>
+      <div class="row center mt-2"><span class="spinner"></span></div>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <span class="brand-logo">{{ (brand.companyName || brand.name).substring(0,2) }}</span>
+        <span>
+          <span class="brand-name">{{ brand.companyName || brand.name }}</span>
+          <span class="brand-sub">{{ brand.name }}</span>
+        </span>
+      </div>
+      <div id="sidebar-nav" class="grow"></div>
+      <div class="sidebar-footer">
+        <a class="nav-item" href="/careers" target="_blank">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 2.5 15.4 0 18M12 3c-2.5 2.6-2.5 15.4 0 18"/></svg>
+          <span>سایت استخدام</span>
+        </a>
+        <div class="text-xs muted text-center mt-1">نسخه {{ h.fa(version) }}</div>
+      </div>
+    </aside>
+    <div class="sidebar-scrim"></div>
+
+    <div class="main">
+      <header class="topbar">
+        <button class="icon-btn menu-toggle" data-menu aria-label="منو">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div class="grow">
+          <h1 id="page-title">داشبورد</h1>
+          <div class="subtitle" id="topbar-date"></div>
+        </div>
+        <div class="search-box" style="max-width:340px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b89a6" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input id="global-search" type="search" placeholder="جست‌وجوی متقاضی، موقعیت شغلی، کاربر…" autocomplete="off">
+        </div>
+        <div id="topbar-user"></div>
+      </header>
+      <main class="content" id="outlet"></main>
+    </div>
+  </div>
+
+  <script src="/vendor/qrcode.min.js"></script>
+  <script src="/assets/js/app.js"></script>
+  <script src="/assets/js/admin-boot.js"></script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<div class="auth-wrap">
+  <div class="auth-panel">
+    <div class="auth-card">
+      <div class="brand mb-4" style="padding:0">
+        <span class="brand-logo">{{ (brand.companyName || brand.name).substring(0,2) }}</span>
+        <span>
+          <span class="brand-name">{{ brand.companyName || brand.name }}</span>
+          <span class="brand-sub">{{ brand.name }}</span>
+        </span>
+      </div>
+      <h2>فعال‌سازی حساب کاربری</h2>
+      <p class="muted text-sm">{{#if user}}{{ user.name }} عزیز، برای فعال‌سازی حساب خود یک رمز عبور تعیین کنید.{{else}}برای فعال‌سازی حساب خود رمز عبور تعیین کنید.{{/if}}</p>
+
+      <div id="invite-error" class="hidden" style="background:var(--rose-50);border:1px solid var(--rose-100);border-radius:14px;padding:12px;color:var(--rose-600);font-size:.84rem;margin-bottom:14px"></div>
+      <div id="invite-success" class="hidden" style="background:var(--mint-50);border:1px solid var(--mint-100);border-radius:14px;padding:12px;color:var(--mint-600);font-size:.84rem;margin-bottom:14px"></div>
+
+      <form id="invite-form">
+        <input type="hidden" name="token" value="{{ token }}">
+        <div class="field">
+          <label class="label">رمز عبور جدید</label>
+          <input class="input" type="password" name="password" placeholder="حداقل ۸ کاراکتر شامل حروف و ارقام" required>
+        </div>
+        <div class="field">
+          <label class="label">تکرار رمز عبور</label>
+          <input class="input" type="password" name="confirmPassword" required>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg" type="submit" id="invite-submit">تعیین رمز عبور و ورود</button>
+      </form>
+      <div class="divider"></div>
+      <div class="text-center text-sm muted"><a href="/admin">بازگشت به صفحه ورود</a></div>
+    </div>
+  </div>
+  <div class="auth-visual">
+    <div style="max-width:480px;position:relative;z-index:1">
+      <h2>خوش آمدید 👋</h2>
+      <p class="muted">پس از تعیین رمز عبور، به‌صورت خودکار وارد پنل می‌شوید و بسته به نقشی که برای شما تعیین شده، بخش‌های مورد دسترس را خواهید دید.</p>
+      <div class="insight sky mt-3"><span class="ic">🔐</span><div class="text-sm">رمز عبور خود را در اختیار دیگران قرار ندهید. توصیه می‌شود از ترکیب حروف بزرگ و کوچک، عدد و علامت استفاده کنید.</div></div>
+    </div>
+  </div>
+</div>
+<script src="/assets/js/invite.js"></script>
