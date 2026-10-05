@@ -240,6 +240,14 @@ function seedDatabase() {
   });
   insertPositions();
 
+  // ─── Seed Assessment Tests ───────────────────────────
+  try {
+    const { seedAssessments } = require('./seed-assessments');
+    seedAssessments();
+  } catch(e) {
+    console.log('⚠️ Assessment seed skipped:', e.message);
+  }
+
   console.log('✅ Database seeded with default data');
 }
 

@@ -84,6 +84,16 @@
       </li>
       <% } %>
 
+      <!-- Assessments -->
+      <% if (['super_admin', 'hr_manager', 'hr_employee'].includes(userRole)) { %>
+      <li class="nav-item">
+        <a href="/assessments/results" class="nav-link <%= currentPath.startsWith('/assessments') ? 'active' : '' %>">
+          <i class="bi bi-clipboard-check"></i>
+          <span>آزمون‌های استخدامی</span>
+        </a>
+      </li>
+      <% } %>
+
       <!-- Employees -->
       <li class="nav-item">
         <a href="/employees" class="nav-link <%= currentPath.startsWith('/employees') ? 'active' : '' %>">

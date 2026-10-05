@@ -1,0 +1,67 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">آزمون‌های استخدامی</h1>
+    <p class="page-subtitle">نتایج آزمون‌های DISC، Big Five، EQ، RIASEC و MBTI</p>
+  </div>
+</div>
+
+<!-- Test Stats -->
+<div class="stats-grid mb-3">
+  <% if (typeof tests !== 'undefined') { tests.forEach(test => { %>
+  <div class="stat-card">
+    <div class="stat-icon primary"><i class="bi bi-clipboard-check"></i></div>
+    <div class="stat-info">
+      <h3><%= typeof testStats !== 'undefined' ? (testStats[test.slug] || 0) : 0 %></h3>
+      <p><%= test.name.split(' - ')[0] %></p>
+    </div>
+  </div>
+  <% }); } %>
+</div>
+
+<!-- Results Table -->
+<div class="card">
+  <div class="card-header"><i class="bi bi-list-check me-2"></i>نتایج آزمون‌ها</div>
+  <div class="card-body p-0">
+    <% if (typeof results !== 'undefined' && results.length > 0) { %>
+    <div class="table-container">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>متقاضی</th>
+            <th>آزمون</th>
+            <th>نتیجه</th>
+            <th>موقعیت شغلی</th>
+            <th>تاریخ</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% results.forEach(r => { %>
+          <tr>
+            <td class="fw-bold"><%= r.first_name %> <%= r.last_name %></td>
+            <td><span class="badge bg-info"><%= r.test_name.split(' - ')[0] %></span></td>
+            <td><span class="badge bg-primary"><%= r.result_type %></span></td>
+            <td><%= r.position_title || '-' %></td>
+            <td class="text-muted"><%= new Date(r.completed_at).toLocaleDateString('fa-IR') %></td>
+            <td>
+              <a href="/assessments/results/<%= r.candidate_id %>/<%= r.test_slug %>" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-eye me-1"></i>جزئیات
+              </a>
+              <a href="/recruitment/<%= r.candidate_id %>" class="btn btn-sm btn-outline-info">
+                <i class="bi bi-person"></i>
+              </a>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <% } else { %>
+    <div class="empty-state">
+      <i class="bi bi-clipboard-check"></i>
+      <h5>هنوز آزمونی انجام نشده</h5>
+      <p class="text-muted">نتایج آزمون‌های متقاضیان اینجا نمایش داده می‌شود</p>
+    </div>
+    <% } %>
+  </div>
+</div>

@@ -201,6 +201,53 @@ function initDatabase() {
       created_by INTEGER,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS assessment_tests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      slug TEXT UNIQUE NOT NULL,
+      description TEXT DEFAULT '',
+      total_questions INTEGER NOT NULL DEFAULT 0,
+      time_minutes INTEGER NOT NULL DEFAULT 10,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS assessment_questions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      test_id INTEGER NOT NULL,
+      question_number INTEGER NOT NULL,
+      question_text TEXT NOT NULL,
+      dimension TEXT NOT NULL DEFAULT '',
+      option_a_text TEXT NOT NULL DEFAULT '',
+      option_b_text TEXT NOT NULL DEFAULT '',
+      option_a_value TEXT NOT NULL DEFAULT '',
+      option_b_value TEXT NOT NULL DEFAULT '',
+      is_active INTEGER NOT NULL DEFAULT 1
+    );
+
+    CREATE TABLE IF NOT EXISTS assessment_responses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      candidate_id INTEGER NOT NULL,
+      test_id INTEGER NOT NULL,
+      question_id INTEGER NOT NULL,
+      selected_option TEXT NOT NULL,
+      score INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(candidate_id, test_id, question_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS assessment_results (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      candidate_id INTEGER NOT NULL,
+      test_id INTEGER NOT NULL,
+      result_type TEXT DEFAULT '',
+      scores TEXT DEFAULT '{}',
+      analysis TEXT DEFAULT '',
+      recommendations TEXT DEFAULT '',
+      completed_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(candidate_id, test_id)
+    );
   `;
 
   db.exec(schema);

@@ -24,8 +24,8 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 
-// Landing page - with or without QR code
-router.get('/:qrCode?', (req, res) => {
+// Landing page - with or without QR code (hex pattern to avoid catching route names)
+router.get('/:qrCode([a-f0-9]{32})?', (req, res) => {
   const db = getDb();
 
   // Check if registration is enabled
@@ -483,7 +483,199 @@ router.post('/mbti/submit', (req, res) => {
     UPDATE candidates SET mbti_completed = 1, mbti_type = ?, mbti_scores = ?, mbti_analysis = ?, status = 'mbti_completed', updated_at = datetime('now') WHERE id = ?
   `).run(type, JSON.stringify(scores), analysis, candidate.id);
 
-  return res.redirect('/apply/success');
+  return res.redirect('/apply/assessments');
+});
+
+// ─── Assessment Selection Page ───────────────────────────
+router.get('/assessments', (req, res) => {
+  if (!req.session.candidate) {
+    return res.redirect('/apply');
+  }
+
+  const db = getDb();
+  const candidate = db.prepare('SELECT * FROM candidates WHERE id = ?').get(req.session.candidate.id);
+
+  const tests = db.prepare('SELECT * FROM assessment_tests WHERE is_active = 1 ORDER BY id').all();
+
+  // Get completed assessments
+  const completed = db.prepare(`
+    SELECT test_id, result_type FROM assessment_results WHERE candidate_id = ?
+  `).all(candidate.id);
+  const completedMap = {};
+  for (const c of completed) {
+    completedMap[c.test_id] = c.result_type;
+  }
+
+  res.render('candidates/assessments', {
+    title: 'آزمون‌های استخدامی',
+    layout: 'layouts/candidate',
+    candidate,
+    tests,
+    completedMap,
+    step: 'assessments'
+  });
+});
+
+// ─── Take Assessment ─────────────────────────────────────
+router.get('/assessment/:testSlug', (req, res) => {
+  if (!req.session.candidate) {
+    return res.redirect('/apply');
+  }
+
+  const db = getDb();
+  const candidate = db.prepare('SELECT * FROM candidates WHERE id = ?').get(req.session.candidate.id);
+  const test = db.prepare('SELECT * FROM assessment_tests WHERE slug = ? AND is_active = 1').get(req.params.testSlug);
+
+  if (!test) {
+    req.flash('error', 'آزمون یافت نشد');
+    return res.redirect('/apply/assessments');
+  }
+
+  // Check if already completed
+  const existing = db.prepare('SELECT * FROM assessment_results WHERE candidate_id = ? AND test_id = ?').get(candidate.id, test.id);
+  if (existing) {
+    return res.redirect(`/apply/assessment/${test.slug}/result`);
+  }
+
+  const questions = db.prepare('SELECT * FROM assessment_questions WHERE test_id = ? AND is_active = 1 ORDER BY question_number').all(test.id);
+
+  // Get existing responses
+  const existingResponses = db.prepare('SELECT * FROM assessment_responses WHERE candidate_id = ? AND test_id = ?').all(candidate.id, test.id);
+  const responseMap = {};
+  for (const r of existingResponses) {
+    responseMap[r.question_id] = r.selected_option;
+  }
+
+  res.render('candidates/assessment-test', {
+    title: test.name,
+    layout: 'layouts/candidate',
+    candidate,
+    test,
+    questions,
+    responseMap,
+    step: 'assessment'
+  });
+});
+
+// ─── Submit Assessment ───────────────────────────────────
+router.post('/assessment/:testSlug/submit', (req, res) => {
+  if (!req.session.candidate) {
+    return res.redirect('/apply');
+  }
+
+  const db = getDb();
+  const candidate = db.prepare('SELECT * FROM candidates WHERE id = ?').get(req.session.candidate.id);
+  const test = db.prepare('SELECT * FROM assessment_tests WHERE slug = ? AND is_active = 1').get(req.params.testSlug);
+
+  if (!test) {
+    req.flash('error', 'آزمون یافت نشد');
+    return res.redirect('/apply/assessments');
+  }
+
+  const questions = db.prepare('SELECT * FROM assessment_questions WHERE test_id = ? AND is_active = 1').all(test.id);
+
+  // Save responses and calculate scores
+  const scores = {};
+  const upsertResponse = db.prepare(`
+    INSERT INTO assessment_responses (candidate_id, test_id, question_id, selected_option, score)
+    VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT(candidate_id, test_id, question_id) DO UPDATE SET selected_option = ?, score = ?
+  `);
+
+  const saveResponses = db.transaction(() => {
+    for (const q of questions) {
+      const answer = req.body[`q_${q.id}`];
+      if (answer) {
+        let score = 0;
+        if (answer === 'A') {
+          score = parseInt(q.option_a_value) || 1;
+          // Track dimension scores
+          if (q.option_a_value && isNaN(parseInt(q.option_a_value))) {
+            const dim = q.option_a_value;
+            scores[dim] = (scores[dim] || 0) + 1;
+          } else {
+            scores[q.dimension] = (scores[q.dimension] || 0) + score;
+          }
+        } else if (answer === 'B') {
+          score = parseInt(q.option_b_value) || 1;
+          if (q.option_b_value && isNaN(parseInt(q.option_b_value))) {
+            const dim = q.option_b_value;
+            scores[dim] = (scores[dim] || 0) + 1;
+          } else {
+            scores[q.dimension] = (scores[q.dimension] || 0) + score;
+          }
+        }
+        upsertResponse.run(candidate.id, test.id, q.id, answer, score, answer, score);
+      }
+    }
+  });
+
+  saveResponses();
+
+  // Analyze results
+  const { analyzeDISC, analyzeBigFive, analyzeEQ, analyzeRIASEC } = require('../services/assessmentAnalysis');
+  let result;
+
+  switch (test.slug) {
+    case 'disc':
+      result = analyzeDISC(scores);
+      break;
+    case 'bigfive':
+      result = analyzeBigFive(scores);
+      break;
+    case 'eq':
+      result = analyzeEQ(scores);
+      break;
+    case 'riasec':
+      result = analyzeRIASEC(scores);
+      break;
+    default:
+      result = { type: 'N/A', scores, analysis: 'تحلیل موجود نیست', recommendations: '' };
+  }
+
+  // Save result
+  db.prepare(`
+    INSERT INTO assessment_results (candidate_id, test_id, result_type, scores, analysis, recommendations)
+    VALUES (?, ?, ?, ?, ?, ?)
+    ON CONFLICT(candidate_id, test_id) DO UPDATE SET result_type=?, scores=?, analysis=?, recommendations=?
+  `).run(candidate.id, test.id, result.type, JSON.stringify(result.scores), result.analysis, result.recommendations,
+         result.type, JSON.stringify(result.scores), result.analysis, result.recommendations);
+
+  return res.redirect(`/apply/assessment/${test.slug}/result`);
+});
+
+// ─── Assessment Result (Candidate view - limited) ────────
+router.get('/assessment/:testSlug/result', (req, res) => {
+  if (!req.session.candidate) {
+    return res.redirect('/apply');
+  }
+
+  const db = getDb();
+  const candidate = db.prepare('SELECT * FROM candidates WHERE id = ?').get(req.session.candidate.id);
+  const test = db.prepare('SELECT * FROM assessment_tests WHERE slug = ?').get(req.params.testSlug);
+
+  if (!test) {
+    req.flash('error', 'آزمون یافت نشد');
+    return res.redirect('/apply/assessments');
+  }
+
+  const result = db.prepare('SELECT * FROM assessment_results WHERE candidate_id = ? AND test_id = ?').get(candidate.id, test.id);
+
+  if (!result) {
+    return res.redirect(`/apply/assessment/${test.slug}`);
+  }
+
+  const scores = JSON.parse(result.scores || '{}');
+
+  res.render('candidates/assessment-result', {
+    title: `نتیجه ${test.name}`,
+    layout: 'layouts/candidate',
+    candidate,
+    test,
+    result,
+    scores,
+    step: 'assessment'
+  });
 });
 
 // Success page

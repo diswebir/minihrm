@@ -13,6 +13,7 @@ function loadModules(app) {
     { path: '/recruitment', file: './candidates' },
     { path: '/form-builder', file: './formBuilder' },
     { path: '/mbti',       file: './mbti' },
+    { path: '/assessments', file: './assessments' },
     { path: '/employees',  file: './employees' },
     { path: '/settings',   file: './settings' },
     { path: '/reports',    file: './reports' },
