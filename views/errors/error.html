@@ -1,0 +1,11 @@
+<section class="portal-container" style="padding:80px 0;max-width:640px">
+  <div class="card text-center" style="padding:40px">
+    <div class="big-icon">{{ h.fa(status) }}</div>
+    <h2>{{ title || 'خطا' }}</h2>
+    <p>{{ message }}</p>
+    <div class="row center gap-2 mt-2">
+      <a class="btn btn-primary" href="{{ backUrl || '/careers' }}">بازگشت</a>
+      <a class="btn btn-ghost" href="/">صفحه اصلی</a>
+    </div>
+  </div>
+</section>

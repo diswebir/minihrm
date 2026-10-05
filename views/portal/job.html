@@ -1,0 +1,93 @@
+<div class="portal-container" style="padding-top:26px">
+  <div class="row gap-2 text-sm muted mb-2">
+    <a href="/careers">فرصت‌های شغلی</a><span>›</span><span>{{ job.title }}</span>
+  </div>
+
+  <div class="job-detail">
+    <div>
+      <div class="card">
+        <div class="row between wrap gap-2">
+          <div>
+            <h1 style="margin-bottom:4px">{{ job.title }}</h1>
+            <div class="muted">{{ job.department || '—' }}{{#if job.level}} — {{ job.level }}{{/if}}</div>
+          </div>
+          <span class="badge badge-violet">{{ job.type || 'نامشخص' }}</span>
+        </div>
+        <div class="row gap-2 wrap mt-2">
+          {{#if job.location}}<span class="badge badge-outline">📍 {{ job.location }}</span>{{/if}}
+          {{#if job.openings}}<span class="badge badge-outline">👥 {{ h.num(job.openings) }} نفر</span>{{/if}}
+          {{#if portal.showSalary}}{{#if job.salaryRange}}<span class="badge badge-mint">💰 {{ job.salaryRange }}</span>{{/if}}{{/if}}
+          {{#if job.deadline}}<span class="badge badge-lemon">⏳ مهلت: {{ h.jalali(job.deadline) }}</span>{{/if}}
+        </div>
+        {{#each job.tags}}
+        <span class="badge mt-2">{{ this }}</span>
+        {{/each}}
+      </div>
+
+      <div class="card mt-3 prose">
+        {{#if job.welcomeMessage}}
+        <div class="insight mint"><span class="ic">💬</span><div class="text-sm">{{ job.welcomeMessage }}</div></div>
+        {{/if}}
+        <h3>شرح موقعیت شغلی</h3>
+        <p style="white-space:pre-line">{{ job.description || job.summary || '—' }}</p>
+
+        {{#if job.responsibilities.length}}
+        <h3>شرح وظایف</h3>
+        <ul>
+          {{#each job.responsibilities}}<li>{{ this }}</li>{{/each}}
+        </ul>
+        {{/if}}
+
+        {{#if job.requirements.length}}
+        <h3>شرایط و مهارت‌های مورد نیاز</h3>
+        <ul>
+          {{#each job.requirements}}<li>{{ this }}</li>{{/each}}
+        </ul>
+        {{/if}}
+      </div>
+    </div>
+
+    <aside class="side">
+      <div class="card">
+        <div class="bold mb-1">آماده شروع هستید؟</div>
+        <p class="text-sm muted">با تکمیل فرم استخدام، درخواست شما مستقیماً برای کارشناسان منابع انسانی ارسال می‌شود.</p>
+        <a class="btn btn-primary btn-block btn-lg" href="{{ applyUrl }}">تکمیل فرم استخدام</a>
+        <div class="divider"></div>
+        <div class="row gap-2 text-sm muted">
+          <span>🔐</span><span>ورود با شماره موبایل و کد پیامکی — بدون رمز عبور</span>
+        </div>
+        <div class="row gap-2 text-sm muted mt-1">
+          <span>💾</span><span>امکان ذخیره خودکار پاسخ‌ها و تکمیل در چند مرحله</span>
+        </div>
+      </div>
+
+      {{#if steps.length}}
+      <div class="card mt-3">
+        <div class="card-title mb-2">مراحل فرم استخدام</div>
+        <div class="step-list">
+          {{#each steps}}
+          <div class="step-item">
+            <span class="bubble">{{ h.fa(@index + 1) }}</span>
+            <span class="grow">{{ title }}</span>
+            <span class="badge">{{ h.num(count) }} فیلد</span>
+          </div>
+          {{/each}}
+        </div>
+        <div class="text-xs muted mt-2">تعداد مراحل و فیلدها برای هر موقعیت شغلی قابل تنظیم است.</div>
+      </div>
+      {{/if}}
+
+      {{#if job.assessmentEnabled}}
+      <div class="card mt-3">
+        <div class="row gap-2" style="align-items:flex-start">
+          <span style="font-size:1.3rem">🧠</span>
+          <div>
+            <div class="bold text-sm">آزمون شناخت سبک کاری و شخصیتی</div>
+            <div class="text-xs muted">پس از ثبت فرم، لینک آزمون در همین صفحه نمایش داده می‌شود. نتیجه آزمون تنها برای کارشناسان منابع انسانی قابل مشاهده است.</div>
+          </div>
+        </div>
+      </div>
+      {{/if}}
+    </aside>
+  </div>
+</div>

@@ -1,0 +1,272 @@
+<div class="install-wrap">
+  <aside class="install-side">
+    <div class="brand mb-4" style="padding:0">
+      <span class="brand-logo">HR</span>
+      <span>
+        <span class="brand-name">{{ app.name || 'مینی HRM' }}</span>
+        <span class="brand-sub">ویزارد نصب سامانه</span>
+      </span>
+    </div>
+
+    <div class="install-steps">
+      {{#each STEPS}}
+      <div class="install-step {{#if (h.eq(@index, ../stepIndex))}}active{{/if}} {{#if (h.lt(@index, ../stepIndex))}}done{{/if}}">
+        <span class="num">{{#if (h.lt(@index, ../stepIndex))}}✓{{else}}{{ h.fa(@index + 1) }}{{/if}}</span>
+        <span>{{#if (h.eq(this, 'requirements'))}}بررسی پیش‌نیازها{{/if}}{{#if (h.eq(this, 'organization'))}}اطلاعات سازمان و مدیر{{/if}}{{#if (h.eq(this, 'modules'))}}انتخاب ماژول‌ها{{/if}}{{#if (h.eq(this, 'sms'))}}تنظیمات پیامک{{/if}}{{#if (h.eq(this, 'finish'))}}نصب نهایی{{/if}}</span>
+      </div>
+      {{/each}}
+    </div>
+
+    <div class="insight sky mt-4">
+      <span class="ic">ℹ️</span>
+      <div class="text-xs">
+        این سامانه بدون نیاز به SSH و بدون دیتابیس خارجی نصب می‌شود. همه داده‌ها در پوشه <code>data</code> نگهداری می‌شوند.
+      </div>
+    </div>
+  </aside>
+
+  <main class="install-main">
+    {{#if error}}
+    <div class="insight rose mb-3"><span class="ic">⚠️</span><div class="text-sm">{{ error }}</div></div>
+    {{/if}}
+
+    {{#if (h.eq(step, 'requirements'))}}
+    <div class="card">
+      <h2>به سامانه منابع انسانی خوش آمدید 🎉</h2>
+      <p class="muted">پیش از شروع، پیش‌نیازهای اجرای سامانه بررسی می‌شود. اگر همه موارد تأیید شوند، می‌توانید نصب را ادامه دهید.</p>
+      <div class="col mt-3">
+        {{#each requirements.checks}}
+        <div class="check-result {{#if ok}}ok{{else}}fail{{/if}}">
+          <span class="ic">{{#if ok}}✓{{else}}!{{/if}}</span>
+          <div class="grow">
+            <div class="bold text-sm">{{ title }}</div>
+            <div class="text-xs muted">{{ hint }}</div>
+          </div>
+          {{#unless required}}<span class="badge badge-outline">اختیاری</span>{{/unless}}
+        </div>
+        {{/each}}
+      </div>
+      <form method="post" action="/install" class="mt-4">
+        <input type="hidden" name="_step" value="requirements">
+        <button class="btn btn-primary btn-lg" {{#unless requirements.ok}}disabled{{/unless}}>
+          {{#if requirements.ok}}شروع نصب سامانه{{else}}ابتدا پیش‌نیازها را تأمین کنید{{/if}}
+        </button>
+      </form>
+    </div>
+    {{/if}}
+
+    {{#if (h.eq(step, 'organization'))}}
+    <div class="card">
+      <h2>اطلاعات سازمان و حساب مدیر ارشد</h2>
+      <p class="muted">این اطلاعات در گزارش‌ها، پورتال استخدام و پیامک‌ها استفاده می‌شود. حساب مدیر ارشد، بالاترین سطح دسترسی را دارد.</p>
+      <form method="post" action="/install">
+        <input type="hidden" name="_step" value="organization">
+        <h4 class="mt-3">مشخصات سازمان</h4>
+        <div class="form-grid">
+          <div class="field col-6">
+            <label class="label">نام سازمان <span class="req">*</span></label>
+            <input class="input" name="companyName" value="{{ state.organization.companyName || '' }}" placeholder="مثال: شرکت دانش‌بنیان عرفان صنعت اصفهان" required>
+            {{#if fieldErrors.companyName}}<div class="error-text">{{ fieldErrors.companyName }}</div>{{/if}}
+          </div>
+          <div class="field col-6">
+            <label class="label">نام سامانه</label>
+            <input class="input" name="appName" value="{{ state.organization.appName || 'مینی HRM' }}">
+            <div class="hint">در عنوان صفحات و پنل نمایش داده می‌شود.</div>
+          </div>
+          <div class="field col-12">
+            <label class="label">آدرس پایه سایت (اختیاری)</label>
+            <input class="input ltr" name="baseUrl" value="{{ state.organization.baseUrl || '' }}" placeholder="https://hr.example.com">
+            <div class="hint">برای ساخت لینک QR و پیامک‌ها استفاده می‌شود. اگر خالی بماند، آدرس فعلی مرورگر در نظر گرفته می‌شود.</div>
+          </div>
+        </div>
+
+        <h4 class="mt-4">حساب مدیر ارشد سامانه</h4>
+        <div class="form-grid">
+          <div class="field col-6">
+            <label class="label">نام و نام خانوادگی <span class="req">*</span></label>
+            <input class="input" name="adminName" value="{{ state.admin.name || '' }}" required>
+            {{#if fieldErrors.adminName}}<div class="error-text">{{ fieldErrors.adminName }}</div>{{/if}}
+          </div>
+          <div class="field col-6">
+            <label class="label">شماره موبایل <span class="req">*</span></label>
+            <input class="input" name="adminMobile" value="{{ state.admin.mobile || '' }}" placeholder="09123456789" inputmode="numeric" required>
+            <div class="hint">با این شماره می‌توانید با کد پیامکی هم وارد شوید.</div>
+            {{#if fieldErrors.adminMobile}}<div class="error-text">{{ fieldErrors.adminMobile }}</div>{{/if}}
+          </div>
+          <div class="field col-6">
+            <label class="label">ایمیل</label>
+            <input class="input ltr" type="email" name="adminEmail" value="{{ state.admin.email || '' }}">
+            {{#if fieldErrors.adminEmail}}<div class="error-text">{{ fieldErrors.adminEmail }}</div>{{/if}}
+          </div>
+          <div class="field col-3">
+            <label class="label">رمز عبور <span class="req">*</span></label>
+            <input class="input" type="password" name="adminPassword" required>
+            {{#if fieldErrors.adminPassword}}<div class="error-text">{{ fieldErrors.adminPassword }}</div>{{/if}}
+          </div>
+          <div class="field col-3">
+            <label class="label">تکرار رمز عبور <span class="req">*</span></label>
+            <input class="input" type="password" name="adminPassword2" required>
+            {{#if fieldErrors.adminPassword2}}<div class="error-text">{{ fieldErrors.adminPassword2 }}</div>{{/if}}
+          </div>
+        </div>
+        <div class="insight lemon mt-2"><span class="ic">🔐</span><div class="text-sm">رمز عبور را در جای امنی نگه دارید. این حساب به همه بخش‌های سامانه دسترسی دارد.</div></div>
+        <div class="row gap-2 mt-3">
+          <button class="btn btn-primary btn-lg">ادامه — انتخاب ماژول‌ها</button>
+          <a class="btn btn-ghost btn-lg" href="/install?step=requirements">بازگشت</a>
+        </div>
+      </form>
+    </div>
+    {{/if}}
+
+    {{#if (h.eq(step, 'modules'))}}
+    <div class="card">
+      <h2>انتخاب ماژول‌های سامانه</h2>
+      <p class="muted">هر ماژول قابلیت مستقلی است و هر زمان می‌توانید آن را از تنظیمات فعال یا غیرفعال کنید.</p>
+      <form method="post" action="/install">
+        <input type="hidden" name="_step" value="modules">
+        <div class="col mt-3">
+          {{#each modules}}
+          <label class="module-card {{#if enabled}}selected{{/if}} {{#if core}}locked{{/if}}">
+            <input type="checkbox" name="module_{{ key }}" value="1" {{#if enabled}}checked{{/if}} {{#if core}}disabled checked{{/if}}>
+            <span class="mc-icon">{{#if core}}🔒{{else}}🧩{{/if}}</span>
+            <span class="grow">
+              <span class="bold">{{ title }}{{#if core}} <span class="badge badge-violet">پایه</span>{{/if}}</span>
+              <span class="text-sm muted block">{{ description }}</span>
+            </span>
+          </label>
+          {{/each}}
+        </div>
+        <div class="row gap-2 mt-4">
+          <button class="btn btn-primary btn-lg">ادامه — تنظیمات پیامک</button>
+          <a class="btn btn-ghost btn-lg" href="/install?step=organization">بازگشت</a>
+        </div>
+      </form>
+    </div>
+    {{/if}}
+
+    {{#if (h.eq(step, 'sms'))}}
+    <div class="card">
+      <h2>تنظیمات پیامک (IPPanel)</h2>
+      <p class="muted">ورود متقاضیان با کد یکبارمصرف پیامکی انجام می‌شود. اگر پنل پیامک ندارید، می‌توانید فعلاً حالت آزمایشی را انتخاب کنید و بعداً از تنظیمات پیامک، اطلاعات را وارد نمایید.</p>
+      <form method="post" action="/install" id="sms-form">
+        <input type="hidden" name="_step" value="sms">
+        <div class="form-grid">
+          <div class="field col-6">
+            <label class="label">ارائه‌دهنده پیامک</label>
+            <select class="select" name="smsProvider" id="sms-provider">
+              <option value="ippanel" {{#if (h.eq(state.sms.provider, 'ippanel'))}}selected{{/if}}>IPPanel (Edge API)</option>
+              <option value="console" {{#unless state.sms}}{{else}}{{#if (h.eq(state.sms.provider, 'console'))}}selected{{/if}}{{/unless}}>حالت آزمایشی (بدون ارسال واقعی)</option>
+            </select>
+            <div class="hint">در حالت آزمایشی، کد ورود در پاسخ سامانه نمایش داده می‌شود تا فرایند قابل تست باشد.</div>
+          </div>
+          <div class="field col-6">
+            <label class="label">شماره فرستنده</label>
+            <input class="input ltr" name="smsSender" value="{{ state.sms.senderNumber || '' }}" placeholder="+983000505">
+          </div>
+          <div class="field col-6">
+            <label class="label">کلید API (Token)</label>
+            <input class="input ltr" name="smsApiKey" value="" placeholder="توکن دریافتی از پنل IPPanel">
+            <div class="hint">از پنل IPPanel → بخش تنظیمات API دریافت می‌شود.</div>
+          </div>
+          <div class="field col-6">
+            <label class="label">کد پترن کد ورود (OTP)</label>
+            <input class="input ltr" name="smsPatternCode" value="{{ state.sms.defaultPatternCode || '' }}" placeholder="aibg4dsfertj5ht">
+            <div class="hint">پترن باید متغیری با نام <code>code</code> داشته باشد.</div>
+          </div>
+          <div class="field col-6">
+            <label class="label">تست ارسال</label>
+            <input class="input ltr" name="testMobile" id="test-mobile" placeholder="09123456789">
+          </div>
+          <div class="field col-6">
+            <label class="label">&nbsp;</label>
+            <button type="button" class="btn btn-soft btn-block" id="btn-test-sms">تست اتصال و ارسال پیام آزمایشی</button>
+            <div class="hint" id="sms-test-result"></div>
+          </div>
+          <div class="field col-12">
+            <label class="switch">
+              <input type="checkbox" name="smsTestMode" value="1" {{#if state.sms}}{{#if state.sms.testMode}}checked{{/if}}{{else}}checked{{/unless}}>
+              <span class="track"></span>
+              <span class="text-sm">حالت آزمایشی فعال باشد (پیام واقعی ارسال نشود)</span>
+            </label>
+          </div>
+        </div>
+        <div class="row gap-2 mt-3">
+          <button class="btn btn-primary btn-lg">ادامه — مرور و نصب</button>
+          <a class="btn btn-ghost btn-lg" href="/install?step=modules">بازگشت</a>
+        </div>
+      </form>
+    </div>
+    {{/if}}
+
+    {{#if (h.eq(step, 'finish'))}}
+    <div class="card">
+      <h2>مرور نهایی و نصب</h2>
+      <p class="muted">با زدن دکمه نصب، تنظیمات ذخیره و داده‌های اولیه ساخته می‌شوند.</p>
+
+      <div class="row gap-3 wrap mt-3">
+        <div class="review-box">
+          <div class="text-xs muted">سازمان</div>
+          <div class="bold">{{ state.organization.companyName || '—' }}</div>
+        </div>
+        <div class="review-box">
+          <div class="text-xs muted">نام سامانه</div>
+          <div class="bold">{{ state.organization.appName || 'مینی HRM' }}</div>
+        </div>
+        <div class="review-box">
+          <div class="text-xs muted">مدیر ارشد</div>
+          <div class="bold">{{ state.admin.name }} — {{ state.admin.mobile }}</div>
+        </div>
+        <div class="review-box">
+          <div class="text-xs muted">پیامک</div>
+          <div class="bold">{{#if (h.eq(state.sms.provider, 'ippanel'))}}IPPanel{{else}}آزمایشی{{/if}}</div>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <div class="bold mb-2">ماژول‌های فعال</div>
+        <div class="row gap-1 wrap">
+          {{#each modules}}
+          {{#if enabled}}<span class="badge badge-mint">{{ title }}</span>{{/if}}
+          {{/each}}
+        </div>
+      </div>
+
+      <form method="post" action="/install" class="mt-4">
+        <input type="hidden" name="_step" value="finish">
+        <label class="checkline mb-4">
+          <input type="checkbox" name="demoData" value="1" checked>
+          <span>
+            <span class="bold text-sm">ایجاد داده نمونه (سه موقعیت شغلی)</span>
+            <span class="text-sm muted block">برای آشنایی سریع با سامانه و تست فرایند استخدام مفید است. بعداً می‌توانید آن‌ها را حذف کنید.</span>
+          </span>
+        </label>
+        <div class="row gap-2">
+          <button class="btn btn-primary btn-lg">نصب نهایی سامانه</button>
+          <a class="btn btn-ghost btn-lg" href="/install?step=sms">بازگشت</a>
+        </div>
+      </form>
+    </div>
+    {{/if}}
+
+    {{#if (h.eq(step, 'done'))}}
+    <div class="card text-center" style="padding:40px">
+      <div class="success-circle">✓</div>
+      <h2>سامانه با موفقیت نصب شد 🎉</h2>
+      <p class="muted">اکنون می‌توانید وارد پنل مدیریت شوید. پیشنهاد می‌کنیم این مراحل را انجام دهید:</p>
+      <div class="col" style="text-align:right;max-width:520px;margin:16px auto 0">
+        <div class="check-result ok"><span class="ic">۱</span><div class="grow"><div class="bold text-sm">ورود به پنل با حساب مدیر ارشد</div><div class="text-xs muted">نام کاربری: {{ adminMobile || (state.admin && state.admin.mobile) || 'شماره موبایل مدیر' }}</div></div></div>
+        <div class="check-result ok"><span class="ic">۲</span><div class="grow"><div class="bold text-sm">تعریف کاربران و نقش‌های منابع انسانی</div><div class="text-xs muted">بخش «کاربران و دسترسی‌ها»</div></div></div>
+        <div class="check-result ok"><span class="ic">۳</span><div class="grow"><div class="bold text-sm">ایجاد موقعیت شغلی و دریافت QR</div><div class="text-xs muted">بخش «موقعیت‌های شغلی»</div></div></div>
+        <div class="check-result ok"><span class="ic">۴</span><div class="grow"><div class="bold text-sm">بازبینی فرم استخدام و آزمون شخصیت</div><div class="text-xs muted">بخش «فرم‌ساز استخدام» و «آزمون‌های شخصیت»</div></div></div>
+      </div>
+      <div class="row center gap-2 mt-4">
+        <a class="btn btn-primary btn-lg" href="/admin">ورود به پنل مدیریت</a>
+        <a class="btn btn-ghost btn-lg" href="/careers">مشاهده سایت استخدام</a>
+      </div>
+    </div>
+    {{/if}}
+
+    <div class="text-center text-xs muted mt-3">سامانه منابع انسانی — نسخه {{ version }}</div>
+  </main>
+</div>
+<script src="/assets/js/install.js"></script>

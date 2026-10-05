@@ -1,0 +1,64 @@
+<div class="portal-container" style="padding-top:26px">
+  <div class="track-card">
+    <div class="card">
+      <div class="card-title mb-1">پیگیری وضعیت درخواست</div>
+      <p class="text-sm muted">کد رهگیری دریافتی پس از ثبت فرم را وارد کنید. برای امنیت بیشتر، شماره موبایل خود را نیز وارد نمایید.</p>
+      <div class="form-grid">
+        <div class="field col-6">
+          <label class="label">کد رهگیری <span class="req">*</span></label>
+          <input class="input ltr" id="track-code" placeholder="APL-1404-0001">
+        </div>
+        <div class="field col-6">
+          <label class="label">شماره موبایل (اختیاری)</label>
+          <input class="input" id="track-mobile" inputmode="numeric" placeholder="09123456789">
+        </div>
+      </div>
+      <div id="track-alert" class="hidden insight rose mb-2"><span class="ic">⚠️</span><div class="text-sm"></div></div>
+      <button class="btn btn-primary btn-lg" id="btn-track">مشاهده وضعیت</button>
+    </div>
+
+    <div id="track-result" class="hidden">
+      <div class="card mt-3">
+        <div class="row between wrap gap-2">
+          <div>
+            <div class="text-xs muted">کد رهگیری</div>
+            <div class="bold ltr" style="font-size:1.1rem" id="track-code-out">—</div>
+          </div>
+          <div class="text-center">
+            <div class="text-xs muted">وضعیت فعلی</div>
+            <span class="badge" id="track-status">—</span>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="row between">
+          <span class="text-sm muted">موقعیت شغلی</span>
+          <span class="text-sm bold" id="track-job">—</span>
+        </div>
+        <div class="row between mt-1">
+          <span class="text-sm muted">تاریخ ثبت</span>
+          <span class="text-sm bold" id="track-date">—</span>
+        </div>
+        <div class="row between mt-1">
+          <span class="text-sm muted">وضعیت آزمون شخصیت</span>
+          <span class="text-sm bold" id="track-assessment">—</span>
+        </div>
+        <div id="track-interview" class="hidden insight sky mt-2"><span class="ic">📅</span><div class="text-sm" id="track-interview-text"></div></div>
+        <p class="text-sm muted mt-2" id="track-desc"></p>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-title mb-2">روند بررسی درخواست</div>
+        <div class="timeline" id="track-timeline"></div>
+      </div>
+    </div>
+
+    <div class="card mt-3">
+      <div class="row gap-2" style="align-items:flex-start">
+        <span style="font-size:1.2rem">🧠</span>
+        <div class="text-sm muted">
+          <span class="bold">نکته:</span> نتیجه آزمون شخصیت‌شناسی تنها برای کارشناسان منابع انسانی قابل مشاهده است و برای متقاضیان نمایش داده نمی‌شود.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
