@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-card xwide">
+    <div class="auth-logo">HR</div>
+    <h1 class="auth-title">ویزارد نصب سامانه مینی‌اچ‌آر‌ام</h1>
+    <p class="auth-sub">در چند گام ساده، سامانه مدیریت منابع انسانی خود را راه‌اندازی کنید</p>
+
+    <div class="install-steps">
+      <div class="install-step <%= step === 1 ? 'active' : (step > 1 ? 'done' : '') %>">۱. بررسی و اطلاعات شرکت</div>
+      <div class="install-step <%= step === 2 ? 'active' : (step > 2 ? 'done' : '') %>">۲. مدیر کل سامانه</div>
+      <div class="install-step <%= step === 3 ? 'active' : (step > 3 ? 'done' : '') %>">۳. پیامک (OTP)</div>
+      <div class="install-step <%= step === 4 ? 'active' : '' %>">۴. نهایی‌سازی</div>
+    </div>
+
+    <% if (error) { %>
+      <div class="alert error"><%= error %></div>
+    <% } %>
+
+    <% if (step === 1) { %>
+      <!-- گام ۱: بررسی سیستم + اطلاعات شرکت -->
+      <h3>بررسی آمادگی سیستم</h3>
+      <div class="req-item">
+        <span>نسخه Node.js</span>
+        <span class="badge <%= checks.node.ok ? 'green' : 'rose' %>"><%= checks.node.value %> <%= checks.node.ok ? '✓' : '✗' %></span>
+      </div>
+      <div class="req-item">
+        <span>پایگاه داده</span>
+        <span class="badge <%= checks.db.ok ? 'green' : 'rose' %>"><%= checks.db.value %> <%= checks.db.ok ? '✓' : '✗' %></span>
+      </div>
+      <div class="req-item">
+        <span>دسترسی نوشتن در پوشه data</span>
+        <span class="badge <%= checks.data.ok ? 'green' : 'rose' %>"><%= checks.data.ok ? 'قابل نوشتن ✓' : 'غیرقابل نوشتن ✗' %></span>
+      </div>
+
+      <hr class="divider">
+      <h3>اطلاعات شرکت</h3>
+      <form method="post" action="/install/company">
+        <div class="form-grid">
+          <div class="field">
+            <label class="label">نام شرکت <span class="req">*</span></label>
+            <input class="input" name="company_name" required value="<%= form.company_name || 'شرکت دانش بنیان عرفان صنعت اصفهان' %>">
+          </div>
+          <div class="field">
+            <label class="label">عنوان سامانه</label>
+            <input class="input" name="app_title" value="<%= form.app_title || 'سامانه مدیریت منابع انسانی' %>">
+          </div>
+          <div class="field">
+            <label class="label">پیشوند کد پیگیری</label>
+            <input class="input" name="tracking_prefix" value="<%= form.tracking_prefix || 'ERF' %>" style="direction:ltr;text-align:left">
+            <div class="help">مثال: ERF-XXXXXX</div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg btn-block mt-3">ادامه</button>
+      </form>
+
+    <% } else if (step === 2) { %>
+      <!-- گام ۲: مدیر کل -->
+      <h3>ساخت حساب مدیر کل سامانه</h3>
+      <p class="text-sm text-muted">این حساب به تمام بخش‌ها، تنظیمات و سطوح دسترسی کامل خواهد داشت.</p>
+      <form method="post" action="/install/admin">
+        <div class="form-grid">
+          <div class="field">
+            <label class="label">نام و نام خانوادگی <span class="req">*</span></label>
+            <input class="input" name="full_name" required value="<%= form.full_name || '' %>">
+          </div>
+          <div class="field">
+            <label class="label">نام کاربری <span class="req">*</span></label>
+            <input class="input" name="username" required style="direction:ltr;text-align:left" value="<%= form.username || '' %>">
+            <div class="help">فقط حروف و اعداد انگلیسی (حداقل ۳ کاراکتر)</div>
+          </div>
+          <div class="field">
+            <label class="label">رمز عبور <span class="req">*</span></label>
+            <input class="input" type="password" name="password" required style="direction:ltr">
+            <div class="help">حداقل ۸ کاراکتر</div>
+          </div>
+          <div class="field">
+            <label class="label">تکرار رمز عبور <span class="req">*</span></label>
+            <input class="input" type="password" name="password2" required style="direction:ltr">
+          </div>
+          <div class="field">
+            <label class="label">ایمیل</label>
+            <input class="input" type="email" name="email" style="direction:ltr;text-align:left" value="<%= form.email || '' %>">
+          </div>
+          <div class="field">
+            <label class="label">شماره موبایل</label>
+            <input class="input" name="phone" style="direction:ltr;text-align:left" value="<%= form.phone || '' %>">
+          </div>
+        </div>
+        <div class="flex-between mt-3">
+          <a href="/install" class="btn btn-ghost">بازگشت</a>
+          <button type="submit" class="btn btn-primary btn-lg">ادامه</button>
+        </div>
+      </form>
+
+    <% } else if (step === 3) { %>
+      <!-- گام ۳: پیامک -->
+      <h3>اتصال سامانه پیامکی (IPPanel)</h3>
+      <p class="text-sm text-muted">
+        برای ورود متقاضیان با QR و کد OTP، به سامانه پیامکی نیاز دارید. می‌توانید بعداً هم از «تنظیمات › پیامک» آن را تنظیم کنید.
+        <a href="https://ippanelcom.github.io/Edge-Document/docs/" target="_blank">مستندات IPPanel</a>
+      </p>
+      <form method="post" action="/install/sms">
+        <div class="field">
+          <label class="label">درایور پیامک</label>
+          <div class="option-tiles cols-2">
+            <label class="option-tile <%= (form.sms_driver || 'mock') === 'mock' ? 'selected' : '' %>">
+              <input type="radio" name="sms_driver" value="mock" <%= (form.sms_driver || 'mock') === 'mock' ? 'checked' : '' %>>
+              <div>
+                <div class="font-bold">حالت آزمایشی (تست)</div>
+                <div class="text-xs text-muted">کد OTP روی صفحه نمایش داده می‌شود — مناسب برای راه‌اندازی و تست</div>
+              </div>
+            </label>
+            <label class="option-tile <%= form.sms_driver === 'ippanel' ? 'selected' : '' %>">
+              <input type="radio" name="sms_driver" value="ippanel" <%= form.sms_driver === 'ippanel' ? 'checked' : '' %>>
+              <div>
+                <div class="font-bold">IPPanel (پیامک واقعی)</div>
+                <div class="text-xs text-muted">ارسال OTP با الگو (Pattern) از طریق Edge API</div>
+              </div>
+            </label>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label class="label">کلید دسترسی (API Key)</label>
+            <input class="input" name="sms_ippanel_apikey" style="direction:ltr;text-align:left" value="<%= form.sms_ippanel_apikey || '' %>" placeholder="از پنل IPPanel › توسعه‌دهندگان › کلیدهای دسترسی">
+          </div>
+          <div class="field">
+            <label class="label">شماره فرستنده</label>
+            <input class="input" name="sms_ippanel_from" style="direction:ltr;text-align:left" value="<%= form.sms_ippanel_from || '+983000505' %>">
+          </div>
+          <div class="field">
+            <label class="label">کد الگوی پیامک (Pattern Code)</label>
+            <input class="input" name="sms_ippanel_pattern_code" style="direction:ltr;text-align:left" value="<%= form.sms_ippanel_pattern_code || '' %>" placeholder="کد الگوی تایید شده OTP">
+            <div class="help">الگو باید حداقل یک متغیر مانند code داشته باشد</div>
+          </div>
+        </div>
+        <div class="flex-between mt-3">
+          <a href="/install" class="btn btn-ghost">بازگشت</a>
+          <button type="submit" class="btn btn-primary btn-lg">ادامه</button>
+        </div>
+      </form>
+
+    <% } else if (step === 4) { %>
+      <!-- گام ۴: نهایی -->
+      <h3>مرور و نهایی‌سازی</h3>
+      <div class="req-item"><span>شرکت</span><strong><%= form.company_name %></strong></div>
+      <div class="req-item"><span>مدیر کل</span><strong><%= form.full_name %> (<%= form.username %>)</strong></div>
+      <div class="req-item"><span>پیامک</span>
+        <strong><%= (form.sms_driver === 'ippanel') ? 'IPPanel — پیامک واقعی' : 'حالت آزمایشی (تست)' %></strong>
+      </div>
+      <div class="alert info mt-3">
+        با کلیک روی «نصب سامانه»، پایگاه داده ایجاد شده و وارد داشبورد می‌شوید. ماژول‌های «استخدام» و «آزمون شخصیت MBTI» به‌صورت پیش‌فرض فعال هستند.
+      </div>
+      <form method="post" action="/install/finish">
+        <div class="flex-between">
+          <a href="/install" class="btn btn-ghost">بازگشت</a>
+          <button type="submit" class="btn btn-primary btn-lg">نصب سامانه</button>
+        </div>
+      </form>
+    <% } %>
+  </div>
+</div>
+<script src="/js/app.js"></script>
+</body>
+</html>

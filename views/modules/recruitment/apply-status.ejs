@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-card wide">
+    <div class="auth-logo">HR</div>
+    <h1 class="auth-title">وضعیت درخواست‌های استخدام</h1>
+    <p class="auth-sub"><%= company %></p>
+
+    <% if (!rows.length) { %>
+      <div class="empty-state">
+        <%- icon('file', 40) %>
+        <p>هنوز درخواستی با این شماره موبایل ثبت نشده است.</p>
+        <a href="/apply" class="btn btn-primary">ثبت درخواست جدید</a>
+      </div>
+    <% } %>
+
+    <% rows.forEach(function(a) {
+      var sb = statusBadge(a.status);
+      var steps = ['draft','submitted','reviewing','interview','accepted'];
+      var finalStates = { accepted:'green', rejected:'rose', on_hold:'gray' };
+    %>
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="flex-between">
+            <div>
+              <div class="font-bold"><%= (a.first_name || '') + ' ' + (a.last_name || '') || 'درخواست استخدام' %></div>
+              <div class="text-xs text-muted">کد پیگیری: <strong><%= a.tracking_code %></strong></div>
+            </div>
+            <span class="badge <%= sb.color %>"><span class="badge-dot"></span> <%= sb.label %></span>
+          </div>
+
+          <% if (a.status === 'draft') { %>
+            <div class="alert warn mt-3" style="margin-bottom:0">
+              فرم شما هنوز تکمیل نشده است.
+              <a href="/apply/wizard/personal" class="font-bold">ادامه تکمیل فرم</a>
+            </div>
+          <% } else { %>
+            <div class="wizard-progress mt-3">
+              <span style="width:<%= Math.max(8, Math.round((steps.indexOf(a.status) + 1) / steps.length * 100)) %>%"></span>
+            </div>
+            <div class="flex-between text-xs text-muted">
+              <span>ارسال فرم</span>
+              <span>بررسی</span>
+              <span>مصاحبه</span>
+              <span>نتیجه نهایی</span>
+            </div>
+          <% } %>
+
+          <div class="text-xs text-muted mt-2">
+            تاریخ ارسال: <%= jalali(a.submitted_at || a.created_at) %>
+            <% if (a.mbti_type) { %> — آزمون شخصیت: تکمیل شده ✓<% } %>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+
+    <div class="text-center mt-3">
+      <a href="/apply" class="btn btn-ghost">بازگشت</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

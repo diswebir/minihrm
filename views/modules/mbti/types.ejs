@@ -1,0 +1,31 @@
+<%- include('../../partials/header') %>
+
+<p class="text-muted text-sm mb-4">
+  راهنمای جامع ۱۶ تیپ شخصیتی MBTI — برای آشنایی کارشناسان منابع انسانی با ویژگی‌ها، نقاط قوت و نکات مصاحبه هر تیپ.
+</p>
+
+<%
+  var groups = {};
+  types.forEach(function(t) {
+    if (!groups[t.group_title]) groups[t.group_title] = [];
+    groups[t.group_title].push(t);
+  });
+%>
+
+<% Object.keys(groups).forEach(function(g) { %>
+  <h3 class="mt-4 mb-3"><%= g %></h3>
+  <div class="grid grid-4 mb-4">
+    <% groups[g].forEach(function(t) { %>
+      <a href="/hr/mbti/types/<%= t.code %>" class="card" style="color:var(--text)">
+        <div class="card-body">
+          <div class="score-tag mb-2"><%= t.code %></div>
+          <h3 style="font-size:1rem;margin-bottom:2px"><%= t.title %></h3>
+          <div class="text-xs text-muted font-bold"><%= t.nickname %></div>
+          <p class="text-xs text-muted mt-2" style="min-height:44px"><%= t.one_liner %></p>
+        </div>
+      </a>
+    <% }) %>
+  </div>
+<% }) %>
+
+<%- include('../../partials/footer') %>

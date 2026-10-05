@@ -1,0 +1,14 @@
+{
+  "code": "recruitment",
+  "name": "ماژول استخدام",
+  "description": "موقعیت‌های شغلی، فرم چندمرحله‌ای استخدام، QR متقاضیان و مدیریت پرونده‌ها",
+  "icon": "briefcase",
+  "version": "1.0.0",
+  "sort": 1,
+  "nav": [
+    { "label": "متقاضیان", "url": "/hr/applicants", "icon": "users", "permission": "applicants.view", "section": "استخدام" },
+    { "label": "موقعیت‌های شغلی", "url": "/hr/positions", "icon": "briefcase", "permission": "positions.view", "section": "استخدام" },
+    { "label": "طراحی فرم استخدام", "url": "/hr/form-builder", "icon": "form", "permission": "formbuilder.manage", "section": "استخدام" },
+    { "label": "گزارش استخدام", "url": "/hr/reports", "icon": "chart", "permission": "reports.view", "section": "استخدام" }
+  ]
+}

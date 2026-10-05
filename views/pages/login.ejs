@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">HR</div>
+    <h1 class="auth-title">ورود به سامانه</h1>
+    <p class="auth-sub"><%= settings.app_title || 'سامانه مدیریت منابع انسانی' %><br><%= settings.company_name || '' %></p>
+
+    <% if (error) { %>
+      <div class="alert error"><%= error %></div>
+    <% } %>
+
+    <form method="post" action="/login">
+      <div class="field">
+        <label class="label">نام کاربری</label>
+        <input class="input" type="text" name="username" value="<%= username %>" required autofocus placeholder="نام کاربری خود را وارد کنید">
+      </div>
+      <div class="field">
+        <label class="label">رمز عبور</label>
+        <input class="input" type="password" name="password" required placeholder="رمز عبور خود را وارد کنید">
+      </div>
+      <button type="submit" class="btn btn-primary btn-lg btn-block">ورود به سامانه</button>
+    </form>
+
+    <hr class="divider">
+    <div class="text-center text-sm">
+      متقاضی استخدام هستید؟
+      <a href="/apply"><strong>ثبت‌نام از طریق QR یا شماره موبایل</strong></a>
+    </div>
+  </div>
+</div>
+<script src="/js/app.js"></script>
+</body>
+</html>

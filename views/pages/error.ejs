@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> | <%= status %></title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-card text-center">
+    <div class="auth-logo" style="background:<%= status === 404 ? 'linear-gradient(135deg,#f5b84c,#f4718c)' : 'linear-gradient(135deg,#f4718c,#a78bfa)' %>">
+      <%= status %>
+    </div>
+    <h1 class="auth-title"><%= title %></h1>
+    <p class="auth-sub"><%= message %></p>
+    <a href="/dashboard" class="btn btn-primary">بازگشت به سامانه</a>
+  </div>
+</div>
+</body>
+</html>

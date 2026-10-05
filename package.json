@@ -1,0 +1,26 @@
+{
+  "name": "minihrm",
+  "version": "1.0.0",
+  "description": "سامانه مدیریت منابع انسانی مینی‌اچ‌آر‌ام - نصب آسان روی هاست cPanel بدون SSH",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "NODE_ENV=development node server.js",
+    "test": "node tests/smoke.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "compression": "^1.8.0",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "jalaali-js": "^1.2.0",
+    "multer": "^2.4.0",
+    "qrcode": "^1.5.4",
+    "sql.js": "^1.13.0"
+  },
+  "license": "MIT",
+  "private": true
+}

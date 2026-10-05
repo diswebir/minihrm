@@ -1,0 +1,196 @@
+<%- include('../partials/header') %>
+
+<%
+  var hour = new Date().getHours();
+  var greet = hour < 12 ? 'صبح بخیر' : (hour < 18 ? 'عصر بخیر' : 'شب بخیر');
+%>
+
+<div class="flex-between mb-4">
+  <div>
+    <h2 style="margin-bottom:2px"><%= greet %>، <%= sessionUser.full_name %> 👋</h2>
+    <p class="text-muted text-sm" style="margin:0">به داشبورد <%= sessionUser.role_name || '' %> خوش آمدید</p>
+  </div>
+  <div class="flex-center gap-2">
+    <% if (can('applicants.view')) { %>
+      <a href="/hr/applicants" class="btn btn-soft"><%- icon('users', 18) %> متقاضیان</a>
+    <% } %>
+    <% if (can('positions.manage')) { %>
+      <a href="/hr/positions/new" class="btn btn-primary"><%- icon('plus', 18) %> موقعیت شغلی جدید</a>
+    <% } %>
+  </div>
+</div>
+
+<% if (sessionUser.is_super_admin) { %>
+  <div class="alert info">
+    <%- icon('shield', 20) %>
+    <div>
+      <strong>مدیر کل سامانه:</strong>
+      از بخش «نقش‌ها و دسترسی‌ها» می‌توانید سطح دسترسی هر نقش و کاربر را به‌صورت کامل مدیریت کنید.
+      از بخش «ماژول‌ها» نیز قابلیت‌های سامانه را فعال یا غیرفعال کنید.
+    </div>
+  </div>
+<% } %>
+
+<% if (settings.sms_driver === 'mock') { %>
+  <div class="alert warn">
+    <%- icon('phone', 20) %>
+    <div><strong>پیامک در حالت آزمایشی است:</strong> کدهای OTP برای تست نمایش داده می‌شوند. برای فعال‌سازی پیامک واقعی، به «تنظیمات › پیامک» بروید.</div>
+  </div>
+<% } %>
+
+<!-- کارت‌های آماری -->
+<% if (can('applicants.view')) { %>
+<div class="grid grid-4 mb-4">
+  <div class="stat-card">
+    <div class="stat-icon violet"><%- icon('users', 26) %></div>
+    <div>
+      <div class="stat-value"><%= faNum(stats.applicantsTotal || 0) %></div>
+      <div class="stat-label">متقاضی کل</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon sky"><%- icon('file', 26) %></div>
+    <div>
+      <div class="stat-value"><%= faNum(stats.applicantsNew || 0) %></div>
+      <div class="stat-label">در انتظار بررسی</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon amber"><%- icon('chat', 26) %></div>
+    <div>
+      <div class="stat-value"><%= faNum(stats.applicantsInterview || 0) %></div>
+      <div class="stat-label">در مرحله مصاحبه</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon mint"><%- icon('check', 26) %></div>
+    <div>
+      <div class="stat-value"><%= faNum(stats.applicantsAccepted || 0) %></div>
+      <div class="stat-label">استخدام‌شده</div>
+    </div>
+  </div>
+</div>
+<% } %>
+
+<div class="grid grid-2-1">
+  <div>
+    <% if (can('applicants.view') && stats.recentApplicants && stats.recentApplicants.length) { %>
+    <div class="card mb-4">
+      <div class="card-header">
+        <div class="card-title"><%- icon('users') %> آخرین متقاضیان</div>
+        <a href="/hr/applicants" class="btn btn-soft btn-sm">مشاهده همه</a>
+      </div>
+      <div class="card-body" style="padding-top:12px">
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr><th>متقاضی</th><th>موقعیت شغلی</th><th>وضعیت</th><th>تاریخ</th></tr>
+            </thead>
+            <tbody>
+              <% stats.recentApplicants.forEach(function(a) {
+                var sb = statusBadge(a.status);
+              %>
+                <tr>
+                  <td>
+                    <a href="/hr/applicants/<%= a.id %>" class="flex-center" style="gap:9px;color:var(--text)">
+                      <span class="avatar-sm"><%= (a.first_name || 'م').charAt(0) %></span>
+                      <span class="font-bold"><%= (a.first_name || '') + ' ' + (a.last_name || '') %></span>
+                    </a>
+                  </td>
+                  <td class="text-sm"><%= a.position_title || '—' %></td>
+                  <td><span class="badge <%= sb.color %>"><%= sb.label %></span></td>
+                  <td class="text-sm text-muted"><%= jalali(a.submitted_at || a.created_at) %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <% } %>
+
+    <% if (can('reports.view') && stats.trend && stats.trend.length > 1) { %>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><%- icon('chart') %> روند درخواست‌های استخدام</div>
+        <span class="card-sub">۳۰ روز اخیر</span>
+      </div>
+      <div class="card-body">
+        <div class="chart-bars" id="trend-chart"></div>
+        <div class="text-center text-xs text-muted mt-2">
+          <% stats.trend.slice(-7).forEach(function(t) { %>
+            <span style="margin:0 6px"><%= jalali(t.d) %> — <%= t.c %></span>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+    <% } %>
+  </div>
+
+  <div>
+    <% if (stats.byStatus && stats.byStatus.length) { %>
+    <div class="card mb-4">
+      <div class="card-header"><div class="card-title"><%- icon('form') %> وضعیت پرونده‌ها</div></div>
+      <div class="card-body">
+        <% stats.byStatus.forEach(function(s) {
+          var sb = statusBadge(s.status);
+          var maxc = Math.max.apply(null, stats.byStatus.map(function(x){return x.c;}));
+        %>
+          <div class="bar-row">
+            <div class="bar-label"><%= sb.label %></div>
+            <div class="bar-track">
+              <div class="bar-fill" style="width:<%= Math.round((s.c / maxc) * 100) %>%"></div>
+            </div>
+            <div class="bar-value"><%= s.c %></div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+    <% } %>
+
+    <% if (stats.mbtiDist && stats.mbtiDist.length && can('mbti.view')) { %>
+    <div class="card mb-4">
+      <div class="card-header">
+        <div class="card-title"><%- icon('brain') %> توزیع تیپ‌های شخصیتی</div>
+      </div>
+      <div class="card-body">
+        <% stats.mbtiDist.forEach(function(m) { %>
+          <div class="flex-between" style="padding:6px 0">
+            <a href="/hr/mbti/types/<%= m.mbti_type %>" class="score-tag"><%= m.mbti_type %></a>
+            <span class="text-sm font-bold"><%= m.c %> نفر</span>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+    <% } %>
+
+    <% if (sessionUser.is_super_admin && stats.auditRecent) { %>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><%- icon('shield') %> آخرین فعالیت‌ها</div>
+        <a href="/admin/audit" class="btn btn-soft btn-sm">همه</a>
+      </div>
+      <div class="card-body">
+        <div class="timeline">
+          <% stats.auditRecent.forEach(function(a) { %>
+            <div class="tl-item">
+              <div class="tl-title"><%= a.action %> — <%= a.user_name || 'سیستم' %></div>
+              <div class="tl-meta"><%= jalaliFull(a.created_at) %></div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<% if (stats.trend && stats.trend.length > 1) { %>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    renderMiniBars(document.getElementById('trend-chart'), <%- JSON.stringify(stats.trend.map(function(t){ return { label: t.d, value: t.c }; })) %>);
+  });
+</script>
+<% } %>
+
+<%- include('../partials/footer') %>

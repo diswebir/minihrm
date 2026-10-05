@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-card text-center">
+    <div class="auth-logo" style="background:linear-gradient(135deg,#2fc4a7,#6fe0c8)">✓</div>
+    <h1 class="auth-title">ثبت موفق فرم استخدام</h1>
+    <p class="auth-sub">
+      فرم استخدام شما با موفقیت ارسال شد.<br>
+      کارشناسان منابع انسانی <%= company %> پس از بررسی، با شما تماس خواهند گرفت.
+    </p>
+
+    <% if (tracking) { %>
+      <div class="dev-code" style="letter-spacing:2px">
+        کد پیگیری: <%= tracking %>
+      </div>
+      <div class="help mt-2">این کد را برای پیگیری درخواست خود نگه دارید</div>
+    <% } %>
+
+    <div class="grid mt-4" style="gap:10px">
+      <a href="/apply/status" class="btn btn-primary btn-block">مشاهده وضعیت درخواست</a>
+      <a href="/apply" class="btn btn-ghost btn-block">بازگشت به صفحه اصلی</a>
+    </div>
+
+    <div class="alert info mt-4" style="text-align:right">
+      <%- icon('brain', 20) %>
+      <div>
+        نتیجه آزمون شخصیت شما توسط تیم منابع انسانی به‌صورت محرمانه بررسی می‌شود و در مراحل بعدی مصاحبه لحاظ خواهد شد.
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

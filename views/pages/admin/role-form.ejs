@@ -1,0 +1,56 @@
+<%- include('../../partials/header') %>
+
+<% if (error) { %>
+  <div class="alert error"><%= error %></div>
+<% } %>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title"><%- icon('key') %> <%= role ? 'ویرایش نقش: ' + role.name : 'نقش جدید' %></div>
+    <a href="/admin/roles" class="btn btn-ghost btn-sm">بازگشت</a>
+  </div>
+  <div class="card-body">
+    <form method="post">
+      <div class="form-grid">
+        <div class="field">
+          <label class="label">نام نقش <span class="req">*</span></label>
+          <input class="input" name="name" required value="<%= role ? role.name : '' %>">
+        </div>
+        <div class="field">
+          <label class="label">توضیحات</label>
+          <input class="input" name="description" value="<%= role ? (role.description || '') : '' %>">
+        </div>
+      </div>
+
+      <hr class="divider">
+      <h3>مجوزهای این نقش</h3>
+      <p class="text-sm text-muted">دسترسی‌هایی که برای این نقش فعال شوند، برای تمام کاربران دارای آن اعمال می‌شود.</p>
+
+      <div class="grid grid-2 mt-3">
+        <% Object.keys(permissionGroups).forEach(function(gname) { %>
+          <div>
+            <div class="nav-section" style="padding-right:0"><%= gname %></div>
+            <% permissionGroups[gname].forEach(function(p) {
+              var checked = rolePerms && (rolePerms[p.id] || (role && role.is_super_admin));
+            %>
+              <label class="check-row" style="padding:8px 0;border-bottom:1px dashed var(--border);align-items:flex-start">
+                <input type="checkbox" name="perm_<%= p.code %>" <%= checked ? 'checked' : '' %>>
+                <div>
+                  <div class="font-bold"><%= p.name %></div>
+                  <div class="text-xs text-muted"><%= p.description %></div>
+                </div>
+              </label>
+            <% }) %>
+          </div>
+        <% }) %>
+      </div>
+
+      <div class="flex-between mt-4">
+        <a href="/admin/roles" class="btn btn-ghost">انصراف</a>
+        <button class="btn btn-primary btn-lg"><%= role ? 'ذخیره تغییرات' : 'ثبت نقش' %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('../../partials/footer') %>

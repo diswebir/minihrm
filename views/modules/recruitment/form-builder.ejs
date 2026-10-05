@@ -1,0 +1,146 @@
+<%- include('../../partials/header') %>
+
+<% if (saved) { %>
+  <div class="alert success">تنظیمات فرم استخدام ذخیره شد. تغییرات بلافاصله در فرم متقاضیان اعمال می‌شود.</div>
+<% } %>
+
+<div class="flex-between mb-4">
+  <p class="text-muted text-sm" style="margin:0">
+    مشخص کنید چه فیلدهایی در فرم استخدام نمایش داده شوند و کدام‌ها الزامی باشند.
+    می‌توانید فیلدهای سفارشی جدید نیز اضافه کنید.
+  </p>
+  <a href="/apply" target="_blank" class="btn btn-soft"><%- icon('eye', 16) %> پیش‌نمایش فرم متقاضی</a>
+</div>
+
+<form method="post" action="/hr/form-builder/save">
+  <% steps.forEach(function(step) {
+    var stepFields = fields.filter(function(f){ return f.step_key === step.key; });
+  %>
+    <div class="card mb-4">
+      <div class="card-header">
+        <div class="card-title">
+          <%- icon(step.icon || 'file') %> <%= step.title %>
+          <span class="text-xs text-muted" style="font-weight:500"><%= step.description %></span>
+        </div>
+        <label class="check-row">
+          <input type="checkbox" name="step_<%= step.key %>" <%= step.enabled ? 'checked' : '' %>>
+          <span class="font-bold text-sm">نمایش این مرحله</span>
+        </label>
+      </div>
+      <div class="card-body" style="padding-top:12px">
+        <% if (!stepFields.length) { %>
+          <div class="text-muted text-sm">این مرحله فیلد قابل تنظیم ندارد (مثلاً آزمون شخصیت یا مرور نهایی)</div>
+        <% } %>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr><th>عنوان فیلد</th><th>نوع</th><th>الزامی</th><th>نمایش</th><th>عملیات</th></tr>
+            </thead>
+            <tbody>
+              <% stepFields.forEach(function(f) { %>
+                <tr>
+                  <td>
+                    <input class="input" name="label_<%= f.id %>" value="<%= f.label %>" style="min-width:220px">
+                    <% if (f.help) { %><div class="help"><%= f.help %></div><% } %>
+                  </td>
+                  <td>
+                    <span class="badge gray">
+                      <%= ({text:'متن',textarea:'متن بلند',number:'عدد',phone:'موبایل',email:'ایمیل',date:'تاریخ شمسی',select:'لیست',radio:'تک‌انتخابی',checkbox:'چندانتخابی',switch:'تاییدیه',file:'فایل',repeater:'ردیف‌های تکرارشونده'})[f.type] || f.type %>
+                    </span>
+                    <% if (!f.builtin) { %><span class="badge violet">سفارشی</span><% } %>
+                  </td>
+                  <td><input type="checkbox" name="required_<%= f.id %>" <%= f.required ? 'checked' : '' %> style="width:18px;height:18px;accent-color:var(--primary)"></td>
+                  <td><input type="checkbox" name="visible_<%= f.id %>" <%= f.visible ? 'checked' : '' %> style="width:18px;height:18px;accent-color:var(--primary)"></td>
+                  <td>
+                    <% if (!f.builtin) { %>
+                      <button type="button" class="btn btn-danger btn-sm" data-action="delete-row"
+                              data-url="/hr/form-builder/field/<%= f.id %>/delete"
+                              data-confirm="این فیلد حذف شود؟"><%- icon('trash', 14) %></button>
+                    <% } else { %>
+                      <span class="text-xs text-muted">پیش‌فرض</span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+
+  <div class="flex-between mb-4">
+    <span class="text-sm text-muted">تغییرات را ذخیره کنید تا در فرم متقاضیان اعمال شود.</span>
+    <button class="btn btn-primary btn-lg"><%- icon('check', 18) %> ذخیره تنظیمات فرم</button>
+  </div>
+</form>
+
+<!-- افزودن فیلد سفارشی -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title"><%- icon('plus') %> افزودن فیلد سفارشی</div>
+  </div>
+  <div class="card-body">
+    <form onsubmit="return addField(event)">
+      <div class="form-grid">
+        <div class="field">
+          <label class="label">عنوان فیلد <span class="req">*</span></label>
+          <input class="input" id="nf-label" required placeholder="مثال: شماره پرونده بیمه تکمیلی">
+        </div>
+        <div class="field">
+          <label class="label">نوع فیلد</label>
+          <select class="select" id="nf-type">
+            <option value="text">متن کوتاه</option>
+            <option value="textarea">متن بلند</option>
+            <option value="number">عدد</option>
+            <option value="date">تاریخ شمسی</option>
+            <option value="select">لیست کشویی</option>
+            <option value="radio">تک‌انتخابی</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="label">مرحله</label>
+          <select class="select" id="nf-step">
+            <% steps.forEach(function(s) { %>
+              <option value="<%= s.key %>"><%= s.title %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="field">
+          <label class="label">عرض نمایش</label>
+          <select class="select" id="nf-width">
+            <option value="half">نیمه</option>
+            <option value="full">تمام عرض</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label class="label">گزینه‌ها (فقط برای لیست/تک‌انتخابی — هر خط یک گزینه)</label>
+          <textarea class="textarea" id="nf-options" rows="3" placeholder="گزینه اول&#10;گزینه دوم"></textarea>
+        </div>
+      </div>
+      <button class="btn btn-mint"><%- icon('plus', 16) %> افزودن فیلد</button>
+    </form>
+  </div>
+</div>
+
+<script>
+async function addField(e) {
+  e.preventDefault();
+  const res = await hrmPost('/hr/form-builder/field', {
+    label: document.getElementById('nf-label').value,
+    type: document.getElementById('nf-type').value,
+    step_key: document.getElementById('nf-step').value,
+    width: document.getElementById('nf-width').value,
+    options: document.getElementById('nf-options').value
+  });
+  if (res.ok) {
+    hrmToast(res.message, 'ok');
+    setTimeout(function(){ location.reload(); }, 550);
+  } else {
+    hrmToast(res.message || 'خطا رخ داد', 'err');
+  }
+  return false;
+}
+</script>
+
+<%- include('../../partials/footer') %>

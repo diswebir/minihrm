@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="auth-wrap" style="align-items:flex-start;padding-top:40px">
+  <div class="auth-card wide text-center">
+    <div class="no-print flex-between" style="margin-bottom:18px">
+      <a href="/hr/positions" class="btn btn-ghost btn-sm"><%- icon('arrow', 15) %> بازگشت</a>
+      <button onclick="window.print()" class="btn btn-primary btn-sm"><%- icon('print', 15) %> چاپ QR</button>
+    </div>
+
+    <!-- کارت چاپی -->
+    <div style="border:2.5px solid var(--border);border-radius:24px;padding:34px;background:#fff">
+      <h2 style="margin-bottom:4px"><%= company %></h2>
+      <p class="text-muted" style="margin-bottom:20px">فرصت همکاری شغلی</p>
+
+      <h1 style="font-size:1.5rem;color:var(--primary-2)"><%= position.title %></h1>
+      <% if (position.department) { %>
+        <p class="text-sm text-muted">واحد: <%= position.department %></p>
+      <% } %>
+
+      <div style="background:#fff;border-radius:20px;display:inline-block;padding:18px;margin:18px 0;box-shadow:var(--shadow)">
+        <%- qrSvg %>
+      </div>
+
+      <p class="text-sm" style="margin-top:8px">
+        برای ثبت‌نام و تکمیل فرم استخدام، این کد را با گوشی موبایل اسکن کنید
+      </p>
+      <div class="dev-code" style="letter-spacing:0;font-size:.95rem;direction:ltr">
+        <%= url %>
+      </div>
+      <p class="text-xs text-muted mt-3">
+        پس از اسکن، شماره موبایل خود را وارد کرده و با کد یکبار مصرف (OTP) وارد فرم استخدام شوید.
+      </p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
