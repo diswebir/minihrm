@@ -84,12 +84,13 @@ router.post('/admin', (req, res) => {
 
 router.post('/sms', async (req, res) => {
   const draft = req.session.installDraft || {};
-  const { sms_driver, sms_ippanel_apikey, sms_ippanel_from, sms_ippanel_pattern_code, test_phone } = req.body;
+  const { sms_driver, sms_ippanel_apikey, sms_ippanel_from, sms_ippanel_pattern_code, sms_pattern_var, test_phone } = req.body;
   req.session.installDraft = Object.assign({}, draft, {
     sms_driver: sms_driver === 'ippanel' ? 'ippanel' : 'mock',
     sms_ippanel_apikey: (sms_ippanel_apikey || '').trim(),
     sms_ippanel_from: (sms_ippanel_from || '').trim(),
     sms_ippanel_pattern_code: (sms_ippanel_pattern_code || '').trim(),
+    sms_pattern_var: sms.sanitizePatternVar(sms_pattern_var),
     sms_test_result: null
   });
 
@@ -120,6 +121,7 @@ router.post('/finish', async (req, res) => {
     helpers.setSetting('sms_ippanel_apikey', draft.sms_ippanel_apikey || '');
     helpers.setSetting('sms_ippanel_from', draft.sms_ippanel_from || '+983000505');
     helpers.setSetting('sms_ippanel_pattern_code', draft.sms_ippanel_pattern_code || '');
+    helpers.setSetting('sms_pattern_var', sms.sanitizePatternVar(draft.sms_pattern_var));
     helpers.setSetting('install_done', '1');
 
     // کاربر سوپرادمین

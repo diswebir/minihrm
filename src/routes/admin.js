@@ -238,11 +238,12 @@ router.post('/settings/general', requirePerm('settings.manage'), (req, res) => {
 });
 
 router.post('/settings/sms', requirePerm('settings.manage'), (req, res) => {
-  const { sms_driver, sms_ippanel_apikey, sms_ippanel_from, sms_ippanel_pattern_code, sms_mock_show } = req.body;
+  const { sms_driver, sms_ippanel_apikey, sms_ippanel_from, sms_ippanel_pattern_code, sms_pattern_var, sms_mock_show } = req.body;
   helpers.setSetting('sms_driver', sms_driver === 'ippanel' ? 'ippanel' : 'mock');
   helpers.setSetting('sms_ippanel_apikey', (sms_ippanel_apikey || '').trim());
   helpers.setSetting('sms_ippanel_from', (sms_ippanel_from || '').trim());
   helpers.setSetting('sms_ippanel_pattern_code', (sms_ippanel_pattern_code || '').trim());
+  helpers.setSetting('sms_pattern_var', sms.sanitizePatternVar(sms_pattern_var));
   helpers.setSetting('sms_mock_show', sms_mock_show === '0' ? '0' : '1');
   audit.log(req, 'settings.sms', 'settings', '', {});
   res.redirect('/admin/settings?saved=sms');

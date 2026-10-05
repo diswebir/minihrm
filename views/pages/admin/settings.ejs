@@ -58,7 +58,28 @@
           <div class="field">
             <label class="label">کد الگو (Pattern Code)</label>
             <input class="input" name="sms_ippanel_pattern_code" value="<%= settings.sms_ippanel_pattern_code || '' %>" style="direction:ltr;text-align:left">
-            <div class="help">الگوی تایید شده با متغیر code</div>
+            <div class="help">کد الگوی تأییدشده (پترن OTP) در پنل پیامکی</div>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label class="label">نام متغیر کد در پترن شما</label>
+            <input class="input" name="sms_pattern_var" value="<%= settings.sms_pattern_var || 'code' %>" style="direction:ltr;text-align:left" placeholder="code">
+            <div class="help">
+              در پنل پیامکی، داخل متن پترن یک جای‌نگهدار برای کد تایید گذاشته‌اید (مثلاً <code style="direction:ltr;display:inline-block">کد تایید: {otp}</code>).
+              نام همان متغیر را اینجا بنویسید تا سامانه کد را با همان نام ارسال کند.
+              اگر در پترن از <code style="direction:ltr;display:inline-block">{code}</code> استفاده کرده‌اید، همان پیش‌فرض را نگه دارید.
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">متغیری که سامانه ارسال می‌کند</label>
+            <div class="dev-code" style="direction:ltr;text-align:left;display:block">
+              params = { "<%= settings.sms_pattern_var || 'code' %>": "&lt;کد تایید&gt;" }
+            </div>
+            <div class="help">
+              مقدار «کد تایید» به‌صورت خودکار (مثلاً <span style="direction:ltr;display:inline-block">12345</span>) جایگزین می‌شود؛
+              فقط نام متغیر باید با پترن شما یکسان باشد.
+            </div>
           </div>
         </div>
         <div class="field">

@@ -327,6 +327,19 @@ async function main() {
   r = await admin('POST', '/admin/settings/security', { form: { otp_length: '6', otp_expiry_seconds: '240', otp_resend_seconds: '60', otp_max_attempts: '4', session_hours: '12' } });
   ok('ذخیره تنظیمات امنیتی', r.status === 302);
 
+  // نام متغیر پترن پیامکی (نقشه‌برداری code → نام دلخواه کاربر مثلاً otp)
+  r = await admin('POST', '/admin/settings/sms', { form: { sms_driver: 'mock', sms_ippanel_apikey: '', sms_ippanel_from: '+983000505', sms_ippanel_pattern_code: 'pat123', sms_pattern_var: 'otp', sms_mock_show: '1' } });
+  ok('ذخیره تنظیمات پیامک با نام متغیر پترن', r.status === 302);
+
+  r = await admin('GET', '/admin/settings');
+  ok('فیلد نام متغیر پترن مقدار otp را نشان می‌دهد',
+    r.text.includes('name="sms_pattern_var"') && /name="sms_pattern_var"[^>]*value="otp"/.test(r.text) && r.text.includes('params = { "otp"'));
+
+  r = await admin('POST', '/admin/settings/sms', { form: { sms_driver: 'mock', sms_pattern_var: 'bad name {x}', sms_mock_show: '1' } });
+  r = await admin('GET', '/admin/settings');
+  ok('نام متغیر نامعتبر → بازگشت به code',
+    /name="sms_pattern_var"[^>]*value="code"/.test(r.text) && r.text.includes('params = { "code"'));
+
   r = await admin('GET', '/admin/settings/backup');
   ok('دانلود پشتیبان دیتابیس', r.status === 200 && r.headers.get('content-type').includes('octet-stream'));
 

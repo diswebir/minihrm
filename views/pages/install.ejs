@@ -139,7 +139,15 @@
           <div class="field">
             <label class="label">کد الگوی پیامک (Pattern Code)</label>
             <input class="input" name="sms_ippanel_pattern_code" style="direction:ltr;text-align:left" value="<%= form.sms_ippanel_pattern_code || '' %>" placeholder="کد الگوی تایید شده OTP">
-            <div class="help">الگو باید حداقل یک متغیر مانند code داشته باشد</div>
+            <div class="help">کد الگوی تأییدشده (پترن OTP) در پنل پیامکی</div>
+          </div>
+          <div class="field">
+            <label class="label">نام متغیر کد در پترن شما</label>
+            <input class="input" name="sms_pattern_var" style="direction:ltr;text-align:left" value="<%= form.sms_pattern_var || 'code' %>" placeholder="code">
+            <div class="help">
+              در متن پترن، جای‌نگهدار کد تایید را چه نامی گذاشته‌اید؟
+              مثلاً اگر پترن شما <code style="direction:ltr;display:inline-block">{otp}</code> است، اینجا <code style="direction:ltr;display:inline-block">otp</code> بنویسید (پیش‌فرض: <code style="direction:ltr;display:inline-block">code</code>).
+            </div>
           </div>
         </div>
         <div class="flex-between mt-3">

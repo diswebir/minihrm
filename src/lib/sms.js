@@ -59,6 +59,18 @@ function normalizePhone(phone) {
 }
 
 /**
+ * نرمال‌سازی نام متغیر پترن (جای‌نگهدار کد OTP در پیامک الگو)
+ * کاربر ممکن است در پترن خود متغیر را «otp» یا هر نام دیگری گذاشته باشد؛
+ * مقدار مجاز: حروف/اعداد/زیرخط بدون فاصله و بدون آکولاد — پیش‌فرض: code
+ */
+function sanitizePatternVar(v) {
+  let s = String(v || '').trim();
+  // اگر کاربر مقدار را با آکولاد وارد کرده ({otp}) فقط آکولادهای احاطه‌گر حذف می‌شوند
+  s = s.replace(/^\{(.+)\}$/, '$1').trim();
+  return /^[a-zA-Z0-9_]{1,40}$/.test(s) ? s : 'code';
+}
+
+/**
  * ارسال پیامک OTP با الگوی IPPanel (Pattern SMS)
  * @param {string} phone شماره موبایل
  * @param {string} code کد یکبار مصرف
@@ -77,13 +89,15 @@ async function sendOtp(phone, code) {
     if (!apikey || !from || !pattern) {
       throw new Error('تنظیمات پیامک IPPanel کامل نیست (کلید API، شماره فرستنده و کد الگو)');
     }
-    // الگوی تایید شده در پنل IPPanel باید حداقل یک متغیر (مثلاً code) داشته باشد
+    // نام متغیر جای‌گذاری‌شده در پترن پیامکی کاربر (مثلاً code یا otp)
+    // کاربر در تنظیمات مشخص می‌کند متغیر پترن خود را چه نامی گذاشته است
+    const patternVar = sanitizePatternVar(cfg.sms_pattern_var);
     const res = await requestJson('POST', BASE_URL + '/api/send', { Authorization: apikey }, {
       sending_type: 'pattern',
       from_number: from,
       code: pattern,
       recipients: [to],
-      params: { code: String(code) }
+      params: { [patternVar]: String(code) }
     });
     if (res.status === 401) throw new Error('کلید دسترسی IPPanel نامعتبر است');
     if (!res.body || res.body.meta?.status !== true) {
@@ -127,4 +141,4 @@ async function sendText(phone, text) {
   return { ok: true, driver: 'mock', message: text };
 }
 
-module.exports = { sendOtp, sendText, normalizePhone, getSmsConfig };
+module.exports = { sendOtp, sendText, normalizePhone, getSmsConfig, sanitizePatternVar };
