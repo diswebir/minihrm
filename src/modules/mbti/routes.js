@@ -121,4 +121,122 @@ router.get('/hr/mbti/types/:code', requirePerm('mbti.view'), (req, res) => {
   });
 });
 
+/* ============================================================
+   آزمون‌های روان‌شناختی — هاب و تحلیل حرفه‌ای (فقط منابع انسانی)
+   ============================================================ */
+const assessments = require('../../lib/assessments');
+
+/** هاب آزمون‌ها: وضعیت تکمیل هر آزمون + دسترسی سریع */
+router.get('/hr/tests', requirePerm('mbti.view'), (req, res) => {
+  const total = db.prepare("SELECT COUNT(*) c FROM applicants WHERE status != 'draft'").get().c;
+  const cards = [];
+
+  // MBTI
+  const mbtiDone = db.prepare("SELECT COUNT(*) c FROM applicants WHERE mbti_type != ''").get().c;
+  cards.push({
+    code: 'mbti', title: 'آزمون شخصیت‌شناسی MBTI', icon: 'brain',
+    description: '۲۸ سوال اجباری، تحلیل ۱۶ تیپ شخصیتی با تحلیل ترکیبی و سازگاری شغلی',
+    done: mbtiDone, total,
+    link: '/hr/tests/mbti', analyzeLink: ''
+  });
+
+  // آزمون‌های جدید
+  const tests = db.prepare('SELECT * FROM tests WHERE enabled = 1 ORDER BY sort').all();
+  for (const t of tests) {
+    const done = db.prepare('SELECT COUNT(*) c FROM test_results WHERE test_code = ?').get(t.code).c;
+    cards.push({
+      code: t.code, title: t.title, icon: t.icon || 'target',
+      description: t.description,
+      done, total,
+      link: '/hr/tests/' + t.code, analyzeLink: ''
+    });
+  }
+
+  res.render('modules/mbti/tests-hub', {
+    title: 'آزمون‌های روان‌شناختی', activeMenu: 'tests',
+    cards, total
+  });
+});
+
+/** لیست نتایج هر آزمون */
+router.get('/hr/tests/:code', requirePerm('mbti.view'), (req, res) => {
+  const code = String(req.params.code);
+  const rows = [];
+
+  if (code === 'mbti') {
+    const list = db.prepare(`
+      SELECT a.id, a.first_name, a.last_name, a.tracking_code, a.mbti_type, a.mbti_scores, a.status,
+             p.title AS position_title
+      FROM applicants a LEFT JOIN positions p ON p.id = a.position_id
+      WHERE a.mbti_type != '' ORDER BY a.updated_at DESC
+    `).all();
+    for (const r of list) {
+      rows.push({
+        applicant: r, label: r.mbti_type, percent: null, extra: '',
+        link: '/hr/mbti/analysis/' + r.id
+      });
+    }
+    return res.render('modules/mbti/tests-list', {
+      title: 'نتایج آزمون MBTI', activeMenu: 'tests',
+      test: { code: 'mbti', title: 'آزمون شخصیت‌شناسی MBTI', description: 'تیپ‌های شناسایی‌شده متقاضیان' },
+      rows
+    });
+  }
+
+  const test = db.prepare('SELECT * FROM tests WHERE code = ?').get(code);
+  if (!test) return res.status(404).render('pages/error', { title: 'یافت نشد', status: 404, message: 'آزمون یافت نشد' });
+  const list = db.prepare(`
+    SELECT tr.*, a.first_name, a.last_name, a.tracking_code, a.status, p.title AS position_title
+    FROM test_results tr
+    JOIN applicants a ON a.id = tr.applicant_id
+    LEFT JOIN positions p ON p.id = a.position_id
+    WHERE tr.test_code = ? ORDER BY tr.completed_at DESC
+  `).all(code);
+  for (const r of list) {
+    const summary = helpers.parseJson(r.summary, {});
+    rows.push({
+      applicant: r, label: summary.label || '', percent: summary.percent, extra: summary.extra || '',
+      link: '/hr/tests/' + code + '/analysis/' + r.applicant_id
+    });
+  }
+  res.render('modules/mbti/tests-list', {
+    title: 'نتایج ' + test.title, activeMenu: 'tests',
+    test, rows
+  });
+});
+
+/** تحلیل حرفه‌ای نتیجه یک آزمون برای متقاضی */
+router.get('/hr/tests/:code/analysis/:applicantId', requirePerm('mbti.view'), (req, res) => {
+  const code = String(req.params.code);
+  if (code === 'mbti') return res.redirect('/hr/mbti/analysis/' + req.params.applicantId);
+
+  const test = db.prepare('SELECT * FROM tests WHERE code = ?').get(code);
+  if (!test) return res.status(404).render('pages/error', { title: 'یافت نشد', status: 404, message: 'آزمون یافت نشد' });
+
+  const applicant = db.prepare(`
+    SELECT a.*, p.title AS position_title FROM applicants a
+    LEFT JOIN positions p ON p.id = a.position_id WHERE a.id = ?
+  `).get(req.params.applicantId);
+  if (!applicant) return res.status(404).render('pages/error', { title: 'یافت نشد', status: 404, message: 'متقاضی یافت نشد' });
+
+  const row = db.prepare('SELECT * FROM test_results WHERE applicant_id = ? AND test_code = ?').get(applicant.id, code);
+  if (!row) {
+    return res.status(400).render('pages/error', {
+      title: 'بدون نتیجه', status: 400,
+      message: 'این متقاضی هنوز این آزمون را تکمیل نکرده است.'
+    });
+  }
+
+  const questions = db.prepare('SELECT * FROM test_questions WHERE test_code = ? AND enabled = 1 ORDER BY sort, number').all(code);
+  const answers = helpers.parseJson(row.answers, []);
+  const scored = assessments.score(answers, questions);
+  const analysis = assessments.analyze(code, scored, questions, (applicant.position_title || ''));
+
+  res.render('modules/mbti/test-analysis', {
+    title: 'تحلیل ' + test.short_title + ' — ' + (applicant.first_name || '') + ' ' + (applicant.last_name || ''),
+    activeMenu: 'tests',
+    applicant, test, analysis, answeredAt: row.completed_at
+  });
+});
+
 module.exports = router;

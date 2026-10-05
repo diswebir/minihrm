@@ -13,6 +13,7 @@ const audit = require('../../lib/audit');
 const { requirePerm } = require('../../lib/permissions');
 const { rateLimit } = require('../../lib/ratelimit');
 const { cleanText } = require('../../lib/validate');
+const sms = require('../../lib/sms');
 const dates = require('../../lib/dates');
 const mbtiEngine = require('../../lib/mbti');
 const seedData = require('../../seed-data');
@@ -193,9 +194,24 @@ router.get('/hr/applicants/:id', requirePerm('applicants.view'), (req, res) => {
     }
   }
 
+  // نتایج آزمون‌های روان‌شناختی تکمیلی (DISC / EQ / Holland) — فقط برای مجازان
+  let testResults = [];
+  if (moduleSystem.isEnabled('mbti') && permissions.can(req.session.user, 'mbti.view')) {
+    const rows = db.prepare(`
+      SELECT tr.*, t.title AS test_title, t.short_title, t.icon FROM test_results tr
+      JOIN tests t ON t.code = tr.test_code WHERE tr.applicant_id = ? ORDER BY t.sort
+    `).all(applicant.id);
+    testResults = rows.map(r => ({
+      code: r.test_code, title: r.test_title, short: r.short_title, icon: r.icon || 'target',
+      summary: helpers.parseJson(r.summary, {}),
+      completedAt: r.completed_at,
+      link: '/hr/tests/' + r.test_code + '/analysis/' + applicant.id
+    }));
+  }
+
   res.render('modules/recruitment/applicant-profile', {
     title: 'پرونده متقاضی', activeMenu: 'applicants',
-    applicant, fields, steps, data, notes, events, mbtiResult,
+    applicant, fields, steps, data, notes, events, mbtiResult, testResults,
     statuses: seedData.APPLICANT_STATUSES,
     canViewMbti: permissions.can(req.session.user, 'mbti.view'),
     canNotes: permissions.can(req.session.user, 'applicants.notes'),
@@ -245,13 +261,20 @@ router.post('/hr/applicants/:id/delete', requirePerm('applicants.delete'), (req,
 /* ============================================================
    HR — فرم‌ساز
    ============================================================ */
+const FIELD_TYPES = ['text', 'textarea', 'number', 'date', 'phone', 'email', 'file', 'select', 'radio', 'checkbox', 'rating', 'switch', 'consent', 'repeater', 'note'];
+const TYPE_LABELS = {
+  text: 'متن', textarea: 'متن بلند', number: 'عدد', date: 'تاریخ شمسی', phone: 'موبایل', email: 'ایمیل',
+  select: 'لیست', radio: 'تک‌انتخابی', checkbox: 'چندانتخابی', rating: 'امتیازدهی', switch: 'تاییدیه ساده',
+  consent: 'تاییدیه متنی', file: 'فایل', repeater: 'تکرارشونده', note: 'متن راهنما'
+};
+
 router.get('/hr/form-builder', requirePerm('formbuilder.manage'), (req, res) => {
   const fields = loadFields();
   const steps = loadSteps();
   const repeaterCols = seedData.REPEATER_COLUMNS;
   res.render('modules/recruitment/form-builder', {
     title: 'طراحی فرم استخدام', activeMenu: 'form-builder',
-    fields, steps, repeaterCols, saved: req.query.saved || null
+    fields, steps, repeaterCols, TYPE_LABELS, saved: req.query.saved || null
   });
 });
 
@@ -275,19 +298,44 @@ router.post('/hr/form-builder/save', requirePerm('formbuilder.manage'), (req, re
 });
 
 router.post('/hr/form-builder/field', requirePerm('formbuilder.manage'), (req, res) => {
-  const { label, type, step_key, options, help, width } = req.body;
+  const { label, type, step_key, options, help, width, consent_text, columns } = req.body;
   if (!label || !label.trim()) return res.status(400).json({ ok: false, message: 'برچسب فیلد الزامی است' });
   const step = db.prepare('SELECT key FROM form_steps WHERE key = ?').get(step_key);
   if (!step) return res.status(400).json({ ok: false, message: 'مرحله نامعتبر است' });
+  const ftype = FIELD_TYPES.includes(type) ? type : 'text';
   const key = 'custom_' + Date.now().toString(36);
-  const opts = String(options || '').split('\n').map(s => s.trim()).filter(Boolean).map(s => ({ value: s, label: s }));
+
+  // محتوای options بر اساس نوع فیلد
+  let opts;
+  if (ftype === 'repeater') {
+    const cols = (Array.isArray(columns) ? columns : [])
+      .filter(c => c && c.label && String(c.label).trim())
+      .slice(0, 5)
+      .map((c, i) => ({
+        key: 'c' + (i + 1),
+        label: String(c.label).trim().slice(0, 80),
+        type: ['text', 'number', 'date'].includes(c.type) ? c.type : 'text'
+      }));
+    if (!cols.length) return res.status(400).json({ ok: false, message: 'برای جدول تکرارشونده حداقل یک ستون تعریف کنید' });
+    opts = cols;
+  } else if (ftype === 'consent') {
+    const txt = cleanText(consent_text, 400);
+    if (!txt) return res.status(400).json({ ok: false, message: 'متن تاییدیه را وارد کنید' });
+    opts = { consent_text: txt };
+  } else if (ftype === 'select' || ftype === 'radio' || ftype === 'checkbox') {
+    opts = String(options || '').split('\n').map(s => s.trim()).filter(Boolean).map(s => ({ value: s, label: s }));
+    if (!opts.length) return res.status(400).json({ ok: false, message: 'حداقل یک گزینه وارد کنید' });
+  } else {
+    opts = [];
+  }
+
   const maxSort = db.prepare('SELECT COALESCE(MAX(sort),0) m FROM form_fields WHERE step_key = ?').get(step_key).m;
   const info = db.prepare(`
     INSERT INTO form_fields (field_key, step_key, label, type, options, required, visible, builtin, grp, width, help, sort)
     VALUES (?,?,?,?,?,1,1,0,'custom',?,?,?)
-  `).run(key, step_key, label.trim().slice(0, 200), type || 'text', JSON.stringify(opts), width === 'full' ? 'full' : 'half', cleanText(help, 300), maxSort + 1);
-  audit.log(req, 'formbuilder.field_add', 'form', key, { label });
-  res.json({ ok: true, message: 'فیلد اضافه شد', id: info.lastInsertRowid, key });
+  `).run(key, step_key, label.trim().slice(0, 200), ftype, JSON.stringify(opts), width === 'full' ? 'full' : 'half', cleanText(help, 300), maxSort + 1);
+  audit.log(req, 'formbuilder.field_add', 'form', key, { label, type: ftype });
+  res.json({ ok: true, message: 'فیلد «' + TYPE_LABELS[ftype] + '» اضافه شد', id: info.lastInsertRowid, key });
 });
 
 router.post('/hr/form-builder/field/:id/delete', requirePerm('formbuilder.manage'), (req, res) => {
@@ -429,6 +477,7 @@ router.get('/apply/wizard/:step', (req, res) => {
     title: 'فرم استخدام', layout: false,
     applicant, step: step || { key: 'review', title: 'بررسی و تایید نهایی', description: 'اطلاعات خود را مرور و تایید کنید', icon: 'check' },
     steps, fields, data, questions, answers,
+    testCards: stepKey === 'mbti' ? buildTestCards(applicant) : [],
     stepOrder: STEP_ORDER.filter(k => steps.some(s => s.key === k) || k === 'review'),
     nextStep: nextStep(stepKey), prevStep: prevStep(stepKey),
     repeaterCols: seedData.REPEATER_COLUMNS,
@@ -443,11 +492,11 @@ function collectStepData(stepKey, body, existing) {
   const fields = loadFields().filter(f => f.step_key === stepKey);
   for (const f of fields) {
     if (f.type === 'repeater') {
-      // داده‌های ردیفی: rows[0][col] ...
+      // داده‌های ردیفی: rows[0][col] ... (فیلدهای سفارشی namespace جدا دارند)
       const rows = [];
-      const raw = body.rows || {};
+      const raw = (f.builtin ? body.rows : body['rows_' + f.field_key]) || {};
       const indexes = Object.keys(raw).filter(k => /^\d+$/.test(k)).map(Number).sort((a, b) => a - b);
-      const cols = seedData.REPEATER_COLUMNS[f.field_key] || [];
+      const cols = repeaterColsFor(f);
       for (const i of indexes) {
         const row = {};
         let hasValue = false;
@@ -462,8 +511,13 @@ function collectStepData(stepKey, body, existing) {
     } else if (f.type === 'checkbox') {
       const val = body['f_' + f.field_key];
       data[f.field_key] = Array.isArray(val) ? val.map(v => cleanText(v, 100)) : (val ? [cleanText(val, 100)] : []);
-    } else if (f.type === 'switch') {
+    } else if (f.type === 'switch' || f.type === 'consent') {
       data[f.field_key] = body['f_' + f.field_key] === 'on' || body['f_' + f.field_key] === '1';
+    } else if (f.type === 'rating') {
+      const v = parseInt(body['f_' + f.field_key], 10);
+      data[f.field_key] = (v >= 1 && v <= 5) ? v : '';
+    } else if (f.type === 'note') {
+      // بدون ورودی
     } else if (f.type === 'file') {
       // جداگانه پردازش می‌شود
     } else {
@@ -473,10 +527,16 @@ function collectStepData(stepKey, body, existing) {
   return data;
 }
 
+/** ستون‌های فیلد تکرارشونده (پیش‌فرض یا سفارشی) */
+function repeaterColsFor(f) {
+  return seedData.REPEATER_COLUMNS[f.field_key] || helpers.parseJson(f.options, []);
+}
+
 function validateStep(stepKey, data) {
   const errors = [];
   const fields = loadFields().filter(f => f.step_key === stepKey && f.visible);
   for (const f of fields) {
+    if (f.type === 'note') continue; // متن راهنما — بدون ورودی
     if (!f.required) continue;
     if (f.type === 'repeater') {
       const rows = data[f.field_key];
@@ -487,14 +547,17 @@ function validateStep(stepKey, data) {
         }
         continue;
       }
-      const cols = (seedData.REPEATER_COLUMNS[f.field_key] || []).filter(c => c.required);
+      const cols = repeaterColsFor(f).filter(c => c.required);
       rows.forEach((row, i) => {
         for (const c of cols) {
           if (!row[c.key]) errors.push({ field: f.field_key, label: f.label, message: `ردیف ${i + 1}: ${c.label} الزامی است` });
         }
       });
-    } else if (f.type === 'switch') {
+    } else if (f.type === 'switch' || f.type === 'consent') {
       if (data[f.field_key] !== true) errors.push({ field: f.field_key, label: f.label, message: 'تاییدیه الزامی است' });
+    } else if (f.type === 'rating') {
+      const v = Number(data[f.field_key]);
+      if (!(v >= 1 && v <= 5)) errors.push({ field: f.field_key, label: f.label, message: 'انتخاب امتیاز الزامی است' });
     } else if (f.type === 'checkbox') {
       if (!Array.isArray(data[f.field_key]) || data[f.field_key].length === 0) {
         errors.push({ field: f.field_key, label: f.label, message: 'حداقل یک گزینه انتخاب کنید' });
@@ -598,7 +661,94 @@ router.post('/apply/wizard/:step', uploadPhoto.single('f_photo'), (req, res) => 
   res.redirect('/apply/wizard/' + nextStep(stepKey));
 });
 
-router.post('/apply/submit', (req, res) => {
+/* ============================================================
+   آزمون‌های روان‌شناختی تکمیلی (DISC / EQ / Holland) — سمت متقاضی
+   ============================================================ */
+const assessments = require('../../lib/assessments');
+
+/** کارت‌های وضعیت آزمون‌ها برای نمایش در مرحله «آزمون‌های روان‌شناختی» */
+function buildTestCards(applicant) {
+  const cards = [{
+    code: 'mbti', title: 'آزمون شخصیت‌شناسی MBTI',
+    description: '۲۸ سوال — الزامی',
+    done: !!applicant.mbti_type,
+    link: '/apply/wizard/mbti', required: true
+  }];
+  if (moduleSystem.isEnabled('mbti')) {
+    const tests = db.prepare('SELECT * FROM tests WHERE enabled = 1 ORDER BY sort').all();
+    for (const t of tests) {
+      const done = !!db.prepare('SELECT id FROM test_results WHERE applicant_id = ? AND test_code = ?').get(applicant.id, t.code);
+      cards.push({
+        code: t.code, title: t.title,
+        description: t.description || '',
+        done, link: '/apply/test/' + t.code, required: false
+      });
+    }
+  }
+  return cards;
+}
+
+router.get('/apply/test/:code', (req, res) => {
+  const applicant = getCandidate(req);
+  if (!applicant) return res.redirect('/apply');
+  if (!moduleSystem.isEnabled('mbti')) return res.status(404).render('pages/error', { title: 'یافت نشد', status: 404, message: 'یافت نشد' });
+
+  const test = db.prepare('SELECT * FROM tests WHERE code = ? AND enabled = 1').get(String(req.params.code));
+  if (!test) return res.status(404).render('pages/error', { title: 'یافت نشد', status: 404, message: 'آزمون یافت نشد' });
+
+  const questions = db.prepare('SELECT * FROM test_questions WHERE test_code = ? AND enabled = 1 ORDER BY sort, number').all(test.code);
+  const scaleLabels = helpers.parseJson(test.scale_labels, ['کاملاً مخالفم', 'مخالفم', 'بی‌تفاوت', 'موافقم', 'کاملاً موافقم']);
+  const saved = db.prepare('SELECT answers FROM test_results WHERE applicant_id = ? AND test_code = ?').get(applicant.id, test.code);
+  const answersMap = {};
+  if (saved) for (const a of helpers.parseJson(saved.answers, [])) answersMap[a.number] = a.value;
+
+  res.render('modules/recruitment/apply-test', {
+    title: test.title, test, questions, scaleLabels, answersMap,
+    company: helpers.getSetting('company_name'),
+    error: null
+  });
+});
+
+router.post('/apply/test/:code', (req, res) => {
+  const applicant = getCandidate(req);
+  if (!applicant) return res.redirect('/apply');
+  if (!moduleSystem.isEnabled('mbti')) return res.status(404).render('pages/error', { title: 'یافت نشد', status: 404, message: 'یافت نشد' });
+
+  const test = db.prepare('SELECT * FROM tests WHERE code = ? AND enabled = 1').get(String(req.params.code));
+  if (!test) return res.status(404).render('pages/error', { title: 'یافت نشد', status: 404, message: 'آزمون یافت نشد' });
+
+  const questions = db.prepare('SELECT * FROM test_questions WHERE test_code = ? AND enabled = 1 ORDER BY sort, number').all(test.code);
+  const scaleLabels = helpers.parseJson(test.scale_labels, ['کاملاً مخالفم', 'مخالفم', 'بی‌تفاوت', 'موافقم', 'کاملاً موافقم']);
+  const answers = [];
+  const answersMap = {};
+  let missing = 0;
+  for (const q of questions) {
+    const v = parseInt(req.body['q_' + q.number], 10);
+    if (v >= 1 && v <= 5) { answers.push({ number: q.number, value: v }); answersMap[q.number] = v; }
+    else missing++;
+  }
+  if (missing > 0) {
+    return res.render('modules/recruitment/apply-test', {
+      title: test.title, test, questions, scaleLabels, answersMap,
+      company: helpers.getSetting('company_name'),
+      error: 'به ' + missing + ' سوال پاسخ داده نشده است. لطفاً به همه سوالات پاسخ دهید.'
+    });
+  }
+
+  // امتیازدهی و تحلیل — نتیجه صرفاً برای منابع انسانی ذخیره می‌شود
+  const scored = assessments.score(answers, questions);
+  const summary = assessments.quickSummary(test.code, scored);
+  db.prepare(`INSERT INTO test_results (applicant_id, test_code, answers, scores, summary, completed_at)
+    VALUES (?,?,?,?,?,datetime('now'))
+    ON CONFLICT(applicant_id, test_code) DO UPDATE SET
+      answers = excluded.answers, scores = excluded.scores, summary = excluded.summary, completed_at = datetime('now')`)
+    .run(applicant.id, test.code, JSON.stringify(answers), JSON.stringify(scored.percents), JSON.stringify(summary));
+  db.prepare('INSERT INTO applicant_events (applicant_id, event, detail) VALUES (?,?,?)')
+    .run(applicant.id, 'test_completed', 'تکمیل آزمون ' + test.short_title);
+  res.redirect('/apply/wizard/mbti');
+});
+
+router.post('/apply/submit', async (req, res) => {
   const applicant = getCandidate(req);
   if (!applicant) return res.redirect('/apply');
   const data = helpers.parseJson(applicant.data, {});
@@ -633,6 +783,17 @@ router.post('/apply/submit', (req, res) => {
     `${data.first_name || ''} ${data.last_name || ''} — ${applicant.tracking_code}`,
     '/hr/applicants/' + applicant.id
   );
+
+  // اطلاع‌رسانی پیامکی: به تیم منابع انسانی (پترن مجزا) + تأیید ثبت‌نام به متقاضی
+  try {
+    const posRow = applicant.position_id
+      ? db.prepare('SELECT title FROM positions WHERE id = ?').get(applicant.position_id) : null;
+    const posTitle = posRow ? posRow.title : '';
+    const fresh = db.prepare('SELECT * FROM applicants WHERE id = ?').get(applicant.id);
+    const smsReport = { hr: await sms.notifyNewApplicant(fresh, posTitle), confirm: await sms.notifyApplicantConfirmation(fresh, posTitle) };
+    req.session.lastSmsReport = smsReport;
+  } catch (e) { /* خطا در ارسال پیامک نباید ثبت فرم را مختل کند */ }
+
   audit.log(req, 'applicant.submit', 'applicant', applicant.id, { tracking: applicant.tracking_code });
 
   req.session.candidateApplicantId = null;
@@ -642,9 +803,11 @@ router.post('/apply/submit', (req, res) => {
 
 router.get('/apply/done', (req, res) => {
   const tracking = req.session.lastTracking || '';
+  const smsReport = req.session.lastSmsReport || null;
+  req.session.lastSmsReport = null;
   res.render('modules/recruitment/apply-done', {
     title: 'ثبت موفق', layout: false,
-    tracking, company: helpers.getSetting('company_name')
+    tracking, smsReport, company: helpers.getSetting('company_name')
   });
 });
 

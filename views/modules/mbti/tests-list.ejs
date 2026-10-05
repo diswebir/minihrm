@@ -1,0 +1,60 @@
+<%- include('../../partials/header') %>
+
+<div class="flex-between mb-4 no-print">
+  <div>
+    <a href="/hr/tests" class="btn btn-ghost btn-sm">← بازگشت به آزمون‌ها</a>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header">
+    <div class="card-title"><%- icon('clipboard') %> <%= test.title %></div>
+  </div>
+  <div class="card-body">
+    <p class="text-muted"><%= test.description || '' %></p>
+    <p class="text-sm"><%= rows.length %> نتیجه ثبت‌شده</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">متقاضی</th>
+          <th scope="col">کد پیگیری</th>
+          <th scope="col">موقعیت شغلی</th>
+          <th scope="col">نتیجه</th>
+          <th scope="col">شاخص</th>
+          <th scope="col">وضعیت</th>
+          <th scope="col">عملیات</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (!rows.length) { %>
+          <tr><td colspan="7"><div class="empty-state"><div>هنوز نتیجه‌ای ثبت نشده است</div><p class="text-muted text-sm">پس از تکمیل آزمون توسط متقاضیان، نتایج اینجا نمایش داده می‌شود.</p></div></td></tr>
+        <% } %>
+        <% rows.forEach(function (r) { %>
+          <tr>
+            <td><strong><%= (r.applicant.first_name || '') + ' ' + (r.applicant.last_name || '') %></strong></td>
+            <td style="direction:ltr;text-align:left"><%= r.applicant.tracking_code %></td>
+            <td><%= r.applicant.position_title || '—' %></td>
+            <td><strong><%= r.label %></strong><% if (r.extra) { %> <span class="text-xs text-muted">— <%= r.extra %></span><% } %></td>
+            <td>
+              <% if (r.percent !== null && r.percent !== undefined) { %>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div class="chart-bars" style="width:70px;height:6px"><div class="bar-fill sky" style="width:<%= r.percent %>%"></div></div>
+                  <span class="text-xs"><%= r.percent %>٪</span>
+                </div>
+              <% } else { %> — <% } %>
+            </td>
+            <td><%- statusBadge(r.applicant.status) %></td>
+            <td><a class="btn btn-soft btn-sm" href="<%= r.link %>">تحلیل کامل</a></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../../partials/footer') %>

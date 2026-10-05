@@ -20,8 +20,8 @@
 
     <form id="otp-form">
       <div class="field">
-        <label class="label">شماره موبایل <span class="req">*</span></label>
-        <input class="input" name="phone" required placeholder="09123456789" style="direction:ltr;text-align:left" inputmode="numeric">
+        <label class="label" for="otp-phone">شماره موبایل <span class="req">*</span></label>
+        <input class="input" id="otp-phone" name="phone" required placeholder="09123456789" style="direction:ltr;text-align:left" inputmode="tel" autocomplete="tel" maxlength="14">
         <div class="help">کد تایید یکبار مصرف (OTP) به این شماره ارسال می‌شود</div>
       </div>
       <button type="submit" class="btn btn-primary btn-lg btn-block">ارسال کد تایید</button>
@@ -31,8 +31,8 @@
       <hr class="divider">
       <form id="verify-form">
         <div class="field">
-          <label class="label">کد تایید</label>
-          <input class="input" name="code" required placeholder="کد ۵ رقمی" style="direction:ltr;text-align:center;letter-spacing:8px;font-size:1.2rem;font-weight:700" inputmode="numeric" maxlength="8">
+          <label class="label" for="otp-code">کد تایید</label>
+          <input class="input" id="otp-code" name="code" required placeholder="کد ۵ رقمی" style="direction:ltr;text-align:center;letter-spacing:8px;font-size:1.2rem;font-weight:700" inputmode="numeric" autocomplete="one-time-code" maxlength="8">
         </div>
         <button type="submit" class="btn btn-mint btn-lg btn-block">تایید و ادامه</button>
       </form>

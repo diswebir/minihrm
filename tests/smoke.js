@@ -45,7 +45,7 @@ function makeClient() {
     const res = await fetch(BASE + urlPath, {
       method,
       headers,
-      body: opts.form ? new URLSearchParams(opts.form).toString() : opts.json ? JSON.stringify(opts.json) : undefined,
+      body: opts.multipart ? opts.multipart : (opts.form ? new URLSearchParams(opts.form).toString() : opts.json ? JSON.stringify(opts.json) : undefined),
       redirect: 'manual'
     });
     const setCookies = res.headers.getSetCookie ? res.headers.getSetCookie() : [];
@@ -141,6 +141,38 @@ async function main() {
   r = await admin('POST', '/hr/form-builder/field/1/delete');
   ok('حذف فیلد پیش‌فرض ممنوع است', r.status === 400);
 
+  // انواع فیلد پیشرفته: تکرارشونده، تاییدیه متنی، امتیازدهی
+  r = await admin('POST', '/hr/form-builder/field', { json: {
+    label: 'مدارک آموزشی', type: 'repeater', step_key: 'education', width: 'full',
+    columns: [{ label: 'نام مدرک', type: 'text' }, { label: 'سال', type: 'number' }, { label: 'مرجع صادرکننده', type: 'text' }]
+  } });
+  const repRes = JSON.parse(r.text);
+  ok('افزودن فیلد تکرارشونده سفارشی', repRes.ok === true && repRes.id, r.text);
+
+  r = await admin('POST', '/hr/form-builder/field', { json: {
+    label: 'تعهدنامه همکاری', type: 'consent', step_key: 'conditions', width: 'full',
+    consent_text: 'متعهد به رعایت محرمانگی اطلاعات شرکت هستم.'
+  } });
+  const consRes = JSON.parse(r.text);
+  ok('افزودن فیلد تاییدیه متنی', consRes.ok === true && consRes.id, r.text);
+
+  r = await admin('POST', '/hr/form-builder/field', { json: {
+    label: 'سطح علاقه به کار تیمی', type: 'rating', step_key: 'expectations', width: 'half'
+  } });
+  const rateRes = JSON.parse(r.text);
+  ok('افزودن فیلد امتیازدهی', rateRes.ok === true && rateRes.id, r.text);
+
+  r = await admin('POST', '/hr/form-builder/field', { json: { label: 'فیلد بدون گزینه', type: 'select', step_key: 'personal', options: '' } });
+  ok('فیلد انتخابی بدون گزینه رد می‌شود', JSON.parse(r.text).ok === false);
+
+  r = await admin('GET', '/hr/form-builder');
+  ok('راهنمای انواع فیلد در فرم‌ساز', r.text.includes('راهنمای انواع فیلد') && r.text.includes('تکرارشونده'));
+
+  // پاک‌سازی فیلدهای تستی
+  for (const rr of [repRes, consRes, rateRes]) {
+    if (rr && rr.id) await admin('POST', `/hr/form-builder/field/${rr.id}/delete`);
+  }
+
   /* ═══════ 4. جریان متقاضی: OTP ═══════ */
   console.log('▸ متقاضی — احراز هویت OTP');
   r = await cand('GET', '/apply');
@@ -163,7 +195,7 @@ async function main() {
   ok('ایجاد پرونده متقاضی', r.status === 302 && r.redirect.includes('/apply/wizard/personal'));
 
   r = await cand('GET', '/apply/wizard/personal');
-  ok('ویزارد چندمرحله‌ای فرم', r.status === 200 && r.text.includes('مشخصات متقاضی') && r.text.includes('آزمون شخصیت‌شناسی'));
+  ok('ویزارد چندمرحله‌ای فرم', r.status === 200 && r.text.includes('مشخصات متقاضی') && r.text.includes('آزمون‌های روان‌شناختی'));
 
   /* ═══════ 5. تکمیل فرم استخدام ═══════ */
   console.log('▸ تکمیل فرم چندمرحله‌ای');
@@ -209,8 +241,50 @@ async function main() {
   r = await cand('GET', '/apply/wizard/review');
   ok('مرور نهایی', r.status === 200 && r.text.includes('تاییدیه صحت اطلاعات') && r.text.includes('تکمیل شده'));
 
+  /* ═══════ ۶.۵ آزمون‌های تکمیلی (DISC / EQ / Holland) ═══════ */
+  console.log('▸ آزمون‌های تکمیلی (DISC / EQ / هالند)');
+  r = await cand('GET', '/apply/wizard/mbti');
+  ok('کارت‌های آزمون در مرحله آزمون‌ها', r.status === 200 && r.text.includes('آزمون‌های روان‌شناختی') && r.text.includes('پیشنهادی'));
+
+  r = await cand('GET', '/apply/test/disc');
+  ok('صفحه آزمون DISC', r.status === 200 && r.text.includes('DISC') && r.text.includes('q_1'));
+
+  const discAll = {};
+  for (let i = 1; i <= 28; i++) discAll['q_' + i] = '4';
+  r = await cand('POST', '/apply/test/disc', { form: { q_1: '5', q_2: '4' } });
+  ok('اعتبارسنجی تکمیل سوالات DISC', r.status === 200 && r.text.includes('پاسخ داده نشده'));
+
+  r = await cand('POST', '/apply/test/disc', { form: discAll });
+  ok('ثبت آزمون DISC', r.status === 302 && r.redirect.includes('/apply/wizard/mbti'));
+
+  r = await cand('GET', '/apply/wizard/mbti');
+  ok('وضعیت تکمیل‌شده در کارت آزمون', r.text.includes('تکمیل‌شده'));
+
+  const eqAll = {};
+  for (let i = 1; i <= 25; i++) eqAll['q_' + i] = '5';
+  r = await cand('POST', '/apply/test/eq', { form: eqAll });
+  ok('ثبت آزمون هوش هیجانی', r.status === 302 && r.redirect.includes('/apply/wizard/mbti'));
+
+  const hollAll = {};
+  for (let i = 1; i <= 30; i++) hollAll['q_' + i] = '3';
+  r = await cand('POST', '/apply/test/holland', { form: hollAll });
+  ok('ثبت آزمون هالند', r.status === 302 && r.redirect.includes('/apply/wizard/mbti'));
+
+  r = await cand('GET', '/apply/test/disc');
+  ok('پاسخ‌های قبلی ذخیره و نمایش داده می‌شوند', r.status === 200 && r.text.includes('checked'));
+
   /* ═══════ 7. ارسال نهایی ═══════ */
   console.log('▸ ارسال نهایی');
+  // پیکربندی اطلاع‌رسانی پیامکی (درایور تست) قبل از ارسال فرم
+  r = await admin('POST', '/admin/settings/sms', { form: {
+    sms_driver: 'mock', sms_mock_show: '1',
+    sms_notify_enabled: '1', sms_notify_recipients: '09121112233', sms_notify_pattern: 'notifPattern',
+    sms_notify_var_name: 'name', sms_notify_var_position: 'position', sms_notify_var_tracking: 'code',
+    sms_confirm_enabled: '1', sms_confirm_pattern: 'confirmPattern',
+    sms_confirm_var_name: 'name', sms_confirm_var_tracking: 'code'
+  } });
+  ok('پیکربندی اطلاع‌رسانی پیامکی', r.status === 302);
+
   r = await cand('POST', '/apply/submit', { form: {} });
   ok('بدون تاییدیه ارسال نمی‌شود', r.status === 302 && r.redirect.includes('/review'));
 
@@ -219,6 +293,7 @@ async function main() {
 
   r = await cand('GET', '/apply/done');
   ok('صفحه موفقیت با کد پیگیری', r.text.includes('ثبت موفق') && r.text.includes('TST-'));
+  ok('اعلان اطلاع‌رسانی پیامکی در صفحه موفقیت', r.text.includes('اطلاع‌رسانی انجام شد') && r.text.includes('آماده بررسی و مصاحبه'));
 
   /* ═══════ 8. پروفایل متقاضی در پنل HR ═══════ */
   console.log('▸ پنل منابع انسانی — پرونده متقاضی');
@@ -252,6 +327,30 @@ async function main() {
 
   r = await cand('GET', '/hr/mbti/analysis/1');
   ok('متقاضی به تحلیل دسترسی ندارد', r.status !== 200);
+
+  /* ═══════ ۹.۵ هاب آزمون‌ها و تحلیل‌های تکمیلی ═══════ */
+  console.log('▸ هاب آزمون‌ها و تحلیل تکمیلی');
+  r = await admin('GET', '/hr/tests');
+  ok('هاب آزمون‌های روان‌شناختی', r.status === 200 && r.text.includes('DISC') && r.text.includes('هوش هیجانی') && r.text.includes('هالند'));
+
+  r = await admin('GET', '/hr/tests/disc');
+  ok('لیست نتایج DISC', r.status === 200 && r.text.includes('رهبر نتیجه‌گرا'));
+
+  r = await admin('GET', '/hr/tests/disc/analysis/1');
+  ok('تحلیل حرفه‌ای DISC', r.status === 200 && r.text.includes('تحلیل ابعاد') && r.text.includes('راهنمای مصاحبه') && r.text.includes('نگاشت هر پاسخ'));
+  ok('محرمانه بودن تحلیل DISC', r.text.includes('محرمانه'));
+
+  r = await admin('GET', '/hr/tests/eq/analysis/1');
+  ok('تحلیل حرفه‌ای هوش هیجانی', r.status === 200 && r.text.includes('خودآگاهی') && r.text.includes('برنامه توسعه فردی'));
+
+  r = await admin('GET', '/hr/tests/holland/analysis/1');
+  ok('تحلیل حرفه‌ای هالند', r.status === 200 && r.text.includes('RIASEC') && r.text.includes('مشاغل پیشنهادی'));
+
+  r = await cand('GET', '/hr/tests/eq/analysis/1');
+  ok('متقاضی به تحلیل آزمون‌ها دسترسی ندارد', r.status !== 200);
+
+  r = await admin('GET', '/hr/applicants/1');
+  ok('کارت آزمون‌ها در پرونده متقاضی', r.text.includes('سایر آزمون‌های روان‌شناختی') && r.text.includes('کد RIASEC'));
 
   r = await admin('GET', '/hr/mbti/questions');
   ok('مدیریت سوالات آزمون', r.status === 200 && r.text.includes('سوالات آزمون'));
@@ -321,8 +420,26 @@ async function main() {
 
   /* ═══════ 13. تنظیمات و پشتیبان ═══════ */
   console.log('▸ تنظیمات و امنیت');
+  r = await admin('GET', '/admin/settings');
+  ok('تب‌بندی حرفه‌ای تنظیمات', r.status === 200 && r.text.includes('data-tabs-container="settings-panels"') && r.text.includes('عمومی و لوگو') && r.text.includes('پیامک و اطلاع‌رسانی') && r.text.includes('پشتیبان‌گیری'));
+
   r = await admin('POST', '/admin/settings/general', { form: { company_name: 'شرکت تست ویرایش', app_title: 'HRM', tracking_prefix: 'ERF' } });
   ok('ذخیره تنظیمات عمومی', r.status === 302);
+
+  // آپلود لوگوی شرکت (multipart)
+  const png1x1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+  const fd = new FormData();
+  fd.append('logo', new Blob([png1x1], { type: 'image/png' }), 'logo.png');
+  r = await admin('POST', '/admin/settings/logo', { multipart: fd });
+  ok('آپلود لوگوی شرکت', r.status === 302);
+
+  r = await admin('GET', '/admin/settings');
+  ok('نمایش لوگو در تنظیمات', r.text.includes('/uploads/brand/logo.png'));
+
+  r = await admin('POST', '/admin/settings/logo/remove', { form: {} });
+  ok('حذف لوگوی شرکت', r.status === 302);
+  r = await admin('GET', '/admin/settings');
+  ok('لوگو پس از حذف نمایش داده نمی‌شود', !r.text.includes('/uploads/brand/logo.png'));
 
   r = await admin('POST', '/admin/settings/security', { form: { otp_length: '6', otp_expiry_seconds: '240', otp_resend_seconds: '60', otp_max_attempts: '4', session_hours: '12' } });
   ok('ذخیره تنظیمات امنیتی', r.status === 302);
@@ -334,6 +451,8 @@ async function main() {
   r = await admin('GET', '/admin/settings');
   ok('فیلد نام متغیر پترن مقدار otp را نشان می‌دهد',
     r.text.includes('name="sms_pattern_var"') && /name="sms_pattern_var"[^>]*value="otp"/.test(r.text) && r.text.includes('params = { "otp"'));
+  ok('بخش اطلاع‌رسانی متقاضی جدید با پترن مجزا',
+    r.text.includes('اطلاع‌رسانی «متقاضی جدید / آماده مصاحبه»') && r.text.includes('sms_notify_pattern') && r.text.includes('sms_confirm_pattern'));
 
   r = await admin('POST', '/admin/settings/sms', { form: { sms_driver: 'mock', sms_pattern_var: 'bad name {x}', sms_mock_show: '1' } });
   r = await admin('GET', '/admin/settings');

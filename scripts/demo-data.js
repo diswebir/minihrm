@@ -82,7 +82,7 @@ async function main() {
   const applicants = [
     {
       first: 'سارا', last: 'محمدی', phone: '09121110001', nat: '0012345678', gender: 'female',
-      pos: 'POSHR', type: 'ENFP', status: 'interview', flip: 2,
+      pos: 'POSHR', type: 'ENFP', status: 'interview', flip: 2, tests: { disc: 'I', eq: 'EM', holland: 'S' },
       email: 'sara@example.com', birth: '1368/03/15', marital: 'married',
       salary: '55,000,000 ریال', coop: 'full_time', start: '1404/09/01',
       exp: { company: 'شرکت پویا', position: 'کارشناس منابع انسانی', period: '1397/04/01 - 1402/07/31', duration: '5 سال', last_salary: '48,000,000 ریال', leave_reason: 'جستجوی چالش جدید', work_phone: '03133334455' },
@@ -90,7 +90,7 @@ async function main() {
     },
     {
       first: 'امیر', last: 'حسینی', phone: '09121110002', nat: '0087654321', gender: 'male',
-      pos: 'POSDEV', type: 'INTJ', status: 'submitted', flip: 1,
+      pos: 'POSDEV', type: 'INTJ', status: 'submitted', flip: 1, tests: { disc: 'C', eq: 'SA', holland: 'I' },
       email: 'amir@example.com', birth: '1372/11/02', marital: 'single',
       salary: '85,000,000 ریال', coop: 'full_time', start: '1404/08/15',
       exp: { company: 'فناوران هوشمند', position: 'توسعه‌دهنده ارشد', period: '1396/02/01 - 1403/01/30', duration: '7 سال', last_salary: '75,000,000 ریال', leave_reason: 'مهاجرت شغلی', work_phone: '02144455667' },
@@ -98,7 +98,7 @@ async function main() {
     },
     {
       first: 'مریم', last: 'کریمی', phone: '09121110003', nat: '0022334455', gender: 'female',
-      pos: 'POSMKT', type: 'ESFJ', status: 'reviewing', flip: 3,
+      pos: 'POSMKT', type: 'ESFJ', status: 'reviewing', flip: 3, tests: { disc: 'I', eq: 'SS', holland: 'E' },
       email: 'maryam@example.com', birth: '1375/06/24', marital: 'married',
       salary: '60,000,000 ریال', coop: 'part_time', start: '1404/10/01',
       exp: { company: 'آژانس نوآور', position: 'کارشناس دیجیتال مارکتینگ', period: '1398/09/01 - 1403/05/31', duration: '5 سال', last_salary: '52,000,000 ریال', leave_reason: 'تغییر محل سکونت', work_phone: '03198765432' },
@@ -106,7 +106,7 @@ async function main() {
     },
     {
       first: 'رضا', last: 'نادری', phone: '09121110004', nat: '0099887766', gender: 'male',
-      pos: 'POSDEV', type: 'ISTJ', status: 'accepted', flip: 1,
+      pos: 'POSDEV', type: 'ISTJ', status: 'accepted', flip: 1, tests: { disc: 'D', eq: 'SR', holland: 'R' },
       email: 'reza@example.com', birth: '1366/09/10', marital: 'married',
       salary: '95,000,000 ریال', coop: 'full_time', start: '1404/08/01',
       exp: { company: 'سیستم‌های یکپارچه', position: 'مدیر فنی', period: '1392/01/01 - 1403/02/29', duration: '11 سال', last_salary: '90,000,000 ریال', leave_reason: 'پایان مأموریت', work_phone: '02532223344' },
@@ -160,6 +160,25 @@ async function main() {
 
     db.prepare('INSERT INTO applicant_events (applicant_id, event, detail) VALUES (?,?,?)')
       .run(info.lastInsertRowid, 'submitted', 'ارسال فرم استخدام (داده نمایشی)');
+
+    // ---- نتایج آزمون‌های روان‌شناختی (DISC / EQ / Holland) ----
+    const assessments = require('../src/lib/assessments');
+    const testPatterns = a.tests || {};
+    for (const t of db.prepare('SELECT * FROM tests WHERE enabled = 1').all()) {
+      const tqs = db.prepare('SELECT * FROM test_questions WHERE test_code = ? AND enabled = 1 ORDER BY number').all(t.code);
+      const hi = testPatterns[t.code]; // بُعد غالب
+      const tAnswers = tqs.map(q => {
+        let v;
+        if (hi && q.dimension === hi) v = q.reverse ? 1 : 5;
+        else v = (q.number % 3 === 0) ? 4 : 3;
+        return { number: q.number, value: v };
+      });
+      const scored = assessments.score(tAnswers, tqs);
+      const summary = assessments.quickSummary(t.code, scored);
+      db.prepare(`INSERT INTO test_results (applicant_id, test_code, answers, scores, summary, completed_at)
+        VALUES (?,?,?,?,?,datetime('now'))`)
+        .run(info.lastInsertRowid, t.code, JSON.stringify(tAnswers), JSON.stringify(scored.percents), JSON.stringify(summary));
+    }
 
     if (a.status === 'interview' || a.status === 'accepted') {
       db.prepare('INSERT INTO applicant_events (applicant_id, event, detail) VALUES (?,?,?)')

@@ -79,6 +79,19 @@ function run() {
     );
   }
 
+  // ---- روان‌آزمون‌ها (DISC / EQ / Holland) ---- (فقط اگر خالی باشند)
+  const tCount2 = db.prepare('SELECT COUNT(*) c FROM tests').get().c;
+  if (tCount2 === 0) {
+    const insTest = db.prepare('INSERT INTO tests (code, title, short_title, description, intro, icon, dimensions, scale_labels, enabled, sort) VALUES (?,?,?,?,?,?,?,?  ,1,?)');
+    const insTQ = db.prepare('INSERT INTO test_questions (test_code, number, text, dimension, reverse, enabled, sort) VALUES (?,?,?,?,?,1,?)');
+    const testData = require('./test-data');
+    testData.TESTS.forEach((t, ti) => {
+      insTest.run(t.code, t.title, t.short_title, t.description, t.intro, t.icon,
+        JSON.stringify(t.dimensions), JSON.stringify(t.scale_labels), ti + 1);
+      for (const q of t.questions) insTQ.run(t.code, q.number, q.text, q.dimension, q.reverse ? 1 : 0, q.number);
+    });
+  }
+
   // ---- default settings ----
   const insSet = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?,?)');
   const defaults = {
@@ -95,10 +108,28 @@ function run() {
     sms_ippanel_apikey: '',
     sms_ippanel_from: '+983000505',
     sms_ippanel_pattern_code: '',
+    sms_pattern_var: 'code',
     sms_mock_show: '1',
+    // اطلاع‌رسانی متقاضی جدید به تیم منابع انسانی
+    sms_notify_enabled: '1',
+    sms_notify_recipients: '',
+    sms_notify_pattern: '',
+    sms_notify_var_name: 'name',
+    sms_notify_var_position: 'position',
+    sms_notify_var_tracking: 'code',
+    // پیام تأیید ثبت‌نام به متقاضی
+    sms_confirm_enabled: '1',
+    sms_confirm_pattern: '',
+    sms_confirm_var_name: 'name',
+    sms_confirm_var_tracking: 'code',
     install_done: '0'
   };
   for (const [k, v] of Object.entries(defaults)) insSet.run(k, v);
+
+  // ---- مهاجرت‌های محتوایی (به‌روزرسانی عنوان‌ها در دیتابیس‌های موجود) ----
+  db.prepare("UPDATE form_steps SET title = 'آزمون‌های روان‌شناختی', description = 'آزمون شخصیت‌شناسی MBTI، DISC، هوش هیجانی و علایق شغلی' WHERE key = 'mbti'").run();
+  db.prepare("UPDATE modules SET name = 'آزمون‌های روان‌شناختی', description = 'MBTI، DISC، هوش هیجانی و علایق شغلی — تحلیل حرفه‌ای برای منابع انسانی' WHERE code = 'mbti'").run();
+  db.prepare("UPDATE tests SET enabled = 1 WHERE enabled IS NULL").run();
 }
 
 module.exports = { run };

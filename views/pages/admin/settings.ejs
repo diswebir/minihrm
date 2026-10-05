@@ -1,157 +1,294 @@
 <%- include('../../partials/header') %>
 
+<%
+  var activeTab = (typeof activeTab !== 'undefined' && activeTab) ? activeTab : (saved === 'sms' ? 'sms' : (saved === 'security' ? 'security' : 'general'));
+%>
+
 <% if (saved) { %>
-  <div class="alert success">تنظیقات با موفقیت ذخیره شد.</div>
+  <div class="alert success" role="status">تنظیمات با موفقیت ذخیره شد.</div>
 <% } %>
 <% if (testResult) { %>
-  <div class="alert <%= testResult.ok ? 'success' : 'error' %>"><%= testResult.message %></div>
+  <div class="alert <%= testResult.ok ? 'success' : 'error' %>" role="status"><%= testResult.message %></div>
 <% } %>
 
-<div class="grid grid-2">
-  <!-- عمومی -->
-  <div class="card">
-    <div class="card-header"><div class="card-title"><%- icon('building') %> تنظیمات عمومی</div></div>
-    <div class="card-body">
-      <form method="post" action="/admin/settings/general">
-        <div class="field">
-          <label class="label">نام شرکت</label>
-          <input class="input" name="company_name" value="<%= settings.company_name || '' %>">
-        </div>
-        <div class="field">
-          <label class="label">عنوان سامانه</label>
-          <input class="input" name="app_title" value="<%= settings.app_title || '' %>">
-        </div>
-        <div class="field">
-          <label class="label">پیشوند کد پیگیری متقاضیان</label>
-          <input class="input" name="tracking_prefix" value="<%= settings.tracking_prefix || 'ERF' %>" style="direction:ltr;text-align:left">
-        </div>
-        <button class="btn btn-primary">ذخیره</button>
-      </form>
-    </div>
-  </div>
+<div class="flex-between mb-3">
+  <h1 style="font-size:1.45rem;font-weight:800"><%- icon('settings') %> تنظیمات سامانه</h1>
+</div>
 
-  <!-- پیامک -->
-  <div class="card">
-    <div class="card-header">
-      <div class="card-title"><%- icon('phone') %> تنظیمات پیامک (IPPanel)</div>
-      <a href="https://ippanelcom.github.io/Edge-Document/docs/" target="_blank" class="btn btn-ghost btn-sm">مستندات</a>
-    </div>
-    <div class="card-body">
-      <form method="post" action="/admin/settings/sms">
-        <div class="field">
-          <label class="label">درایور پیامک</label>
-          <select class="select" name="sms_driver">
-            <option value="mock" <%= (settings.sms_driver || 'mock') === 'mock' ? 'selected' : '' %>>حالت آزمایشی (نمایش کد OTP)</option>
-            <option value="ippanel" <%= settings.sms_driver === 'ippanel' ? 'selected' : '' %>>IPPanel — پیامک واقعی</option>
-          </select>
-        </div>
-        <div class="field">
-          <label class="label">کلید دسترسی (API Key / Token)</label>
-          <input class="input" name="sms_ippanel_apikey" value="<%= settings.sms_ippanel_apikey || '' %>" style="direction:ltr;text-align:left">
-          <div class="help">پنل IPPanel › توسعه‌دهندگان › کلیدهای دسترسی</div>
-        </div>
-        <div class="form-grid">
-          <div class="field">
-            <label class="label">شماره فرستنده</label>
-            <input class="input" name="sms_ippanel_from" value="<%= settings.sms_ippanel_from || '+983000505' %>" style="direction:ltr;text-align:left">
-          </div>
-          <div class="field">
-            <label class="label">کد الگو (Pattern Code)</label>
-            <input class="input" name="sms_ippanel_pattern_code" value="<%= settings.sms_ippanel_pattern_code || '' %>" style="direction:ltr;text-align:left">
-            <div class="help">کد الگوی تأییدشده (پترن OTP) در پنل پیامکی</div>
-          </div>
-        </div>
-        <div class="form-grid">
-          <div class="field">
-            <label class="label">نام متغیر کد در پترن شما</label>
-            <input class="input" name="sms_pattern_var" value="<%= settings.sms_pattern_var || 'code' %>" style="direction:ltr;text-align:left" placeholder="code">
-            <div class="help">
-              در پنل پیامکی، داخل متن پترن یک جای‌نگهدار برای کد تایید گذاشته‌اید (مثلاً <code style="direction:ltr;display:inline-block">کد تایید: {otp}</code>).
-              نام همان متغیر را اینجا بنویسید تا سامانه کد را با همان نام ارسال کند.
-              اگر در پترن از <code style="direction:ltr;display:inline-block">{code}</code> استفاده کرده‌اید، همان پیش‌فرض را نگه دارید.
+<!-- ===== تب‌ها ===== -->
+<div class="tabs" data-tabs-container="settings-panels" role="tablist" aria-label="بخش‌های تنظیمات">
+  <button type="button" class="tab <%= activeTab === 'general' ? 'active' : '' %>" data-tab="general" role="tab" aria-selected="<%= activeTab === 'general' %>"><%- icon('building', 15) %> عمومی و لوگو</button>
+  <button type="button" class="tab <%= activeTab === 'sms' ? 'active' : '' %>" data-tab="sms" role="tab" aria-selected="<%= activeTab === 'sms' %>"><%- icon('phone', 15) %> پیامک و اطلاع‌رسانی</button>
+  <button type="button" class="tab <%= activeTab === 'security' ? 'active' : '' %>" data-tab="security" role="tab" aria-selected="<%= activeTab === 'security' %>"><%- icon('shield', 15) %> امنیت</button>
+  <button type="button" class="tab <%= activeTab === 'backup' ? 'active' : '' %>" data-tab="backup" role="tab" aria-selected="<%= activeTab === 'backup' %>"><%- icon('download', 15) %> پشتیبان‌گیری</button>
+</div>
+
+<div id="settings-panels">
+
+  <!-- ═════════ تب ۱: عمومی و لوگو ═════════ -->
+  <div data-tab-panel="general" style="display:<%= activeTab === 'general' ? '' : 'none' %>">
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-header"><div class="card-title"><%- icon('building') %> اطلاعات سازمان</div></div>
+        <div class="card-body">
+          <form method="post" action="/admin/settings/general">
+            <div class="field">
+              <label class="label" for="set-company">نام شرکت</label>
+              <input class="input" id="set-company" name="company_name" value="<%= settings.company_name || '' %>" required>
             </div>
-          </div>
-          <div class="field">
-            <label class="label">متغیری که سامانه ارسال می‌کند</label>
-            <div class="dev-code" style="direction:ltr;text-align:left;display:block">
-              params = { "<%= settings.sms_pattern_var || 'code' %>": "&lt;کد تایید&gt;" }
+            <div class="field">
+              <label class="label" for="set-title">عنوان سامانه</label>
+              <input class="input" id="set-title" name="app_title" value="<%= settings.app_title || '' %>">
             </div>
-            <div class="help">
-              مقدار «کد تایید» به‌صورت خودکار (مثلاً <span style="direction:ltr;display:inline-block">12345</span>) جایگزین می‌شود؛
-              فقط نام متغیر باید با پترن شما یکسان باشد.
+            <div class="field">
+              <label class="label" for="set-prefix">پیشوند کد پیگیری متقاضیان</label>
+              <input class="input" id="set-prefix" name="tracking_prefix" value="<%= settings.tracking_prefix || 'ERF' %>" style="direction:ltr;text-align:left" maxlength="8">
+              <div class="help">کد پیگیری متقاضیان با این پیشوند ساخته می‌شود (مثلاً ERF-2024-0042)</div>
             </div>
-          </div>
+            <button class="btn btn-primary">ذخیره اطلاعات سازمان</button>
+          </form>
         </div>
-        <div class="field">
-          <label class="check-row">
-            <input type="checkbox" name="sms_mock_show" value="1" <%= (settings.sms_mock_show || '1') === '1' ? 'checked' : '' %>>
-            نمایش کد OTP در حالت آزمایشی
-          </label>
-        </div>
-        <button class="btn btn-primary">ذخیره تنظیمات پیامک</button>
-      </form>
+      </div>
 
-      <hr class="divider">
-      <form method="post" action="/admin/settings/sms/test">
-        <div class="field">
-          <label class="label">تست ارسال پیامک</label>
-          <div class="flex-center">
-            <input class="input" name="test_phone" placeholder="09123456789" style="direction:ltr;text-align:left">
-            <button class="btn btn-mint">ارسال تست</button>
+      <div class="card">
+        <div class="card-header"><div class="card-title"><%- icon('star') %> لوگوی شرکت</div></div>
+        <div class="card-body">
+          <p class="text-sm text-muted">لوگو در سایدبار، صفحه ورود و گزارش‌های چاپی نمایش داده می‌شود. فرمت‌های مجاز: PNG، JPG، WebP — حداکثر ۲ مگابایت.</p>
+          <div class="flex-center gap-3 mt-3" style="flex-wrap:wrap">
+            <div style="width:88px;height:88px;border-radius:22px;background:var(--primary-soft,#efecfe);display:flex;align-items:center;justify-content:center;overflow:hidden">
+              <% if (settings.company_logo) { %>
+                <img src="<%= settings.company_logo %>?v=<%= Date.now() %>" alt="لوگوی شرکت" style="width:100%;height:100%;object-fit:cover">
+              <% } else { %>
+                <span style="font-size:1.6rem;font-weight:800;color:var(--primary)">HR</span>
+              <% } %>
+            </div>
+            <form method="post" action="/admin/settings/logo" enctype="multipart/form-data" class="flex-center gap-2" style="flex-wrap:wrap">
+              <input type="file" name="logo" id="logo-file" accept=".png,.jpg,.jpeg,.webp" class="input" style="max-width:240px" aria-label="انتخاب فایل لوگو">
+              <button class="btn btn-primary btn-sm"><%- icon('plus', 15) %> آپلود لوگو</button>
+            </form>
+            <% if (settings.company_logo) { %>
+              <form method="post" action="/admin/settings/logo/remove" onsubmit="return confirm('لوگوی فعلی حذف شود؟')">
+                <button class="btn btn-danger btn-sm">حذف لوگو</button>
+              </form>
+            <% } %>
           </div>
         </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- امنیت -->
-  <div class="card">
-    <div class="card-header"><div class="card-title"><%- icon('shield') %> امنیت و OTP</div></div>
-    <div class="card-body">
-      <form method="post" action="/admin/settings/security">
-        <div class="form-grid">
-          <div class="field">
-            <label class="label">تعداد ارقام کد OTP</label>
-            <input class="input" type="number" name="otp_length" min="4" max="8" value="<%= settings.otp_length || '5' %>">
-          </div>
-          <div class="field">
-            <label class="label">مدت اعتبار کد (ثانیه)</label>
-            <input class="input" type="number" name="otp_expiry_seconds" value="<%= settings.otp_expiry_seconds || '300' %>">
-          </div>
-          <div class="field">
-            <label class="label">فاصله ارسال مجدد (ثانیه)</label>
-            <input class="input" type="number" name="otp_resend_seconds" value="<%= settings.otp_resend_seconds || '120' %>">
-          </div>
-          <div class="field">
-            <label class="label">حداکثر تلاش برای هر کد</label>
-            <input class="input" type="number" name="otp_max_attempts" value="<%= settings.otp_max_attempts || '5' %>">
-          </div>
-          <div class="field">
-            <label class="label">مدت نشست کاربران (ساعت)</label>
-            <input class="input" type="number" name="session_hours" value="<%= settings.session_hours || '24' %>">
-          </div>
-        </div>
-        <button class="btn btn-primary">ذخیره</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- پشتیبان‌گیری -->
-  <div class="card">
-    <div class="card-header"><div class="card-title"><%- icon('download') %> پشتیبان‌گیری</div></div>
-    <div class="card-body">
-      <p class="text-sm text-muted">
-        از کل پایگاه داده سامانه (کاربران، متقاضیان، تنظیمات و ...) یک نسخه پشتیبان تهیه کنید.
-        توصیه می‌شود به‌صورت دوره‌ای این کار را انجام دهید.
-      </p>
-      <a href="/admin/settings/backup" class="btn btn-mint">
-        <%- icon('download', 18) %> دانلود نسخه پشتیبان (فایل دیتابیس)
-      </a>
-      <div class="help mt-2">
-        فایل پشتیبان با هر نرم‌افزار SQLite قابل بازیابی است. برای بازگردانی، جایگزین فایل data/app.db کنید.
       </div>
     </div>
   </div>
+
+  <!-- ═════════ تب ۲: پیامک و اطلاع‌رسانی ═════════ -->
+  <div data-tab-panel="sms" style="display:<%= activeTab === 'sms' ? '' : 'none' %>">
+    <form method="post" action="/admin/settings/sms">
+
+      <!-- ۲.۱ درایور و اتصال -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <div class="card-title"><%- icon('phone') %> ۱) درایور و اتصال</div>
+          <a href="https://ippanelcom.github.io/Edge-Document/docs/" target="_blank" class="btn btn-ghost btn-sm">مستندات IPPanel</a>
+        </div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="field">
+              <label class="label" for="sms-driver">درایور پیامک</label>
+              <select class="select" id="sms-driver" name="sms_driver">
+                <option value="mock" <%= (settings.sms_driver || 'mock') === 'mock' ? 'selected' : '' %>>حالت آزمایشی (نمایش کد OTP)</option>
+                <option value="ippanel" <%= settings.sms_driver === 'ippanel' ? 'selected' : '' %>>IPPanel — پیامک واقعی</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="label" for="sms-apikey">کلید دسترسی (API Key / Token)</label>
+              <input class="input" id="sms-apikey" name="sms_ippanel_apikey" value="<%= settings.sms_ippanel_apikey || '' %>" style="direction:ltr;text-align:left" autocomplete="off">
+              <div class="help">پنل IPPanel › توسعه‌دهندگان › کلیدهای دسترسی</div>
+            </div>
+            <div class="field">
+              <label class="label" for="sms-from">شماره فرستنده</label>
+              <input class="input" id="sms-from" name="sms_ippanel_from" value="<%= settings.sms_ippanel_from || '+983000505' %>" style="direction:ltr;text-align:left">
+            </div>
+            <div class="field">
+              <label class="check-row">
+                <input type="checkbox" name="sms_mock_show" value="1" <%= (settings.sms_mock_show || '1') === '1' ? 'checked' : '' %>>
+                نمایش کد OTP در حالت آزمایشی
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ۲.۲ کد تایید (OTP) -->
+      <div class="card mb-4">
+        <div class="card-header"><div class="card-title"><%- icon('shield') %> ۲) کد تایید (OTP) — پترن ورود متقاضیان</div></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="field">
+              <label class="label" for="sms-pattern">کد الگو (Pattern Code)</label>
+              <input class="input" id="sms-pattern" name="sms_ippanel_pattern_code" value="<%= settings.sms_ippanel_pattern_code || '' %>" style="direction:ltr;text-align:left">
+              <div class="help">کد الگوی تأییدشده (پترن OTP) در پنل پیامکی</div>
+            </div>
+            <div class="field">
+              <label class="label" for="sms-pattern-var">نام متغیر کد در پترن شما</label>
+              <input class="input" id="sms-pattern-var" name="sms_pattern_var" value="<%= settings.sms_pattern_var || 'code' %>" style="direction:ltr;text-align:left" placeholder="code">
+              <div class="help">
+                در متن پترن، جای‌نگهدار کد تایید را چه نامی گذاشته‌اید؟
+                مثلاً اگر پترن شما <code style="direction:ltr;display:inline-block">{otp}</code> است، اینجا <code style="direction:ltr;display:inline-block">otp</code> بنویسید (پیش‌فرض: <code style="direction:ltr;display:inline-block">code</code>).
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">متغیری که سامانه برای OTP ارسال می‌کند</label>
+            <div class="dev-code" style="direction:ltr;text-align:left;display:block">
+              params = { "<%= settings.sms_pattern_var || 'code' %>": "&lt;کد تایید&gt;" }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ۲.۳ اطلاع‌رسانی متقاضی جدید -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <div class="card-title"><%- icon('users') %> ۳) اطلاع‌رسانی «متقاضی جدید / آماده مصاحبه» به تیم منابع انسانی</div>
+          <label class="check-row" style="margin:0">
+            <input type="checkbox" name="sms_notify_enabled" value="1" <%= (settings.sms_notify_enabled || '1') === '1' ? 'checked' : '' %>>
+            فعال
+          </label>
+        </div>
+        <div class="card-body">
+          <p class="text-sm text-muted">با ارسال نهایی فرم توسط متقاضی، برای هر یک از شماره‌های زیر یک پیامک با «پترن مجزا» ارسال می‌شود تا از متقاضی جدید مطلع شوند.</p>
+          <div class="field">
+            <label class="label" for="sms-notify-recipients">شماره‌های دریافت‌کننده (تیم منابع انسانی)</label>
+            <textarea class="textarea" id="sms-notify-recipients" name="sms_notify_recipients" rows="2" placeholder="09121112233، 09124445566" style="direction:ltr;text-align:left"><%= settings.sms_notify_recipients || '' %></textarea>
+            <div class="help">شماره‌ها را با ویرگول یا خط جدید جدا کنید.</div>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label class="label" for="sms-notify-pattern">کد الگو (Pattern) اطلاع‌رسانی</label>
+              <input class="input" id="sms-notify-pattern" name="sms_notify_pattern" value="<%= settings.sms_notify_pattern || '' %>" style="direction:ltr;text-align:left">
+            </div>
+            <div class="field">
+              <label class="label" for="sms-notify-var-name">نام متغیر «نام متقاضی» در پترن شما</label>
+              <input class="input" id="sms-notify-var-name" name="sms_notify_var_name" value="<%= settings.sms_notify_var_name || 'name' %>" style="direction:ltr;text-align:left">
+            </div>
+            <div class="field">
+              <label class="label" for="sms-notify-var-position">نام متغیر «موقعیت شغلی» در پترن شما</label>
+              <input class="input" id="sms-notify-var-position" name="sms_notify_var_position" value="<%= settings.sms_notify_var_position || 'position' %>" style="direction:ltr;text-align:left">
+            </div>
+            <div class="field">
+              <label class="label" for="sms-notify-var-tracking">نام متغیر «کد پیگیری» در پترن شما</label>
+              <input class="input" id="sms-notify-var-tracking" name="sms_notify_var_tracking" value="<%= settings.sms_notify_var_tracking || 'code' %>" style="direction:ltr;text-align:left">
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">متغیرهایی که سامانه برای اطلاع‌رسانی ارسال می‌کند</label>
+            <div class="dev-code" style="direction:ltr;text-align:left;display:block">
+              params = { "<%= settings.sms_notify_var_name || 'name' %>": "&lt;نام متقاضی&gt;", "<%= settings.sms_notify_var_position || 'position' %>": "&lt;عنوان موقعیت&gt;", "<%= settings.sms_notify_var_tracking || 'code' %>": "&lt;کد پیگیری&gt;" }
+            </div>
+            <div class="help">نام متغیرها را دقیقاً مطابق جای‌نگهدارهای پترن خود در پنل پیامکی تنظیم کنید.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ۲.۴ تأیید ثبت‌نام به متقاضی -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <div class="card-title"><%- icon('check') %> ۴) پیام «ثبت‌نام موفق» به خود متقاضی</div>
+          <label class="check-row" style="margin:0">
+            <input type="checkbox" name="sms_confirm_enabled" value="1" <%= (settings.sms_confirm_enabled || '1') === '1' ? 'checked' : '' %>>
+            فعال
+          </label>
+        </div>
+        <div class="card-body">
+          <p class="text-sm text-muted">پس از ارسال نهایی فرم، پیام تأیید به همراه کد پیگیری برای متقاضی ارسال می‌شود.</p>
+          <div class="form-grid">
+            <div class="field">
+              <label class="label" for="sms-confirm-pattern">کد الگو (Pattern) تأیید ثبت‌نام</label>
+              <input class="input" id="sms-confirm-pattern" name="sms_confirm_pattern" value="<%= settings.sms_confirm_pattern || '' %>" style="direction:ltr;text-align:left">
+            </div>
+            <div class="field">
+              <label class="label" for="sms-confirm-var-name">نام متغیر «نام متقاضی» در پترن شما</label>
+              <input class="input" id="sms-confirm-var-name" name="sms_confirm_var_name" value="<%= settings.sms_confirm_var_name || 'name' %>" style="direction:ltr;text-align:left">
+            </div>
+            <div class="field">
+              <label class="label" for="sms-confirm-var-tracking">نام متغیر «کد پیگیری» در پترن شما</label>
+              <input class="input" id="sms-confirm-var-tracking" name="sms_confirm_var_tracking" value="<%= settings.sms_confirm_var_tracking || 'code' %>" style="direction:ltr;text-align:left">
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">متغیرهایی که سامانه برای تأیید ثبت‌نام ارسال می‌کند</label>
+            <div class="dev-code" style="direction:ltr;text-align:left;display:block">
+              params = { "<%= settings.sms_confirm_var_name || 'name' %>": "&lt;نام متقاضی&gt;", "<%= settings.sms_confirm_var_tracking || 'code' %>": "&lt;کد پیگیری&gt;" }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-lg">ذخیره تنظیمات پیامک</button>
+    </form>
+
+    <!-- ۲.۵ تست ارسال -->
+    <div class="card mt-4">
+      <div class="card-header"><div class="card-title"><%- icon('spark') %> ۵) تست ارسال</div></div>
+      <div class="card-body">
+        <form method="post" action="/admin/settings/sms/test" class="flex-center gap-2" style="flex-wrap:wrap">
+          <input class="input" name="test_phone" placeholder="09120000000" style="direction:ltr;text-align:left;max-width:220px" aria-label="شماره موبایل تست">
+          <button class="btn btn-mint">ارسال پیامک تستی (کد OTP)</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════ تب ۳: امنیت ═════════ -->
+  <div data-tab-panel="security" style="display:<%= activeTab === 'security' ? '' : 'none' %>">
+    <div class="card">
+      <div class="card-header"><div class="card-title"><%- icon('shield') %> امنیت و کد تایید</div></div>
+      <div class="card-body">
+        <form method="post" action="/admin/settings/security">
+          <div class="form-grid">
+            <div class="field">
+              <label class="label" for="otp-len">تعداد ارقام کد OTP</label>
+              <input class="input" id="otp-len" type="number" name="otp_length" min="4" max="8" value="<%= settings.otp_length || '5' %>">
+            </div>
+            <div class="field">
+              <label class="label" for="otp-exp">مدت اعتبار کد (ثانیه)</label>
+              <input class="input" id="otp-exp" type="number" name="otp_expiry_seconds" value="<%= settings.otp_expiry_seconds || '300' %>">
+            </div>
+            <div class="field">
+              <label class="label" for="otp-resend">فاصله ارسال مجدد (ثانیه)</label>
+              <input class="input" id="otp-resend" type="number" name="otp_resend_seconds" value="<%= settings.otp_resend_seconds || '120' %>">
+            </div>
+            <div class="field">
+              <label class="label" for="otp-max">حداکثر تلاش برای هر کد</label>
+              <input class="input" id="otp-max" type="number" name="otp_max_attempts" value="<%= settings.otp_max_attempts || '5' %>">
+            </div>
+            <div class="field">
+              <label class="label" for="session-hours">مدت نشست کاربران (ساعت)</label>
+              <input class="input" id="session-hours" type="number" name="session_hours" value="<%= settings.session_hours || '24' %>">
+            </div>
+          </div>
+          <button class="btn btn-primary">ذخیره تنظیمات امنیتی</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════ تب ۴: پشتیبان‌گیری ═════════ -->
+  <div data-tab-panel="backup" style="display:<%= activeTab === 'backup' ? '' : 'none' %>">
+    <div class="card">
+      <div class="card-header"><div class="card-title"><%- icon('download') %> پشتیبان‌گیری</div></div>
+      <div class="card-body">
+        <p class="text-sm text-muted">
+          از کل پایگاه داده سامانه (کاربران، متقاضیان، تنظیمات و ...) یک نسخه پشتیبان تهیه کنید.
+          توصیه می‌شود به‌صورت دوره‌ای این کار را انجام دهید.
+        </p>
+        <a href="/admin/settings/backup" class="btn btn-mint">
+          <%- icon('download', 18) %> دانلود نسخه پشتیبان (فایل دیتابیس)
+        </a>
+        <div class="help mt-2">
+          فایل پشتیبان با هر نرم‌افزار SQLite قابل بازیابی است. برای بازگردانی، جایگزین فایل data/app.db کنید.
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <%- include('../../partials/footer') %>

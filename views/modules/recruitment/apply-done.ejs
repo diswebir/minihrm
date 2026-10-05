@@ -28,6 +28,13 @@
       <a href="/apply" class="btn btn-ghost btn-block">بازگشت به صفحه اصلی</a>
     </div>
 
+    <% if (smsReport && ((smsReport.confirm && smsReport.confirm.sent) || (smsReport.hr && smsReport.hr.sent))) { %>
+      <div class="alert success mt-3" style="text-align:right">
+        <strong>اطلاع‌رسانی انجام شد:</strong>
+        <% if (smsReport.confirm && smsReport.confirm.sent) { %>پیام تأیید ثبت‌نام برای شما ارسال شد. <% } %>
+        <% if (smsReport.hr && smsReport.hr.sent) { %>تیم منابع انسانی از دریافت فرم شما مطلع شد و درخواست شما «آماده بررسی و مصاحبه» است. <% } %>
+      </div>
+    <% } %>
     <div class="alert info mt-4" style="text-align:right">
       <%- icon('brain', 20) %>
       <div>

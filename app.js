@@ -33,6 +33,8 @@ function createApp() {
   app.use(express.json({ limit: '2mb' }));
   app.use(express.urlencoded({ extended: true, limit: '2mb' }));
   app.use(express.static(path.join(__dirname, 'public'), { maxAge: process.env.NODE_ENV === 'production' ? '7d' : 0 }));
+  // فایل‌های آپلودی (عکس متقاضیان، لوگو و ...) — data/uploads
+  app.use('/uploads', express.static(require('./src/config').UPLOAD_DIR, { maxAge: process.env.NODE_ENV === 'production' ? '7d' : 0 }));
 
   // ---- sessions (ذخیره در SQLite — امن برای چندپردازشی) ----
   const SqliteSessionStore = require('./src/lib/session-store')(session);

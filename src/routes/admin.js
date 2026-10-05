@@ -3,6 +3,8 @@
 const express = require('express');
 const router = express.Router();
 const fs = require('fs');
+const path = require('path');
+const upload = require('../lib/upload');
 const db = require('../db');
 const auth = require('../lib/auth');
 const helpers = require('../lib/helpers');
@@ -224,6 +226,7 @@ router.get('/settings', requirePerm('settings.manage'), (req, res) => {
   res.render('pages/admin/settings', {
     title: 'تنظیمات سامانه', activeMenu: 'settings',
     saved: req.query.saved || null,
+    activeTab: req.query.tab || null,
     testResult: null
   });
 });
@@ -238,30 +241,65 @@ router.post('/settings/general', requirePerm('settings.manage'), (req, res) => {
 });
 
 router.post('/settings/sms', requirePerm('settings.manage'), (req, res) => {
-  const { sms_driver, sms_ippanel_apikey, sms_ippanel_from, sms_ippanel_pattern_code, sms_pattern_var, sms_mock_show } = req.body;
+  const {
+    sms_driver, sms_ippanel_apikey, sms_ippanel_from, sms_ippanel_pattern_code, sms_pattern_var, sms_mock_show,
+    sms_notify_enabled, sms_notify_recipients, sms_notify_pattern, sms_notify_var_name, sms_notify_var_position, sms_notify_var_tracking,
+    sms_confirm_enabled, sms_confirm_pattern, sms_confirm_var_name, sms_confirm_var_tracking
+  } = req.body;
   helpers.setSetting('sms_driver', sms_driver === 'ippanel' ? 'ippanel' : 'mock');
   helpers.setSetting('sms_ippanel_apikey', (sms_ippanel_apikey || '').trim());
   helpers.setSetting('sms_ippanel_from', (sms_ippanel_from || '').trim());
   helpers.setSetting('sms_ippanel_pattern_code', (sms_ippanel_pattern_code || '').trim());
   helpers.setSetting('sms_pattern_var', sms.sanitizePatternVar(sms_pattern_var));
   helpers.setSetting('sms_mock_show', sms_mock_show === '0' ? '0' : '1');
+
+  // اطلاع‌رسانی متقاضی جدید به تیم منابع انسانی
+  helpers.setSetting('sms_notify_enabled', sms_notify_enabled === '0' ? '0' : '1');
+  helpers.setSetting('sms_notify_recipients', String(sms_notify_recipients || '').replace(/[^\d\n,،+ ]/g, '').slice(0, 2000));
+  helpers.setSetting('sms_notify_pattern', (sms_notify_pattern || '').trim());
+  helpers.setSetting('sms_notify_var_name', sms.sanitizePatternVar(sms_notify_var_name));
+  helpers.setSetting('sms_notify_var_position', sms.sanitizePatternVar(sms_notify_var_position));
+  helpers.setSetting('sms_notify_var_tracking', sms.sanitizePatternVar(sms_notify_var_tracking));
+
+  // پیام تأیید ثبت‌نام به متقاضی
+  helpers.setSetting('sms_confirm_enabled', sms_confirm_enabled === '0' ? '0' : '1');
+  helpers.setSetting('sms_confirm_pattern', (sms_confirm_pattern || '').trim());
+  helpers.setSetting('sms_confirm_var_name', sms.sanitizePatternVar(sms_confirm_var_name));
+  helpers.setSetting('sms_confirm_var_tracking', sms.sanitizePatternVar(sms_confirm_var_tracking));
+
   audit.log(req, 'settings.sms', 'settings', '', {});
   res.redirect('/admin/settings?saved=sms');
 });
 
+/** آپلود / تغییر لوگوی شرکت */
+router.post('/settings/logo', requirePerm('settings.manage'), upload.uploadLogo.single('logo'), (req, res) => {
+  if (req.file) {
+    const rel = '/uploads/brand/' + path.basename(req.file.path);
+    helpers.setSetting('company_logo', rel);
+    audit.log(req, 'settings.logo_update', 'settings', '', {});
+  }
+  res.redirect('/admin/settings?saved=general');
+});
+
+/** حذف لوگوی شرکت */
+router.post('/settings/logo/remove', requirePerm('settings.manage'), (req, res) => {
+  upload.removeLogo();
+  helpers.setSetting('company_logo', '');
+  audit.log(req, 'settings.logo_remove', 'settings', '', {});
+  res.redirect('/admin/settings?saved=general');
+});
+
 router.post('/settings/sms/test', requirePerm('settings.manage'), async (req, res) => {
+  const render = (testResult) => res.render('pages/admin/settings', {
+    title: 'تنظیمات سامانه', activeMenu: 'settings', saved: null,
+    activeTab: 'sms', testResult
+  });
   try {
     const phone = req.body.test_phone;
     const result = await sms.sendOtp(phone, '12345');
-    res.render('pages/admin/settings', {
-      title: 'تنظیمات سامانه', activeMenu: 'settings', saved: null,
-      testResult: { ok: true, message: 'پیامک تستی با موفقیت ارسال شد (درایور: ' + result.driver + ')' }
-    });
+    render({ ok: true, message: 'پیامک تستی با موفقیت ارسال شد (درایور: ' + result.driver + ')' });
   } catch (e) {
-    res.render('pages/admin/settings', {
-      title: 'تنظیمات سامانه', activeMenu: 'settings', saved: null,
-      testResult: { ok: false, message: 'خطا در ارسال تست: ' + e.message }
-    });
+    render({ ok: false, message: 'خطا در ارسال تست: ' + e.message });
   }
 });
 

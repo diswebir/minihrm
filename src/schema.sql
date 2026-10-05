@@ -224,6 +224,43 @@ CREATE TABLE IF NOT EXISTS mbti_questions (
   sort INTEGER DEFAULT 0
 );
 
+-- ---------- آزمون‌های روان‌شناختی (DISC / هوش هیجانی / هالند و ...) ----------
+CREATE TABLE IF NOT EXISTS tests (
+  code TEXT PRIMARY KEY,             -- disc | eq | holland
+  title TEXT NOT NULL,
+  short_title TEXT DEFAULT '',
+  description TEXT DEFAULT '',
+  intro TEXT DEFAULT '',
+  icon TEXT DEFAULT 'brain',
+  dimensions TEXT DEFAULT '[]',      -- JSON [{key,name,desc}]
+  scale_labels TEXT DEFAULT '[]',    -- JSON ["کاملاً مخالفم", ...]
+  enabled INTEGER DEFAULT 1,
+  sort INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS test_questions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  test_code TEXT NOT NULL REFERENCES tests(code) ON DELETE CASCADE,
+  number INTEGER NOT NULL,
+  text TEXT NOT NULL,
+  dimension TEXT NOT NULL,
+  reverse INTEGER DEFAULT 0,
+  enabled INTEGER DEFAULT 1,
+  sort INTEGER DEFAULT 0,
+  UNIQUE(test_code, number)
+);
+
+CREATE TABLE IF NOT EXISTS test_results (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  applicant_id INTEGER NOT NULL REFERENCES applicants(id) ON DELETE CASCADE,
+  test_code TEXT NOT NULL REFERENCES tests(code) ON DELETE CASCADE,
+  answers TEXT DEFAULT '[]',         -- JSON [{number,value}]
+  scores TEXT DEFAULT '{}',          -- JSON {dimension: raw}
+  summary TEXT DEFAULT '{}',         -- JSON نتیجه تحلیل‌شده
+  completed_at TEXT DEFAULT (datetime('now')),
+  UNIQUE(applicant_id, test_code)
+);
+
 CREATE TABLE IF NOT EXISTS mbti_types (
   code TEXT PRIMARY KEY,            -- INTJ ...
   title TEXT NOT NULL,

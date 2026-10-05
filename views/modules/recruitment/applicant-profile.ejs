@@ -73,8 +73,8 @@
   <button class="tab active" data-tab="info">مشخصات</button>
   <button class="tab" data-tab="exp">سوابق و تحصیلات</button>
   <button class="tab" data-tab="views">دیدگاه‌ها و شرایط</button>
-  <% if (mbtiResult && canViewMbti) { %>
-    <button class="tab" data-tab="mbti">تحلیل شخصیت</button>
+  <% if ((mbtiResult || (testResults && testResults.length)) && canViewMbti) { %>
+    <button class="tab" data-tab="mbti">آزمون‌های روان‌شناختی</button>
   <% } %>
   <button class="tab" data-tab="notes">نظرات و مصاحبه</button>
   <button class="tab" data-tab="timeline">تاریخچه</button>
@@ -120,6 +120,54 @@
         </div>
       </div>
     </div>
+
+    <% var customFields = fields.filter(function(f){ return !f.builtin && f.visible && f.type !== 'note'; }); %>
+    <% if (customFields.length) { %>
+      <div class="card mt-3">
+        <div class="card-header"><div class="card-title"><%- icon('form') %> اطلاعات تکمیلی</div></div>
+        <div class="card-body">
+          <div class="grid grid-2">
+            <% customFields.forEach(function(f) {
+              var v = data[f.field_key];
+            %>
+              <% if (f.type === 'repeater') { %>
+                <div class="full" style="margin-bottom:12px">
+                  <div class="label" style="font-weight:700;margin-bottom:6px"><%= f.label %></div>
+                  <% var rcols = parseJson(f.options, []); var rrows = Array.isArray(v) ? v : []; %>
+                  <% if (rrows.length) { %>
+                    <div class="table-wrap">
+                      <table>
+                        <thead><tr><% rcols.forEach(function(c) { %><th scope="col"><%= c.label %></th><% }); %></tr></thead>
+                        <tbody>
+                          <% rrows.forEach(function(row) { %>
+                            <tr><% rcols.forEach(function(c) { %><td><%= row[c.key] || '—' %></td><% }); %></tr>
+                          <% }); %>
+                        </tbody>
+                      </table>
+                    </div>
+                  <% } else { %><div class="text-xs text-muted">—</div><% } %>
+                </div>
+              <% } else { %>
+                <div class="kv">
+                  <div class="k"><%= f.label %></div>
+                  <div class="v">
+                    <% if (f.type === 'switch' || f.type === 'consent') { %>
+                      <%= v === true ? 'تایید شد ✓' : '—' %>
+                    <% } else if (f.type === 'rating') { %>
+                      <%= v ? v + ' از ۵' : '—' %>
+                    <% } else if (f.type === 'checkbox') { %>
+                      <%- val(Array.isArray(v) ? v.join('، ') : v) %>
+                    <% } else { %>
+                      <%- val(v) %>
+                    <% } %>
+                  </div>
+                </div>
+              <% } %>
+            <% }); %>
+          </div>
+        </div>
+      </div>
+    <% } %>
   </div>
 
   <!-- ===== سوابق و تحصیلات ===== -->
@@ -264,9 +312,10 @@
     </div>
   </div>
 
-  <!-- ===== تحلیل شخصیت ===== -->
-  <% if (mbtiResult && canViewMbti) { %>
+  <!-- ===== آزمون‌های روان‌شناختی ===== -->
+  <% if ((mbtiResult || (testResults && testResults.length)) && canViewMbti) { %>
   <div data-tab-panel="mbti" style="display:none">
+    <% if (mbtiResult) { %>
     <div class="alert info no-print">
       <%- icon('brain', 20) %>
       <div>
@@ -329,6 +378,35 @@
         </div>
       </div>
     </div>
+    <% } %>
+
+    <% if (testResults && testResults.length) { %>
+      <h3 class="mt-4 mb-2" style="font-size:1.05rem;font-weight:800">سایر آزمون‌های روان‌شناختی</h3>
+      <div class="grid grid-2">
+        <% testResults.forEach(function (tr) { %>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><%- icon(tr.icon || 'target') %> <%= tr.title %></div>
+              <a href="<%= tr.link %>" class="btn btn-soft btn-sm">تحلیل کامل ←</a>
+            </div>
+            <div class="card-body">
+              <div class="flex-between">
+                <div>
+                  <div class="font-bold"><%= tr.summary.label || '' %></div>
+                  <% if (tr.summary.extra) { %><div class="text-xs text-muted mt-1"><%= tr.summary.extra %></div><% } %>
+                  <div class="text-xs text-muted mt-1">تکمیل: <%= jalaliFull(tr.completedAt) %></div>
+                </div>
+                <% if (tr.summary.percent) { %>
+                  <div class="text-center" style="background:var(--primary-soft,#efecfe);border-radius:16px;padding:10px 16px">
+                    <div style="font-size:1.35rem;font-weight:800;color:var(--primary)"><%= tr.summary.percent %>٪</div>
+                  </div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
   </div>
   <% } %>
 

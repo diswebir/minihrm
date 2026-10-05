@@ -39,4 +39,34 @@ function makeUploader(kind) {
 const uploadPhoto = makeUploader('image');
 const uploadDoc = makeUploader('doc');
 
-module.exports = { uploadPhoto, uploadDoc, ALLOWED_IMG, ALLOWED_DOC };
+// ---- لوگوی شرکت: نام ثابت logo.<ext> در data/uploads/brand/ ----
+const uploadLogo = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const dir = path.join(config.UPLOAD_DIR, 'brand');
+      fs.mkdirSync(dir, { recursive: true });
+      cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname || '').toLowerCase();
+      cb(null, 'logo' + ext);
+    }
+  }),
+  limits: { fileSize: MAX_IMG },
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname || '').toLowerCase();
+    if (ALLOWED_IMG.includes(ext)) return cb(null, true);
+    cb(new Error('فرمت لوگو مجاز نیست. فرمت‌های مجاز: ' + ALLOWED_IMG.join(', ')));
+  }
+});
+
+/** حذف لوگوی فعلی از دیسک */
+function removeLogo() {
+  const dir = path.join(config.UPLOAD_DIR, 'brand');
+  if (!fs.existsSync(dir)) return;
+  for (const f of fs.readdirSync(dir)) {
+    if (f.startsWith('logo')) fs.unlinkSync(path.join(dir, f));
+  }
+}
+
+module.exports = { uploadPhoto, uploadDoc, uploadLogo, removeLogo, ALLOWED_IMG, ALLOWED_DOC };

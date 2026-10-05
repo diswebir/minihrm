@@ -6,12 +6,34 @@
   document.addEventListener('click', function (e) {
     const toggle = e.target.closest('.menu-toggle');
     if (toggle) {
-      document.querySelector('.sidebar')?.classList.toggle('open');
+      const sb = document.querySelector('.sidebar');
+      if (sb) {
+        sb.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', sb.classList.contains('open') ? 'true' : 'false');
+      }
       return;
     }
     const sidebar = document.querySelector('.sidebar');
     if (sidebar && sidebar.classList.contains('open') && !e.target.closest('.sidebar') && !e.target.closest('.menu-toggle')) {
       sidebar.classList.remove('open');
+      const t = document.querySelector('.menu-toggle');
+      if (t) t.setAttribute('aria-expanded', 'false');
+    }
+  });
+  // بستن سایدبار / دراپ‌داون با کلید Escape
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar && sidebar.classList.contains('open')) {
+      sidebar.classList.remove('open');
+      const t = document.querySelector('.menu-toggle');
+      if (t) { t.setAttribute('aria-expanded', 'false'); t.focus(); }
+    }
+    const dd = document.getElementById('notif-dropdown');
+    if (dd && dd.style.display !== 'none') {
+      dd.style.display = 'none';
+      const bell = document.querySelector('[data-notif-toggle]');
+      if (bell) { bell.setAttribute('aria-expanded', 'false'); bell.focus(); }
     }
   });
 
@@ -66,10 +88,13 @@
   });
 
   function reindexRows(container, targetId) {
+    // نام‌گذاری: فیلدهای پیش‌فرض rows[i][col] — فیلدهای سفارشی rows_<key>[i][col]
+    const fk = targetId.indexOf('rep-') === 0 ? targetId.slice(4) : targetId;
+    const prefix = fk.indexOf('custom_') === 0 ? 'rows_' + fk : 'rows';
     container.querySelectorAll('.repeater-row').forEach(function (row, idx) {
       row.querySelectorAll('[data-col]').forEach(function (input) {
         const col = input.getAttribute('data-col');
-        input.name = `rows[${idx}][${col}]`;
+        input.name = `${prefix}[${idx}][${col}]`;
       });
       const num = row.querySelector('.row-num');
       if (num) num.textContent = idx + 1;
@@ -79,20 +104,50 @@
     reindexRows(c, c.id);
   });
 
-  /* ---------- تب‌ها ---------- */
-  document.addEventListener('click', function (e) {
-    const tab = e.target.closest('.tab');
-    if (!tab) return;
+  /* ---------- تب‌ها (با پشتیبانی کیبورد و ARIA) ---------- */
+  function activateTab(tab) {
     const group = tab.closest('.tabs');
     const container = group && group.getAttribute('data-tabs-container');
     if (!container) return;
-    group.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
+    group.querySelectorAll('.tab').forEach(function (t) {
+      const on = t === tab;
+      t.classList.toggle('active', on);
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.setAttribute('tabindex', on ? '0' : '-1');
+    });
     const target = tab.getAttribute('data-tab');
     document.querySelectorAll('#' + container + ' > [data-tab-panel]').forEach(function (panel) {
       panel.style.display = panel.getAttribute('data-tab-panel') === target ? '' : 'none';
     });
+    if (history.replaceState) history.replaceState(null, '', '#' + target);
+  }
+  document.addEventListener('click', function (e) {
+    const tab = e.target.closest('.tab');
+    if (tab && tab.closest('.tabs') && tab.closest('.tabs').getAttribute('data-tabs-container')) {
+      activateTab(tab);
+    }
   });
+  // جهت‌یابی فلش‌ها (راست/چپ) بین تب‌ها
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Home' && e.key !== 'End') return;
+    const tab = e.target.closest && e.target.closest('.tab');
+    if (!tab) return;
+    const tabs = Array.prototype.slice.call(tab.closest('.tabs').querySelectorAll('.tab'));
+    const i = tabs.indexOf(tab);
+    let n = null;
+    if (e.key === 'ArrowLeft') n = tabs[(i + 1) % tabs.length];      // RTL: فلش چپ = بعدی
+    if (e.key === 'ArrowRight') n = tabs[(i - 1 + tabs.length) % tabs.length];
+    if (e.key === 'Home') n = tabs[0];
+    if (e.key === 'End') n = tabs[tabs.length - 1];
+    if (n) { e.preventDefault(); n.focus(); activateTab(n); }
+  });
+  // باز کردن تب از روی هشتگ URL (#sms و ...)
+  (function () {
+    const h = location.hash.replace('#', '');
+    if (!h) return;
+    const tab = document.querySelector('.tabs .tab[data-tab="' + h + '"]');
+    if (tab) activateTab(tab);
+  })();
 
   /* ---------- درخواست‌های AJAX ساده ---------- */
   window.hrmPost = async function (url, data) {
@@ -113,6 +168,8 @@
     if (!box) {
       box = document.createElement('div');
       box.id = 'hrm-toast';
+      box.setAttribute('role', 'status');
+      box.setAttribute('aria-live', 'polite');
       box.style.cssText = 'position:fixed;bottom:22px;left:22px;z-index:999;display:flex;flex-direction:column;gap:10px;';
       document.body.appendChild(box);
     }
@@ -128,15 +185,33 @@
     setTimeout(function () { el.remove(); }, 4200);
   };
 
-  /* ---------- تایید عملیات‌ها ---------- */
+  /* ---------- تایید عملیات‌ها + وضعیت بارگذاری دکمه‌ها ---------- */
   document.addEventListener('submit', function (e) {
     const form = e.target;
     if (form.hasAttribute('data-confirm')) {
       if (!window.confirm(form.getAttribute('data-confirm') || 'آیا مطمئن هستید؟')) {
         e.preventDefault();
+        return;
+      }
+    }
+    // غیرفعال‌سازی دکمه ثبت و نمایش وضعیت بارگذاری (جلوگیری از ارسال دوباره)
+    const btn = form.querySelector('button[type="submit"]:not([data-no-loading])');
+    if (btn && form.checkValidity()) {
+      btn.disabled = true;
+      if (!btn.getAttribute('data-old-text')) {
+        btn.setAttribute('data-old-text', btn.textContent);
+        btn.textContent = btn.getAttribute('data-loading-text') || 'در حال ثبت...';
       }
     }
   });
+
+  /* ---------- فوکوس خودکار روی اولین فیلد نامعتبر ---------- */
+  (function () {
+    const invalid = document.querySelector('form :invalid');
+    if (invalid && invalid.focus) {
+      try { invalid.focus({ preventScroll: false }); } catch (_) { invalid.focus(); }
+    }
+  })();
 
   document.addEventListener('click', async function (e) {
     const btn = e.target.closest('[data-action]');
@@ -181,15 +256,22 @@
   /* ---------- اعلان‌ها ---------- */
   const bell = document.querySelector('[data-notif-toggle]');
   if (bell) {
+    bell.setAttribute('aria-expanded', 'false');
+    bell.setAttribute('aria-haspopup', 'true');
     bell.addEventListener('click', function (e) {
       e.preventDefault();
       const dd = document.getElementById('notif-dropdown');
-      if (dd) dd.style.display = dd.style.display === 'none' || !dd.style.display ? 'block' : 'none';
+      if (dd) {
+        const open = dd.style.display === 'none' || !dd.style.display;
+        dd.style.display = open ? 'block' : 'none';
+        bell.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
     });
     document.addEventListener('click', function (e) {
       const dd = document.getElementById('notif-dropdown');
       if (dd && !e.target.closest('[data-notif-toggle]') && !e.target.closest('#notif-dropdown')) {
         dd.style.display = 'none';
+        bell.setAttribute('aria-expanded', 'false');
       }
     });
   }

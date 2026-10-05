@@ -1,137 +1,249 @@
 <%- include('../../partials/header') %>
 
 <% if (saved) { %>
-  <div class="alert success">تنظیمات فرم استخدام ذخیره شد. تغییرات بلافاصله در فرم متقاضیان اعمال می‌شود.</div>
+  <div class="alert success" role="status">تنظیمات فرم استخدام ذخیره شد. تغییرات بلافاصله در فرم متقاضیان اعمال می‌شود.</div>
 <% } %>
 
-<div class="flex-between mb-4">
-  <p class="text-muted text-sm" style="margin:0">
-    مشخص کنید چه فیلدهایی در فرم استخدام نمایش داده شوند و کدام‌ها الزامی باشند.
-    می‌توانید فیلدهای سفارشی جدید نیز اضافه کنید.
-  </p>
+<div class="flex-between mb-3">
+  <div>
+    <h1 style="font-size:1.45rem;font-weight:800"><%- icon('form') %> فرم‌ساز استخدام</h1>
+    <p class="text-muted text-sm" style="margin:4px 0 0">
+      مشخص کنید چه فیلدهایی در فرم استخدام نمایش داده شوند و کدام‌ها الزامی باشند.
+    </p>
+  </div>
   <a href="/apply" target="_blank" class="btn btn-soft"><%- icon('eye', 16) %> پیش‌نمایش فرم متقاضی</a>
 </div>
 
-<form method="post" action="/hr/form-builder/save">
-  <% steps.forEach(function(step) {
-    var stepFields = fields.filter(function(f){ return f.step_key === step.key; });
-  %>
-    <div class="card mb-4">
-      <div class="card-header">
-        <div class="card-title">
-          <%- icon(step.icon || 'file') %> <%= step.title %>
-          <span class="text-xs text-muted" style="font-weight:500"><%= step.description %></span>
-        </div>
-        <label class="check-row">
-          <input type="checkbox" name="step_<%= step.key %>" <%= step.enabled ? 'checked' : '' %>>
-          <span class="font-bold text-sm">نمایش این مرحله</span>
-        </label>
-      </div>
-      <div class="card-body" style="padding-top:12px">
-        <% if (!stepFields.length) { %>
-          <div class="text-muted text-sm">این مرحله فیلد قابل تنظیم ندارد (مثلاً آزمون شخصیت یا مرور نهایی)</div>
-        <% } %>
-        <div class="table-wrap">
-          <table class="table">
-            <thead>
-              <tr><th>عنوان فیلد</th><th>نوع</th><th>الزامی</th><th>نمایش</th><th>عملیات</th></tr>
-            </thead>
-            <tbody>
-              <% stepFields.forEach(function(f) { %>
-                <tr>
-                  <td>
-                    <input class="input" name="label_<%= f.id %>" value="<%= f.label %>" style="min-width:220px">
-                    <% if (f.help) { %><div class="help"><%= f.help %></div><% } %>
-                  </td>
-                  <td>
-                    <span class="badge gray">
-                      <%= ({text:'متن',textarea:'متن بلند',number:'عدد',phone:'موبایل',email:'ایمیل',date:'تاریخ شمسی',select:'لیست',radio:'تک‌انتخابی',checkbox:'چندانتخابی',switch:'تاییدیه',file:'فایل',repeater:'ردیف‌های تکرارشونده'})[f.type] || f.type %>
-                    </span>
-                    <% if (!f.builtin) { %><span class="badge violet">سفارشی</span><% } %>
-                  </td>
-                  <td><input type="checkbox" name="required_<%= f.id %>" <%= f.required ? 'checked' : '' %> style="width:18px;height:18px;accent-color:var(--primary)"></td>
-                  <td><input type="checkbox" name="visible_<%= f.id %>" <%= f.visible ? 'checked' : '' %> style="width:18px;height:18px;accent-color:var(--primary)"></td>
-                  <td>
-                    <% if (!f.builtin) { %>
-                      <button type="button" class="btn btn-danger btn-sm" data-action="delete-row"
-                              data-url="/hr/form-builder/field/<%= f.id %>/delete"
-                              data-confirm="این فیلد حذف شود؟"><%- icon('trash', 14) %></button>
-                    <% } else { %>
-                      <span class="text-xs text-muted">پیش‌فرض</span>
-                    <% } %>
-                  </td>
-                </tr>
-              <% }) %>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  <% }) %>
+<!-- ===== تب‌ها ===== -->
+<div class="tabs" data-tabs-container="fb-panels" role="tablist" aria-label="بخش‌های فرم‌ساز">
+  <button type="button" class="tab active" data-tab="fields" role="tab" aria-selected="true"><%- icon('form', 15) %> مراحل و فیلدها</button>
+  <button type="button" class="tab" data-tab="add" role="tab" aria-selected="false"><%- icon('plus', 15) %> افزودن فیلد سفارشی</button>
+  <button type="button" class="tab" data-tab="help" role="tab" aria-selected="false"><%- icon('spark', 15) %> راهنمای انواع فیلد</button>
+</div>
 
-  <div class="flex-between mb-4">
-    <span class="text-sm text-muted">تغییرات را ذخیره کنید تا در فرم متقاضیان اعمال شود.</span>
-    <button class="btn btn-primary btn-lg"><%- icon('check', 18) %> ذخیره تنظیمات فرم</button>
-  </div>
-</form>
+<div id="fb-panels">
 
-<!-- افزودن فیلد سفارشی -->
-<div class="card">
-  <div class="card-header">
-    <div class="card-title"><%- icon('plus') %> افزودن فیلد سفارشی</div>
-  </div>
-  <div class="card-body">
-    <form onsubmit="return addField(event)">
-      <div class="form-grid">
-        <div class="field">
-          <label class="label">عنوان فیلد <span class="req">*</span></label>
-          <input class="input" id="nf-label" required placeholder="مثال: شماره پرونده بیمه تکمیلی">
+  <!-- ═════════ تب ۱: مراحل و فیلدها ═════════ -->
+  <div data-tab-panel="fields">
+    <form method="post" action="/hr/form-builder/save">
+      <% steps.forEach(function(step) {
+        var stepFields = fields.filter(function(f){ return f.step_key === step.key; });
+      %>
+        <div class="card mb-4">
+          <div class="card-header">
+            <div class="card-title">
+              <%- icon(step.icon || 'file') %> <%= step.title %>
+              <span class="text-xs text-muted" style="font-weight:500"><%= step.description %></span>
+            </div>
+            <label class="check-row">
+              <input type="checkbox" name="step_<%= step.key %>" <%= step.enabled ? 'checked' : '' %>>
+              <span class="font-bold text-sm">نمایش این مرحله</span>
+            </label>
+          </div>
+          <div class="card-body" style="padding-top:12px">
+            <% if (!stepFields.length) { %>
+              <div class="text-muted text-sm">این مرحله فیلد قابل تنظیم ندارد (مثلاً آزمون‌ها یا مرور نهایی)</div>
+            <% } %>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr><th scope="col">عنوان فیلد</th><th scope="col">نوع</th><th scope="col">الزامی</th><th scope="col">نمایش</th><th scope="col">عملیات</th></tr>
+                </thead>
+                <tbody>
+                  <% stepFields.forEach(function(f) { %>
+                    <tr>
+                      <td>
+                        <label class="sr-only" for="label_<%= f.id %>">عنوان فیلد <%= f.label %></label>
+                        <input class="input" id="label_<%= f.id %>" name="label_<%= f.id %>" value="<%= f.label %>" style="min-width:220px">
+                        <% if (f.help) { %><div class="help"><%= f.help %></div><% } %>
+                      </td>
+                      <td>
+                        <span class="badge"><%= TYPE_LABELS[f.type] || f.type %></span>
+                        <% if (f.builtin) { %><span class="text-xs text-muted">پیش‌فرض</span><% } %>
+                      </td>
+                      <td><input type="checkbox" name="required_<%= f.id %>" <%= f.required ? 'checked' : '' %> style="width:18px;height:18px;accent-color:var(--primary)" aria-label="الزامی بودن <%= f.label %>"></td>
+                      <td><input type="checkbox" name="visible_<%= f.id %>" <%= f.visible ? 'checked' : '' %> style="width:18px;height:18px;accent-color:var(--primary)" aria-label="نمایش <%= f.label %>"></td>
+                      <td>
+                        <% if (!f.builtin) { %>
+                          <button type="button" class="btn btn-danger btn-sm" data-action="delete-row"
+                            data-url="/hr/form-builder/field/<%= f.id %>/delete" data-confirm="فیلد «<%= f.label %>» حذف شود؟">حذف</button>
+                        <% } else { %>
+                          <span class="text-xs text-muted">قابل حذف نیست</span>
+                        <% } %>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-        <div class="field">
-          <label class="label">نوع فیلد</label>
-          <select class="select" id="nf-type">
-            <option value="text">متن کوتاه</option>
-            <option value="textarea">متن بلند</option>
-            <option value="number">عدد</option>
-            <option value="date">تاریخ شمسی</option>
-            <option value="select">لیست کشویی</option>
-            <option value="radio">تک‌انتخابی</option>
-          </select>
-        </div>
-        <div class="field">
-          <label class="label">مرحله</label>
-          <select class="select" id="nf-step">
-            <% steps.forEach(function(s) { %>
-              <option value="<%= s.key %>"><%= s.title %></option>
-            <% }) %>
-          </select>
-        </div>
-        <div class="field">
-          <label class="label">عرض نمایش</label>
-          <select class="select" id="nf-width">
-            <option value="half">نیمه</option>
-            <option value="full">تمام عرض</option>
-          </select>
-        </div>
-        <div class="field full">
-          <label class="label">گزینه‌ها (فقط برای لیست/تک‌انتخابی — هر خط یک گزینه)</label>
-          <textarea class="textarea" id="nf-options" rows="3" placeholder="گزینه اول&#10;گزینه دوم"></textarea>
-        </div>
-      </div>
-      <button class="btn btn-mint"><%- icon('plus', 16) %> افزودن فیلد</button>
+      <% }); %>
+      <button class="btn btn-primary btn-lg">ذخیره تغییرات فرم</button>
     </form>
   </div>
+
+  <!-- ═════════ تب ۲: افزودن فیلد سفارشی ═════════ -->
+  <div data-tab-panel="add" style="display:none">
+    <div class="card">
+      <div class="card-header"><div class="card-title"><%- icon('plus') %> افزودن فیلد سفارشی</div></div>
+      <div class="card-body">
+        <form onsubmit="return addField(event)">
+          <div class="form-grid">
+            <div class="field">
+              <label class="label" for="nf-label">عنوان فیلد</label>
+              <input class="input" id="nf-label" required placeholder="مثال: وضعیت نظام وظیفه">
+            </div>
+            <div class="field">
+              <label class="label" for="nf-type">نوع فیلد</label>
+              <select class="select" id="nf-type" onchange="typeChanged()">
+                <optgroup label="متن و عدد">
+                  <option value="text">متن کوتاه</option>
+                  <option value="textarea">متن بلند</option>
+                  <option value="number">عدد</option>
+                  <option value="date">تاریخ شمسی</option>
+                </optgroup>
+                <optgroup label="ارتباطی">
+                  <option value="phone">شماره موبایل</option>
+                  <option value="email">ایمیل</option>
+                  <option value="file">فایل / رزومه</option>
+                </optgroup>
+                <optgroup label="انتخابی">
+                  <option value="select">لیست کشویی</option>
+                  <option value="radio">تک‌انتخابی</option>
+                  <option value="checkbox">چندانتخابی</option>
+                  <option value="rating">امتیازدهی (۱ تا ۵)</option>
+                </optgroup>
+                <optgroup label="تاییدیه و ساختار">
+                  <option value="switch">تاییدیه ساده (بله/خیر)</option>
+                  <option value="consent">تاییدیه متنی (امضای الکترونیکی)</option>
+                  <option value="repeater">ردیف‌های تکرارشونده (جدولی)</option>
+                  <option value="note">متن راهنما (بدون ورودی)</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="field">
+              <label class="label" for="nf-step">مرحله</label>
+              <select class="select" id="nf-step">
+                <% steps.forEach(function(s) { %>
+                  <option value="<%= s.key %>"><%= s.title %></option>
+                <% }); %>
+              </select>
+            </div>
+            <div class="field">
+              <label class="label" for="nf-width">عرض فیلد</label>
+              <select class="select" id="nf-width">
+                <option value="half">نیمه</option>
+                <option value="full">تمام عرض</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- گزینه‌ها (select / radio / checkbox) -->
+          <div class="field" id="nf-options-wrap" style="display:none">
+            <label class="label" for="nf-options">گزینه‌ها (هر خط یک گزینه)</label>
+            <textarea class="textarea" id="nf-options" rows="4" placeholder="گزینه اول&#10;گزینه دوم"></textarea>
+          </div>
+
+          <!-- ستون‌های جدول تکرارشونده -->
+          <div class="field" id="nf-columns-wrap" style="display:none">
+            <label class="label">ستون‌های جدول تکرارشونده</label>
+            <div class="help mb-2">حداکثر ۵ ستون — عنوان و نوع هر ستون را مشخص کنید.</div>
+            <div id="nf-columns">
+              <div class="form-grid" style="grid-template-columns:2fr 1fr">
+                <input class="input nf-col-label" placeholder="عنوان ستون (مثلاً نام دوره)">
+                <select class="select nf-col-type">
+                  <option value="text">متن</option>
+                  <option value="number">عدد</option>
+                  <option value="date">تاریخ</option>
+                </select>
+              </div>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm mt-2" onclick="addColumnRow()">+ ستون دیگر</button>
+          </div>
+
+          <!-- متن تاییدیه -->
+          <div class="field" id="nf-consent-wrap" style="display:none">
+            <label class="label" for="nf-consent">متن تاییدیه (کاربر باید آن را تأیید کند)</label>
+            <input class="input" id="nf-consent" placeholder="مثال: متعهد می‌شوم اطلاعات فوق صحیح است.">
+          </div>
+
+          <div class="field">
+            <label class="label" for="nf-help">راهنمای زیر فیلد (اختیاری)</label>
+            <input class="input" id="nf-help" placeholder="متن راهنمای کوتاه">
+          </div>
+
+          <button class="btn btn-mint"><%- icon('plus', 16) %> افزودن فیلد</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════ تب ۳: راهنمای انواع فیلد ═════════ -->
+  <div data-tab-panel="help" style="display:none">
+    <div class="card">
+      <div class="card-header"><div class="card-title"><%- icon('spark') %> راهنمای انواع فیلد</div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">نوع</th><th scope="col">کاربرد</th><th scope="col">نکته</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge">متن کوتاه</span></td><td>عنوان‌ها، نام‌ها، کد ملی</td><td>یک خطی</td></tr>
+            <tr><td><span class="badge">متن بلند</span></td><td>توضیحات، بیانیه انگیزشی</td><td>چند خطی</td></tr>
+            <tr><td><span class="badge">عدد</span></td><td>سن، سابقه، مبلغ</td><td>کیبورد عددی موبایل</td></tr>
+            <tr><td><span class="badge">تاریخ شمسی</span></td><td>تاریخ تولد، شروع همکاری</td><td>فرمت 1403/07/01</td></tr>
+            <tr><td><span class="badge">شماره موبایل</span></td><td>تماس‌های اضطراری</td><td>اعتبارسنجی 09xx</td></tr>
+            <tr><td><span class="badge">ایمیل</span></td><td>ایمیل جایگزین</td><td>اعتبارسنجی فرمت</td></tr>
+            <tr><td><span class="badge">فایل</span></td><td>رزومه، گواهینامه</td><td>PDF/تصویر تا ۶ مگابایت</td></tr>
+            <tr><td><span class="badge">لیست کشویی</span></td><td>شهر، مقطع، وضعیت</td><td>گزینه‌ها را وارد کنید</td></tr>
+            <tr><td><span class="badge">تک‌انتخابی</span></td><td>جنسیت، نوع همکاری</td><td>گزینه‌ها را وارد کنید</td></tr>
+            <tr><td><span class="badge">چندانتخابی</span></td><td>مهارت‌ها، علایق</td><td>امکان انتخاب چند مورد</td></tr>
+            <tr><td><span class="badge">امتیازدهی</span></td><td>خودارزیابی مهارت (۱ تا ۵)</td><td>دکمه‌های امتیاز</td></tr>
+            <tr><td><span class="badge">تاییدیه ساده</span></td><td>بله/خیر (مثلاً آمادگی مهاجرت)</td><td>یک چک‌باکس</td></tr>
+            <tr><td><span class="badge">تاییدیه متنی</span></td><td>تعهدنامه، رضایت‌نامه</td><td>متن + تأیید اجباری</td></tr>
+            <tr><td><span class="badge">تکرارشونده</span></td><td>سوابق، دوره‌ها، مدارک</td><td>جدول با ستون‌های دلخواه</td></tr>
+            <tr><td><span class="badge">متن راهنما</span></td><td>توضیح بین فیلدها</td><td>بدون ورودی اطلاعات</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
+function typeChanged() {
+  const t = document.getElementById('nf-type').value;
+  document.getElementById('nf-options-wrap').style.display = (t === 'select' || t === 'radio' || t === 'checkbox') ? '' : 'none';
+  document.getElementById('nf-columns-wrap').style.display = (t === 'repeater') ? '' : 'none';
+  document.getElementById('nf-consent-wrap').style.display = (t === 'consent') ? '' : 'none';
+}
+function addColumnRow() {
+  const wrap = document.getElementById('nf-columns');
+  if (wrap.children.length >= 5) { hrmToast('حداکثر ۵ ستون', 'err'); return; }
+  const div = document.createElement('div');
+  div.className = 'form-grid';
+  div.style.gridTemplateColumns = '2fr 1fr';
+  div.innerHTML = '<input class="input nf-col-label" placeholder="عنوان ستون">' +
+    '<select class="select nf-col-type"><option value="text">متن</option><option value="number">عدد</option><option value="date">تاریخ</option></select>';
+  wrap.appendChild(div);
+}
 async function addField(e) {
   e.preventDefault();
+  const type = document.getElementById('nf-type').value;
+  const columns = [];
+  document.querySelectorAll('#nf-columns .form-grid').forEach(function (row) {
+    const label = row.querySelector('.nf-col-label').value.trim();
+    if (label) columns.push({ label: label, type: row.querySelector('.nf-col-type').value });
+  });
   const res = await hrmPost('/hr/form-builder/field', {
     label: document.getElementById('nf-label').value,
-    type: document.getElementById('nf-type').value,
+    type: type,
     step_key: document.getElementById('nf-step').value,
     width: document.getElementById('nf-width').value,
-    options: document.getElementById('nf-options').value
+    options: document.getElementById('nf-options').value,
+    consent_text: document.getElementById('nf-consent').value,
+    columns: columns,
+    help: document.getElementById('nf-help').value
   });
   if (res.ok) {
     hrmToast(res.message, 'ok');
@@ -141,6 +253,7 @@ async function addField(e) {
   }
   return false;
 }
+typeChanged();
 </script>
 
 <%- include('../../partials/footer') %>

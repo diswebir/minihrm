@@ -1,0 +1,36 @@
+<%- include('../../partials/header') %>
+
+<div class="flex-between mb-4">
+  <div>
+    <h1 style="font-size:1.5rem;font-weight:800"><%- icon('brain') %> آزمون‌های روان‌شناختی</h1>
+    <p class="text-muted mt-1">مجموعه آزمون‌های شخصیت‌شناسی، رفتاری و علایق شغلی — تحلیل‌ها صرفاً در اختیار تیم منابع انسانی است</p>
+  </div>
+  <a href="/hr/applicants" class="btn btn-soft">فهرست متقاضیان</a>
+</div>
+
+<div class="alert info mb-4">
+  <strong>محرمانگی:</strong> نتایج این آزمون‌ها هرگز برای متقاضی قابل مشاهده نیست و فقط در پروفایل متقاضی در پنل منابع انسانی نمایش داده می‌شود.
+</div>
+
+<div class="grid grid-2">
+  <% cards.forEach(function (c) { %>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><%- icon(c.icon || 'brain') %> <%= c.title %></div>
+        <span class="badge <%= c.done > 0 ? 'mint' : '' %>"><%= c.done %> / <%= c.total %> تکمیل‌شده</span>
+      </div>
+      <div class="card-body">
+        <p class="text-muted" style="min-height:44px"><%= c.description %></p>
+        <div class="chart-bars mt-2" style="height:8px">
+          <div class="bar-fill <%= c.done > 0 ? 'mint' : 'sky' %>" style="width:<%= c.total ? Math.round((c.done / c.total) * 100) : 0 %>%"></div>
+        </div>
+        <div class="flex-between mt-3">
+          <a class="btn btn-primary btn-sm" href="<%= c.link %>">مشاهده نتایج</a>
+          <span class="text-xs text-muted"><%= c.total ? Math.round((c.done / c.total) * 100) : 0 %>٪ از متقاضیان</span>
+        </div>
+      </div>
+    </div>
+  <% }); %>
+</div>
+
+<%- include('../../partials/footer') %>

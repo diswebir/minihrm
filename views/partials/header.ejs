@@ -7,12 +7,13 @@
   <link rel="stylesheet" href="/css/app.css">
 </head>
 <body>
+<a class="skip-link" href="#main">پرش به محتوای اصلی</a>
 <div class="app">
   <!-- ================= سایدبار ================= -->
   <aside class="sidebar" id="sidebar">
     <div class="brand">
       <% if (settings.company_logo) { %>
-        <img src="<%= settings.company_logo %>" alt="" class="brand-logo" style="object-fit:cover">
+        <img src="<%= settings.company_logo %>" alt="لوگوی <%= settings.company_name || 'شرکت' %>" class="brand-logo" style="object-fit:cover">
       <% } else { %>
         <div class="brand-logo">HR</div>
       <% } %>
@@ -51,10 +52,15 @@
       <% } %>
     <% } %>
 
-    <!-- بخش روانشناسی -->
+    <!-- بخش آزمون‌ها -->
     <% if (enabledModules.find(m => m.code === 'mbti')) { %>
       <% if (can('mbti.manage') || can('mbti.view')) { %>
-        <div class="nav-section">روانشناسی</div>
+        <div class="nav-section">آزمون‌ها</div>
+        <% if (can('mbti.view')) { %>
+          <a class="nav-item <%= activeMenu === 'tests' ? 'active' : '' %>" href="/hr/tests">
+            <%- icon('clipboard') %> آزمون‌های روان‌شناختی
+          </a>
+        <% } %>
         <% if (can('mbti.manage')) { %>
           <a class="nav-item <%= activeMenu === 'mbti-questions' ? 'active' : '' %>" href="/hr/mbti/questions">
             <%- icon('brain') %> سوالات آزمون شخصیت
@@ -109,16 +115,16 @@
   </aside>
 
   <!-- ================= محتوا ================= -->
-  <div class="main">
+  <div class="main" id="main" role="main">
     <header class="topbar">
-      <button class="menu-toggle" aria-label="منو"><%- icon('menu', 24) %></button>
+      <button class="menu-toggle" aria-label="منوی کناری" aria-controls="sidebar" aria-expanded="false"><%- icon('menu', 24) %></button>
       <div style="flex:1">
         <h1 style="font-size:1.15rem;margin:0"><%= title %></h1>
       </div>
 
       <!-- اعلان‌ها -->
       <div class="tooltip-host">
-        <button class="btn btn-ghost btn-sm" data-notif-toggle style="position:relative">
+        <button class="btn btn-ghost btn-sm" data-notif-toggle style="position:relative" aria-label="اعلان‌ها (<%= unreadCount %>)">
           <%- icon('bell', 19) %>
           <% if (unreadCount > 0) { %>
             <span style="position:absolute;top:-4px;left:-4px;background:var(--rose);color:#fff;border-radius:999px;font-size:.66rem;padding:1px 6px;font-weight:700"><%= unreadCount %></span>
@@ -149,7 +155,7 @@
         </div>
       </a>
       <form action="/logout" method="post" style="margin:0">
-        <button class="btn btn-ghost btn-sm" title="خروج"><%- icon('logout', 18) %></button>
+        <button class="btn btn-ghost btn-sm" title="خروج" aria-label="خروج از حساب"><%- icon('logout', 18) %></button>
       </form>
     </header>
 

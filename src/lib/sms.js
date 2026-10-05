@@ -71,33 +71,36 @@ function sanitizePatternVar(v) {
 }
 
 /**
- * ارسال پیامک OTP با الگوی IPPanel (Pattern SMS)
- * @param {string} phone شماره موبایل
- * @param {string} code کد یکبار مصرف
- * @param {object} opts آپشن‌ها {templateName}
+ * ارسال عمومی پیامک الگو (Pattern) با نگاشت متغیرها به نام‌های تعریف‌شده کاربر
+ * @param {string} phone شماره مقصد
+ * @param {string} patternCode کد الگوی تأییدشده در پنل پیامکی
+ * @param {object} params نگاشت {نام‌متغیر-پیش‌فرض: مقدار} مثلاً {code:'12345'}
+ * @param {object} varMap نگاشت نام متغیرها در پترن کاربر {code:'otp'}
  */
-async function sendOtp(phone, code) {
+async function sendPattern(phone, patternCode, params, varMap) {
   const cfg = getSmsConfig();
   const driver = cfg.sms_driver || 'mock';
   const to = normalizePhone(phone);
   if (!to) throw new Error('شماره موبایل نامعتبر است');
 
+  const mapped = {};
+  for (const [k, v] of Object.entries(params || {})) {
+    mapped[sanitizePatternVar((varMap || {})[k] || k)] = String(v);
+  }
+
   if (driver === 'ippanel') {
     const apikey = (cfg.sms_ippanel_apikey || '').trim();
     const from = (cfg.sms_ippanel_from || '').trim();
-    const pattern = (cfg.sms_ippanel_pattern_code || '').trim();
+    const pattern = String(patternCode || '').trim();
     if (!apikey || !from || !pattern) {
       throw new Error('تنظیمات پیامک IPPanel کامل نیست (کلید API، شماره فرستنده و کد الگو)');
     }
-    // نام متغیر جای‌گذاری‌شده در پترن پیامکی کاربر (مثلاً code یا otp)
-    // کاربر در تنظیمات مشخص می‌کند متغیر پترن خود را چه نامی گذاشته است
-    const patternVar = sanitizePatternVar(cfg.sms_pattern_var);
     const res = await requestJson('POST', BASE_URL + '/api/send', { Authorization: apikey }, {
       sending_type: 'pattern',
       from_number: from,
       code: pattern,
       recipients: [to],
-      params: { [patternVar]: String(code) }
+      params: mapped
     });
     if (res.status === 401) throw new Error('کلید دسترسی IPPanel نامعتبر است');
     if (!res.body || res.body.meta?.status !== true) {
@@ -108,13 +111,83 @@ async function sendOtp(phone, code) {
   }
 
   // ---- درایور آزمایشی (mock) ----
-  const show = cfg.sms_mock_show === '1';
   return {
     ok: true,
     driver: 'mock',
-    code: show ? String(code) : undefined,
-    message: 'پیامک آزمایشی (درایور تست). کد OTP: ' + code
+    params: mapped,
+    message: 'پیامک آزمایشی: ' + JSON.stringify(mapped)
   };
+}
+
+/**
+ * ارسال پیامک OTP با الگوی IPPanel (Pattern SMS)
+ * @param {string} phone شماره موبایل
+ * @param {string} code کد یکبار مصرف
+ */
+async function sendOtp(phone, code) {
+  const cfg = getSmsConfig();
+  const pattern = (cfg.sms_ippanel_pattern_code || '').trim();
+  const patternVar = sanitizePatternVar(cfg.sms_pattern_var);
+  const res = await sendPattern(phone, pattern, { [patternVar]: String(code) }, {});
+  if (res.driver === 'mock' && cfg.sms_mock_show === '1') {
+    res.code = String(code);
+    res.message = 'پیامک آزمایشی (درایور تست). کد OTP: ' + code;
+  }
+  return res;
+}
+
+/**
+ * اطلاع‌رسانی «متقاضی جدید» به شماره‌های تیم منابع انسانی (پترن مجزا)
+ * @returns {Promise<{sent: number, failed: number, messages: string[]}>}
+ */
+async function notifyNewApplicant(applicant, positionTitle) {
+  const cfg = getSmsConfig();
+  const out = { sent: 0, failed: 0, messages: [] };
+  if (cfg.sms_notify_enabled !== '1') return out;
+  const pattern = (cfg.sms_notify_pattern || '').trim();
+  const recipients = String(cfg.sms_notify_recipients || '')
+    .split(/[,،\n]/).map(s => s.trim()).filter(Boolean);
+  if (!pattern || recipients.length === 0) return out;
+
+  const params = {
+    name: ((applicant.first_name || '') + ' ' + (applicant.last_name || '')).trim() || applicant.tracking_code,
+    position: positionTitle || '—',
+    tracking: applicant.tracking_code
+  };
+  const varMap = {
+    name: cfg.sms_notify_var_name,
+    position: cfg.sms_notify_var_position,
+    tracking: cfg.sms_notify_var_tracking
+  };
+  for (const r of recipients) {
+    try {
+      await sendPattern(r, pattern, params, varMap);
+      out.sent++;
+    } catch (e) {
+      out.failed++;
+      out.messages.push(String(r) + ': ' + e.message);
+    }
+  }
+  return out;
+}
+
+/** پیام تأیید ثبت‌نام فرم به خود متقاضی (پترن مجزا) */
+async function notifyApplicantConfirmation(applicant, positionTitle) {
+  const cfg = getSmsConfig();
+  if (cfg.sms_confirm_enabled !== '1') return { sent: 0, failed: 0, messages: [] };
+  const pattern = (cfg.sms_confirm_pattern || '').trim();
+  if (!pattern) return { sent: 0, failed: 0, messages: [] };
+  const params = {
+    name: ((applicant.first_name || '') + ' ' + (applicant.last_name || '')).trim() || applicant.tracking_code,
+    tracking: applicant.tracking_code
+  };
+  const varMap = { name: cfg.sms_confirm_var_name, tracking: cfg.sms_confirm_var_tracking };
+  try {
+    await sendPattern(applicant.phone, pattern, params, varMap);
+    return { sent: 1, failed: 0, messages: [] };
+  } catch (e) {
+    return { sent: 0, failed: 1, messages: [e.message] };
+  }
 }
 
 /** ارسال پیامک متن ساده (اعلان‌ها) */
@@ -141,4 +214,4 @@ async function sendText(phone, text) {
   return { ok: true, driver: 'mock', message: text };
 }
 
-module.exports = { sendOtp, sendText, normalizePhone, getSmsConfig, sanitizePatternVar };
+module.exports = { sendOtp, sendText, sendPattern, notifyNewApplicant, notifyApplicantConfirmation, normalizePhone, getSmsConfig, sanitizePatternVar };

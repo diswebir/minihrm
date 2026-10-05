@@ -19,12 +19,12 @@
 
     <form method="post" action="/login">
       <div class="field">
-        <label class="label">نام کاربری</label>
-        <input class="input" type="text" name="username" value="<%= username %>" required autofocus placeholder="نام کاربری خود را وارد کنید">
+        <label class="label" for="login-username">نام کاربری</label>
+        <input class="input" id="login-username" type="text" name="username" value="<%= username %>" required autofocus placeholder="نام کاربری خود را وارد کنید" autocomplete="username">
       </div>
       <div class="field">
-        <label class="label">رمز عبور</label>
-        <input class="input" type="password" name="password" required placeholder="رمز عبور خود را وارد کنید">
+        <label class="label" for="login-password">رمز عبور</label>
+        <input class="input" id="login-password" type="password" name="password" required placeholder="رمز عبور خود را وارد کنید" autocomplete="current-password">
       </div>
       <button type="submit" class="btn btn-primary btn-lg btn-block">ورود به سامانه</button>
     </form>

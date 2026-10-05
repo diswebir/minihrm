@@ -34,16 +34,16 @@
     </div>
 
     <!-- استپر -->
-    <div class="stepper">
+    <div class="stepper" role="navigation" aria-label="مراحل فرم">
       <% stepOrder.forEach(function(sk, i) {
         var st = steps.find(function(x){ return x.key === sk; }) || { title: 'بررسی نهایی', icon: 'check' };
         var state = i < stepIdx ? 'done' : (i === stepIdx ? 'current' : '');
       %>
-        <div class="step-item <%= state %>">
-          <div class="step-dot"><%= i < stepIdx ? '✓' : (i + 1) %></div>
-          <div class="step-label"><%= st.title %></div>
+        <div class="step-item <%= state %>" <%= state === 'current' ? 'aria-current="step"' : '' %>>
+          <div class="step-dot" aria-hidden="true"><%= i < stepIdx ? '✓' : (i + 1) %></div>
+          <div class="step-label"><%= st.title %><% if (state === 'done') { %><span class="sr-only"> (تکمیل شده)</span><% } %></div>
         </div>
-        <% if (i < stepOrder.length - 1) { %><div class="step-line"></div><% } %>
+        <% if (i < stepOrder.length - 1) { %><div class="step-line" aria-hidden="true"></div><% } %>
       <% }) %>
     </div>
 
@@ -52,7 +52,27 @@
     <% } %>
 
     <% if (step.key === 'mbti') { %>
-      <!-- ===== آزمون شخصیت ===== -->
+      <!-- ===== آزمون‌های روان‌شناختی ===== -->
+      <% if (typeof testCards !== 'undefined' && testCards && testCards.length > 1) { %>
+        <div class="mb-4">
+          <h3 style="font-size:1.05rem;font-weight:800;margin-bottom:4px">آزمون‌های روان‌شناختی</h3>
+          <p class="text-muted text-sm">آزمون MBTI الزامی است؛ سایر آزمون‌ها پیشنهادی‌اند و به تحلیل بهتر شما کمک می‌کنند.</p>
+          <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-top:12px">
+            <% testCards.forEach(function (tc) { %>
+              <a href="<%= tc.link %>" class="card" style="padding:14px;text-decoration:none;color:inherit;border:2px solid <%= tc.done ? 'var(--mint, #34d399)' : 'transparent' %>">
+                <div class="flex-between">
+                  <strong class="text-sm"><%= tc.title %></strong>
+                  <% if (tc.done) { %><span class="badge mint">تکمیل‌شده ✓</span>
+                  <% } else if (tc.required) { %><span class="badge rose">الزامی</span>
+                  <% } else { %><span class="badge">پیشنهادی</span><% } %>
+                </div>
+                <div class="text-xs text-muted mt-1"><%= tc.description %></div>
+              </a>
+            <% }); %>
+          </div>
+        </div>
+        <hr class="divider">
+      <% } %>
       <div class="alert info">
         <%- icon('brain', 20) %>
         <div>
@@ -106,10 +126,13 @@
             var summary = [];
             stepFields.forEach(function(f) {
               var v = data[f.field_key];
+              if (f.type === 'note') return;
               if (f.type === 'repeater') {
                 summary.push(f.label + ': ' + ((v && v.length) ? v.length + ' ردیف' : '—'));
-              } else if (f.type === 'switch') {
-                summary.push(f.label + ': ' + (v ? 'تایید شد' : '—'));
+              } else if (f.type === 'switch' || f.type === 'consent') {
+                summary.push(f.label + ': ' + (v ? 'تایید شد ✓' : '—'));
+              } else if (f.type === 'rating') {
+                summary.push(f.label + ': ' + (v ? v + ' از ۵' : '—'));
               } else if (f.type === 'checkbox') {
                 summary.push(f.label + ': ' + ((v && v.length) ? v.join('، ') : '—'));
               } else if (f.type === 'file') {
@@ -193,6 +216,8 @@
                 <div class="repeater-container" id="rep-<%= f.field_key %>">
                   <%
                     var rows = (Array.isArray(v) && v.length) ? v : [{}];
+                    var repCols = repeaterCols[f.field_key] || parseJson(f.options, []);
+                    var rowPrefix = f.builtin ? 'rows' : ('rows_' + f.field_key);
                   %>
                   <% rows.forEach(function(row, ri) { %>
                     <div class="repeater-row">
@@ -201,18 +226,18 @@
                         <button type="button" class="btn btn-danger btn-sm row-remove"><%- icon('trash', 14) %> حذف</button>
                       </div>
                       <div class="form-grid">
-                        <% (repeaterCols[f.field_key] || []).forEach(function(col) { %>
+                        <% repCols.forEach(function(col) { %>
                           <div class="field" style="margin-bottom:4px">
                             <label class="label" style="font-size:.78rem"><%= col.label %><% if (col.required) { %><span class="req">*</span><% } %></label>
                             <% if (col.type === 'select') { %>
-                              <select class="select" data-col="<%= col.key %>" name="rows[<%= ri %>][<%= col.key %>]">
+                              <select class="select" data-col="<%= col.key %>" name="<%= rowPrefix %>[<%= ri %>][<%= col.key %>]">
                                 <option value="">—</option>
                                 <% (col.options || []).forEach(function(o) { %>
                                   <option value="<%= o.value %>" <%= row[col.key] === o.value ? 'selected' : '' %>><%= o.label %></option>
                                 <% }) %>
                               </select>
                             <% } else { %>
-                              <input class="input" data-col="<%= col.key %>" name="rows[<%= ri %>][<%= col.key %>]" value="<%= row[col.key] || '' %>">
+                              <input class="input" data-col="<%= col.key %>" name="<%= rowPrefix %>[<%= ri %>][<%= col.key %>]" value="<%= row[col.key] || '' %>" <%= col.type === 'number' ? 'inputmode="numeric"' : (col.type === 'date' ? 'placeholder="1403/07/01"' : '') %>>
                             <% } %>
                           </div>
                         <% }) %>
@@ -233,18 +258,18 @@
                       <button type="button" class="btn btn-danger btn-sm row-remove"><%- icon('trash', 14) %> حذف</button>
                     </div>
                     <div class="form-grid">
-                      <% (repeaterCols[f.field_key] || []).forEach(function(col) { %>
+                      <% repCols.forEach(function(col) { %>
                         <div class="field" style="margin-bottom:4px">
                           <label class="label" style="font-size:.78rem"><%= col.label %><% if (col.required) { %><span class="req">*</span><% } %></label>
                           <% if (col.type === 'select') { %>
-                            <select class="select" data-col="<%= col.key %>" name="rows[__IDX__][<%= col.key %>]">
+                            <select class="select" data-col="<%= col.key %>" name="<%= rowPrefix %>[__IDX__][<%= col.key %>]">
                               <option value="">—</option>
                               <% (col.options || []).forEach(function(o) { %>
                                 <option value="<%= o.value %>"><%= o.label %></option>
                               <% }) %>
                             </select>
                           <% } else { %>
-                            <input class="input" data-col="<%= col.key %>" name="rows[__IDX__][<%= col.key %>]" value="">
+                            <input class="input" data-col="<%= col.key %>" name="<%= rowPrefix %>[__IDX__][<%= col.key %>]" value="">
                           <% } %>
                         </div>
                       <% }) %>
@@ -328,6 +353,45 @@
                   <% }) %>
                 </select>
                 <% if (f.help) { %><div class="help"><%= f.help %></div><% } %>
+              </div>
+
+            <% } else if (f.type === 'consent') { %>
+              <!-- تاییدیه متنی -->
+              <div class="<%= f.width === 'full' ? 'full' : '' %>">
+                <div class="alert info" style="margin-bottom:8px">
+                  <%- icon('check', 18) %>
+                  <div class="text-sm" style="line-height:2"><%= (parseJson(f.options, {}) || {}).consent_text || f.label %></div>
+                </div>
+                <label class="check-row">
+                  <input type="checkbox" name="f_<%= f.field_key %>" <%= v === true ? 'checked' : '' %> <%= f.required ? 'required' : '' %>>
+                  <span class="text-sm font-bold"><%= f.label %><% if (f.required) { %><span class="req">*</span><% } %></span>
+                </label>
+                <% if (f.help) { %><div class="help"><%= f.help %></div><% } %>
+              </div>
+
+            <% } else if (f.type === 'rating') { %>
+              <!-- امتیازدهی ۱ تا ۵ -->
+              <div class="<%= f.width === 'full' ? 'full' : '' %>">
+                <label class="label"><%= f.label %><% if (f.required) { %><span class="req">*</span><% } %></label>
+                <div class="option-tiles cols-5" style="display:flex;gap:8px;flex-wrap:wrap">
+                  <% [1,2,3,4,5].forEach(function (rv) { %>
+                    <label class="option-tile <%= Number(v) === rv ? 'selected' : '' %>" style="flex:1;min-width:56px;text-align:center">
+                      <input type="radio" name="f_<%= f.field_key %>" value="<%= rv %>" <%= Number(v) === rv ? 'checked' : '' %> <%= f.required ? 'required' : '' %>>
+                      <strong><%= rv %></strong>
+                    </label>
+                  <% }); %>
+                </div>
+                <div class="help">۱ = خیلی کم تا ۵ = خیلی زیاد</div>
+                <% if (f.help) { %><div class="help"><%= f.help %></div><% } %>
+              </div>
+
+            <% } else if (f.type === 'note') { %>
+              <!-- متن راهنما (بدون ورودی) -->
+              <div class="<%= f.width === 'full' ? 'full' : '' %>">
+                <div class="alert info">
+                  <%- icon('spark', 18) %>
+                  <div class="text-sm" style="line-height:2"><strong><%= f.label %></strong><% if (f.help) { %><br><%= f.help %><% } %></div>
+                </div>
               </div>
 
             <% } else { %>

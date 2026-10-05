@@ -1,0 +1,182 @@
+<%- include('../../partials/header') %>
+
+<div class="flex-between mb-4">
+  <div>
+    <p class="text-muted text-sm" style="margin:0">
+      تحلیل کامل و حرفه‌ای نتیجه آزمون — <strong><%= (applicant.first_name || '') + ' ' + (applicant.last_name || '') %></strong>
+      | موقعیت: <strong><%= applicant.position_title || '—' %></strong>
+      | تاریخ تکمیل: <strong><%= jalaliFull(answeredAt) %></strong>
+    </p>
+  </div>
+  <div class="flex-center gap-2 no-print">
+    <a href="/hr/applicants/<%= applicant.id %>" class="btn btn-ghost"><%- icon('arrow', 15) %> پرونده متقاضی</a>
+    <a href="/hr/tests/<%= test.code %>" class="btn btn-ghost">همه نتایج</a>
+    <button onclick="window.print()" class="btn btn-soft"><%- icon('print', 15) %> چاپ تحلیل</button>
+  </div>
+</div>
+
+<div class="alert warn no-print">
+  <%- icon('shield', 20) %>
+  <div>
+    <strong>محرمانه:</strong> این گزارش صرفاً برای تیم منابع انسانی و مدیریت تهیه شده و نباید در اختیار متقاضی قرار گیرد.
+    نتایج آزمون‌های روان‌شناختی ابزار کمکی تصمیم‌گیری‌اند و نباید به‌تنهایی مبنای تصمیم قطعی باشند.
+  </div>
+</div>
+
+<!-- ===== هیروی نتیجه ===== -->
+<div class="type-hero mb-4">
+  <div class="flex-between" style="flex-wrap:wrap;gap:18px">
+    <div>
+      <div class="code" style="font-size:1.15rem;letter-spacing:0"><%= analysis.hero.badge %></div>
+      <h1 style="color:#fff;margin:14px 0 4px;font-size:1.55rem"><%= analysis.hero.title %></h1>
+      <div style="opacity:.9"><%= analysis.hero.subtitle %></div>
+      <p style="color:rgba(255,255,255,.92);margin-top:10px;max-width:560px"><%= analysis.hero.scoreText %></p>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="background:rgba(255,255,255,.16);border-radius:18px;padding:14px 20px;text-align:center;min-width:110px">
+        <div style="font-size:.74rem;opacity:.85">سطح کلی</div>
+        <div style="font-size:1.25rem;font-weight:800;margin-top:4px"><%= analysis.hero.levelLabel %></div>
+      </div>
+      <div style="background:rgba(255,255,255,.16);border-radius:18px;padding:14px 20px;text-align:center;min-width:110px">
+        <div style="font-size:.74rem;opacity:.85">تعداد سوالات</div>
+        <div style="font-size:1.25rem;font-weight:800;margin-top:4px"><%= analysis.questionMap.length %></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ابعاد ===== -->
+<div class="card mb-4">
+  <div class="card-header">
+    <div class="card-title"><%- icon('chart') %> تحلیل ابعاد</div>
+  </div>
+  <div class="card-body">
+    <% analysis.dimensions.forEach(function (d) { %>
+      <div class="mb-4">
+        <div class="flex-between">
+          <span class="text-sm font-bold"><%= d.name %>
+            <% if (d.note) { %><span class="badge <%= d.note.indexOf('نیازمند') >= 0 ? 'amber' : 'mint' %>"><%= d.note %></span><% } %>
+          </span>
+          <span class="text-sm font-bold"><%= d.percent %>٪ — <%= d.levelLabel %></span>
+        </div>
+        <div class="chart-bars" style="height:12px;margin:8px 0">
+          <div class="bar-fill <%= d.level === 'high' ? 'mint' : (d.level === 'low' ? 'rose' : 'sky') %>" style="width:<%= d.percent %>%"></div>
+        </div>
+        <div class="help" style="margin:0"><%= d.desc %></div>
+      </div>
+    <% }) %>
+  </div>
+</div>
+
+<!-- ===== بخش‌های تحلیل ===== -->
+<% analysis.sections.forEach(function (s) { %>
+  <div class="card mb-4">
+    <div class="card-header">
+      <div class="card-title"><%- icon('file') %> <%= s.title %></div>
+    </div>
+    <div class="card-body">
+      <% (s.paragraphs || []).forEach(function (p) { %>
+        <p style="line-height:2"><%= p %></p>
+      <% }); %>
+      <% if ((s.bullets || []).length) { %>
+        <ul style="padding-right:18px;line-height:2.1;margin:8px 0 0">
+          <% s.bullets.forEach(function (b) { %><li><%= b %></li><% }); %>
+        </ul>
+      <% } %>
+    </div>
+  </div>
+<% }); %>
+
+<div class="grid grid-2">
+  <!-- ===== سازگاری شغلی ===== -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><%- icon('briefcase') %> سازگاری با موقعیت شغلی</div>
+      <span class="score-tag"><%= analysis.fit.levelLabel %></span>
+    </div>
+    <div class="card-body">
+      <p class="text-sm"><strong>موقعیت:</strong> <%= analysis.fit.position %></p>
+      <% if (analysis.fit.score) { %>
+        <div class="chart-bars" style="height:10px;margin:10px 0">
+          <div class="bar-fill <%= analysis.fit.score >= 80 ? 'mint' : (analysis.fit.score >= 60 ? 'sky' : 'rose') %>" style="width:<%= analysis.fit.score %>%"></div>
+        </div>
+      <% } %>
+      <ul style="padding-right:18px;line-height:2">
+        <% analysis.fit.bullets.forEach(function (b) { %><li><%= b %></li><% }); %>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== راهنمای مصاحبه و هشدارها ===== -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><%- icon('users') %> راهنمای مصاحبه</div>
+    </div>
+    <div class="card-body">
+      <ul style="padding-right:18px;line-height:2">
+        <% analysis.tips.forEach(function (t) { %><li><%= t %></li><% }); %>
+      </ul>
+      <% if ((analysis.redFlags || []).length) { %>
+        <div class="alert warn" style="margin:14px 0 0">
+          <strong class="text-sm">نکات هشدار:</strong>
+          <ul style="padding-right:18px;margin:6px 0 0" class="text-sm">
+            <% analysis.redFlags.forEach(function (f) { %><li><%= f %></li><% }); %>
+          </ul>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<!-- ===== نگاشت پاسخ‌ها ===== -->
+<div class="card mb-4">
+  <div class="card-header">
+    <div class="card-title"><%- icon('clipboard') %> نگاشت هر پاسخ به بُعد مربوط</div>
+    <span class="badge"><%= analysis.questionMap.length %> پاسخ</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">صورت سوال</th>
+          <th scope="col">پاسخ متقاضی</th>
+          <th scope="col">بُعد</th>
+          <th scope="col">نکته</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% analysis.questionMap.forEach(function (q) { %>
+          <tr>
+            <td><span class="question-no" style="width:24px;height:24px;font-size:.7rem"><%= q.number %></span></td>
+            <td style="max-width:360px"><%= q.text %></td>
+            <td><span class="score-tag"><%= q.answerLabel %> (<%= q.value %>)</span></td>
+            <td><%= q.dimName %></td>
+            <td class="text-xs text-muted"><%= q.reversed ? 'سوال معکوس‌نمره — نمره بازتاب‌شده اعمال شد' : '' %></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== نمرات خام ===== -->
+<div class="card mb-4">
+  <div class="card-header">
+    <div class="card-title"><%- icon('chart') %> نمرات خام</div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th scope="col">بُعد</th><th scope="col">نمره خام</th><th scope="col">درصد</th></tr>
+      </thead>
+      <tbody>
+        <% analysis.counts.forEach(function (c) { %>
+          <tr><td><%= c.name %> (<%= c.key %>)</td><td><%= c.raw %></td><td><%= c.percent %>٪</td></tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../../partials/footer') %>
