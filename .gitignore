@@ -1,0 +1,9 @@
+# Local/runtime HRM data and secrets
+storage/data.json
+storage/data.json.*.tmp
+storage/backups/
+logs/
+*.log
+.env
+node_modules/
+.DS_Store
