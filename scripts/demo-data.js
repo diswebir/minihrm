@@ -43,12 +43,12 @@ function answersForType(typeCode, questions, flipCount) {
   return answers;
 }
 
-async function main() {
-  if (!config.isInstalled()) {
-    console.error('ابتدا سامانه را نصب کنید (ویزارد نصب).');
-    process.exit(1);
-  }
-  await db.init(config.DB_PATH);
+/**
+ * افزودن داده‌های نمایشی به سامانه نصب‌شده (idempotent — هر داده فقط یک بار ساخته می‌شود)
+ * @returns {Promise<{positions:number, applicants:number, skipped:number, results:number}>}
+ */
+async function seedDemo() {
+  const summary = { positions: 0, applicants: 0, skipped: 0, results: 0 };
 
   const questions = db.prepare('SELECT * FROM mbti_questions WHERE enabled = 1 ORDER BY sort').all();
   const prefix = require('../src/lib/helpers').getSetting('tracking_prefix', 'ERF');
@@ -75,6 +75,7 @@ async function main() {
     const info = db.prepare(`INSERT INTO positions (code, title, department, employment_type, description, requirements, benefits, status)
       VALUES (?,?,?,?,?,?,?,'open')`).run(p.code, p.title, p.department, p.employment_type, p.description, p.requirements, p.benefits);
     posIds[p.code] = info.lastInsertRowid;
+    summary.positions++;
     console.log('position:', p.title);
   }
 
@@ -116,7 +117,7 @@ async function main() {
 
   for (const a of applicants) {
     const exists = db.prepare('SELECT id FROM applicants WHERE phone = ?').get(a.phone);
-    if (exists) { console.log('exists:', a.first, a.last); continue; }
+    if (exists) { summary.skipped++; console.log('exists:', a.first, a.last); continue; }
 
     const answers = answersForType(a.type, questions, a.flip);
     const result = mbtiEngine.score(answers, questions);
@@ -157,6 +158,7 @@ async function main() {
         a.status, 'review', JSON.stringify(data), result.typeCode,
         JSON.stringify({ counts: result.counts, dimensions: result.dimensions }),
         JSON.stringify(answers));
+    summary.applicants++;
 
     db.prepare('INSERT INTO applicant_events (applicant_id, event, detail) VALUES (?,?,?)')
       .run(info.lastInsertRowid, 'submitted', 'ارسال فرم استخدام (داده نمایشی)');
@@ -174,10 +176,11 @@ async function main() {
         return { number: q.number, value: v };
       });
       const scored = assessments.score(tAnswers, tqs);
-      const summary = assessments.quickSummary(t.code, scored);
+      const qsum = assessments.quickSummary(t.code, scored);
       db.prepare(`INSERT INTO test_results (applicant_id, test_code, answers, scores, summary, completed_at)
         VALUES (?,?,?,?,?,datetime('now'))`)
-        .run(info.lastInsertRowid, t.code, JSON.stringify(tAnswers), JSON.stringify(scored.percents), JSON.stringify(summary));
+        .run(info.lastInsertRowid, t.code, JSON.stringify(tAnswers), JSON.stringify(scored.percents), JSON.stringify(qsum));
+      summary.results++;
     }
 
     if (a.status === 'interview' || a.status === 'accepted') {
@@ -194,6 +197,21 @@ async function main() {
   }
 
   console.log('✅ داده‌های نمایشی آماده شد.');
+  return summary;
 }
 
-main().then(() => process.exit(0)).catch((e) => { console.error(e); process.exit(1); });
+/* اجرای مستقیم خط فرمان: node scripts/demo-data.js */
+async function main() {
+  if (!config.isInstalled()) {
+    console.error('ابتدا سامانه را نصب کنید (ویزارد نصب).');
+    process.exit(1);
+  }
+  await db.init(config.DB_PATH);
+  return seedDemo();
+}
+
+if (require.main === module) {
+  main().then(() => process.exit(0)).catch((e) => { console.error(e); process.exit(1); });
+}
+
+module.exports = { seedDemo };

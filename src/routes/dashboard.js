@@ -65,7 +65,8 @@ router.get('/dashboard', (req, res) => {
   res.render('pages/dashboard', {
     title: 'داشبورد',
     activeMenu: 'dashboard',
-    stats
+    stats,
+    demo: req.query.demo || null
   });
 });
 

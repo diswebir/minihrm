@@ -20,6 +20,17 @@
   </div>
 </div>
 
+<% if (typeof demo !== 'undefined' && demo) { %>
+  <div class="alert <%= demo === '1' ? 'success' : 'warn' %> mb-4">
+    <% if (demo === '1') { %>
+      <strong>داده‌های نمایشی با موفقیت اضافه شد.</strong>
+      سامانه اکنون شامل ۳ موقعیت شغلی، ۴ متقاضی نمونه و نتایج کامل آزمون‌های روان‌شناختی (MBTI، DISC، هوش هیجانی، هالند) است — از منوی «استخدام › متقاضیان» می‌توانید آن‌ها را ببینید.
+    <% } else { %>
+      افزودن داده‌های نمایشی با خطا مواجه شد. می‌توانید بعداً با اجرای «node scripts/demo-data.js» آن را اضافه کنید.
+    <% } %>
+  </div>
+<% } %>
+
 <% if (sessionUser.is_super_admin) { %>
   <div class="alert info">
     <%- icon('shield', 20) %>

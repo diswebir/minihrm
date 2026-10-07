@@ -167,10 +167,17 @@
       <div class="alert info mt-3">
         با کلیک روی «نصب سامانه»، پایگاه داده ایجاد شده و وارد داشبورد می‌شوید. ماژول‌های «استخدام» و «آزمون شخصیت MBTI» به‌صورت پیش‌فرض فعال هستند.
       </div>
+      <div class="alert success mt-3">
+        <strong>افزودن داده‌های نمایشی (اختیاری)</strong><br>
+        با دکمه «نصب + افزودن داده‌های نمایشی»، سامانه به‌صورت خودکار با ۳ موقعیت شغلی، ۴ متقاضی نمونه و نتایج کامل آزمون‌های روان‌شناختی (MBTI، DISC، هوش هیجانی و هالند) پر می‌شود تا با محیط واقعی سامانه آشنا شوید. بعداً می‌توانید داده‌های نمایشی را از بخش‌های مختلف حذف کنید.
+      </div>
       <form method="post" action="/install/finish">
-        <div class="flex-between">
+        <div class="flex-between" style="gap:10px;flex-wrap:wrap">
           <a href="/install" class="btn btn-ghost">بازگشت</a>
-          <button type="submit" class="btn btn-primary btn-lg">نصب سامانه</button>
+          <div class="flex" style="gap:10px;flex-wrap:wrap">
+            <button type="submit" name="demo" value="1" class="btn btn-soft btn-lg">نصب + افزودن داده‌های نمایشی</button>
+            <button type="submit" name="demo" value="0" class="btn btn-primary btn-lg">نصب سامانه</button>
+          </div>
         </div>
       </form>
     <% } %>

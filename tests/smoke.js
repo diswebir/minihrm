@@ -103,13 +103,18 @@ async function main() {
   ok('گام ساخت مدیر کل', r.status === 200 && r.text.includes('پیامک'));
 
   r = await admin('POST', '/install/sms', { form: { sms_driver: 'mock', sms_mock_show: '1' } });
-  ok('گام پیامک', r.status === 200 && r.text.includes('نهایی‌سازی'));
+  ok('گام پیامک', r.status === 200 && r.text.includes('نهایی‌سازی') && r.text.includes('افزودن داده‌های نمایشی'));
 
-  r = await admin('POST', '/install/finish');
+  r = await admin('POST', '/install/finish', { form: { demo: '1' } });
   ok('نهایی‌سازی نصب و ورود خودکار', r.status === 302 && r.redirect.includes('/dashboard'));
+  ok('نصب با داده‌های نمایشی', r.redirect.includes('demo=1'));
 
-  r = await admin('GET', '/dashboard');
+  r = await admin('GET', '/dashboard?demo=1');
   ok('داشبورد مدیر کل', r.status === 200 && r.text.includes('مدیر کل'));
+  ok('اعلان افزودن داده‌های نمایشی', r.text.includes('داده‌های نمایشی با موفقیت اضافه شد'));
+
+  r = await admin('GET', '/hr/applicants');
+  ok('متقاضیان نمایشی در سامانه', r.text.includes('سارا') && r.text.includes('رضا') && r.text.includes('مریم'));
 
   r = await admin('GET', '/install');
   ok('ویزارد نصب پس از نصب قفل است', r.status === 404);
@@ -121,8 +126,11 @@ async function main() {
 
   r = await admin('GET', '/hr/positions');
   ok('لیست موقعیت‌ها', r.text.includes('کارشناس نرم‌افزار'));
+  const posCardHtml = (r.text.split('<div class="card"').find(seg => seg.includes('>کارشناس نرم‌افزار<')) || '');
+  const posId = parseInt((posCardHtml.match(/\/hr\/positions\/(\d+)/) || ['', ''])[1], 10);
+  ok('استخراج شناسه موقعیت شغلی', Number.isInteger(posId) && posId > 0, String(posId));
 
-  r = await admin('GET', '/hr/positions/1/qr');
+  r = await admin('GET', '/hr/positions/' + posId + '/qr');
   ok('QR موقعیت شغلی', r.status === 200 && r.text.includes('svg') && r.text.includes('/apply?pos='));
 
   /* ═══════ 3. فرم‌ساز ═══════ */
@@ -178,7 +186,7 @@ async function main() {
   r = await cand('GET', '/apply');
   ok('صفحه عمومی درخواست همکاری', r.status === 200 && r.text.includes('درخواست همکاری'));
 
-  r = await cand('POST', '/apply/start', { form: { position_id: '1' } });
+  r = await cand('POST', '/apply/start', { form: { position_id: String(posId) } });
   ok('شروع ثبت‌نام با موقعیت انتخابی', r.status === 200 && r.text.includes('تایید شماره موبایل'));
 
   r = await cand('POST', '/api/otp/send', { json: { phone: '09121112233' } });
@@ -310,25 +318,28 @@ async function main() {
   console.log('▸ پنل منابع انسانی — پرونده متقاضی');
   r = await admin('GET', '/hr/applicants');
   ok('لیست متقاضیان', r.text.includes('علی') && r.text.includes('رضایی'));
+  const appRowHtml = (r.text.split('<tr').find(seg => seg.includes('>علی رضایی<')) || '');
+  const appId = parseInt((appRowHtml.match(/\/hr\/applicants\/(\d+)/) || ['', ''])[1], 10);
+  ok('استخراج شناسه متقاضی', Number.isInteger(appId) && appId > 0, String(appId));
 
-  r = await admin('GET', '/hr/applicants/1');
+  r = await admin('GET', '/hr/applicants/' + appId);
   ok('پرونده متقاضی', r.text.includes('علی رضایی') && r.text.includes('کارشناس نرم‌افزار'));
   ok('نمایش سوابق و تحصیلات', r.text.includes('آریا') && r.text.includes('مهندسی کامپیوتر'));
   ok('نمایش نتیجه MBTI فقط برای HR', r.text.includes('INTJ'));
   ok('هشدار محرمانه بودن MBTI', r.text.includes('محرمانه'));
 
-  r = await admin('POST', '/hr/applicants/1/status', { json: { status: 'interview' } });
+  r = await admin('POST', '/hr/applicants/' + appId + '/status', { json: { status: 'interview' } });
   ok('تغییر وضعیت به مصاحبه', JSON.parse(r.text).ok === true);
 
-  r = await admin('POST', '/hr/applicants/1/note', { json: { kind: 'interview', note: 'متقاضی خوبی است', decision: 'accept' } });
+  r = await admin('POST', '/hr/applicants/' + appId + '/note', { json: { kind: 'interview', note: 'متقاضی خوبی است', decision: 'accept' } });
   ok('ثبت نظر مصاحبه با تصمیم', JSON.parse(r.text).ok === true);
 
-  r = await admin('GET', '/hr/applicants/1/print');
+  r = await admin('GET', '/hr/applicants/' + appId + '/print');
   ok('فرم چاپی پرونده', r.status === 200 && r.text.includes('فرم استخدام'));
 
   /* ═══════ 9. تحلیل MBTI ═══════ */
   console.log('▸ تحلیل شخصیت');
-  r = await admin('GET', '/hr/mbti/analysis/1');
+  r = await admin('GET', '/hr/mbti/analysis/' + appId);
   ok('صفحه تحلیل کامل', r.status === 200 && r.text.includes('INTJ') && r.text.includes('معمار'));
   ok('تحلیل ابعاد با درصد', r.text.includes('برون‌گرایی') && r.text.includes('%'));
   ok('راهنمای مصاحبه', r.text.includes('راهنمای مصاحبه'));
@@ -336,7 +347,7 @@ async function main() {
   ok('سازگاری شغلی', r.text.includes('سازگاری با موقعیت شغلی'));
   ok('نتیجه به متقاضی نمایش داده نمی‌شود', true);
 
-  r = await cand('GET', '/hr/mbti/analysis/1');
+  r = await cand('GET', '/hr/mbti/analysis/' + appId);
   ok('متقاضی به تحلیل دسترسی ندارد', r.status !== 200);
 
   /* ═══════ ۹.۵ هاب آزمون‌ها و تحلیل‌های تکمیلی ═══════ */
@@ -347,20 +358,20 @@ async function main() {
   r = await admin('GET', '/hr/tests/disc');
   ok('لیست نتایج DISC', r.status === 200 && r.text.includes('رهبر نتیجه‌گرا'));
 
-  r = await admin('GET', '/hr/tests/disc/analysis/1');
+  r = await admin('GET', '/hr/tests/disc/analysis/' + appId);
   ok('تحلیل حرفه‌ای DISC', r.status === 200 && r.text.includes('تحلیل ابعاد') && r.text.includes('راهنمای مصاحبه') && r.text.includes('نگاشت هر پاسخ'));
   ok('محرمانه بودن تحلیل DISC', r.text.includes('محرمانه'));
 
-  r = await admin('GET', '/hr/tests/eq/analysis/1');
+  r = await admin('GET', '/hr/tests/eq/analysis/' + appId);
   ok('تحلیل حرفه‌ای هوش هیجانی', r.status === 200 && r.text.includes('خودآگاهی') && r.text.includes('برنامه توسعه فردی'));
 
-  r = await admin('GET', '/hr/tests/holland/analysis/1');
+  r = await admin('GET', '/hr/tests/holland/analysis/' + appId);
   ok('تحلیل حرفه‌ای هالند', r.status === 200 && r.text.includes('RIASEC') && r.text.includes('مشاغل پیشنهادی'));
 
-  r = await cand('GET', '/hr/tests/eq/analysis/1');
+  r = await cand('GET', '/hr/tests/eq/analysis/' + appId);
   ok('متقاضی به تحلیل آزمون‌ها دسترسی ندارد', r.status !== 200);
 
-  r = await admin('GET', '/hr/applicants/1');
+  r = await admin('GET', '/hr/applicants/' + appId);
   ok('کارت آزمون‌ها در پرونده متقاضی', r.text.includes('سایر آزمون‌های روان‌شناختی') && r.text.includes('کد RIASEC'));
 
   /* ═══════ ۹.۶ مدیریت سوالات با انتخاب آزمون ═══════ */
@@ -457,10 +468,10 @@ async function main() {
   r = await staff('GET', '/admin/settings');
   ok('hr_staff: بدون دسترسی به تنظیمات', r.status === 403);
 
-  r = await staff('GET', '/hr/mbti/analysis/1');
+  r = await staff('GET', '/hr/mbti/analysis/' + appId);
   ok('hr_staff: دسترسی به تحلیل MBTI', r.status === 200);
 
-  r = await staff('POST', '/hr/applicants/1/note', { json: { kind: 'hr', note: 'نظر کارمند HR', decision: 'accept' } });
+  r = await staff('POST', '/hr/applicants/' + appId + '/note', { json: { kind: 'hr', note: 'نظر کارمند HR', decision: 'accept' } });
   ok('hr_staff: بدون مجوز تصمیم نهایی رد می‌شود', JSON.parse(r.text).ok === false);
 
   /* ═══════ 12. ماژول‌ها ═══════ */
@@ -471,7 +482,7 @@ async function main() {
   r = await admin('POST', '/admin/modules/mbti/toggle', { json: {} });
   ok('غیرفعال‌سازی ماژول MBTI', JSON.parse(r.text).enabled === 0);
 
-  r = await staff('GET', '/hr/mbti/analysis/1');
+  r = await staff('GET', '/hr/mbti/analysis/' + appId);
   ok('ماژول غیرفعال → مسیر MBTI قطع', r.status === 404);
 
   r = await cand('GET', '/apply/wizard/review');
@@ -581,7 +592,7 @@ async function main() {
 
   r = await admin('GET', '/hr/applicants?status=accepted');
   const tbody = (r.text.split('<tbody>')[1] || '').split('</tbody>')[0] || '';
-  ok('فیلتر وضعیت خالی (ردیفی در جدول نیست)', !tbody.includes('/hr/applicants/1'));
+  ok('فیلتر وضعیت خالی (ردیفی در جدول نیست)', !tbody.includes('/hr/applicants/' + appId));
 
   /* ═══════ نتیجه ═══════ */
   console.log(`\n══════════════════════════════════`);

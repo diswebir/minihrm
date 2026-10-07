@@ -146,7 +146,21 @@ router.post('/finish', async (req, res) => {
     audit.log(req, 'install.finish', 'system', '', { username: draft.username, company: draft.company_name });
     delete req.session.installDraft;
 
-    res.redirect('/dashboard');
+    // داده‌های نمایشی (اختیاری) — دکمه «نصب + افزودن داده‌های نمایشی» در ویزارد
+    let demoQuery = '';
+    if (req.body.demo === '1') {
+      try {
+        const { seedDemo } = require('../../scripts/demo-data');
+        const demoSummary = await seedDemo();
+        audit.log(req, 'install.demo', 'system', '', demoSummary);
+        demoQuery = '?demo=1';
+      } catch (e) {
+        console.error('[demo-data]', e.message);
+        demoQuery = '?demo=err';
+      }
+    }
+
+    res.redirect('/dashboard' + demoQuery);
   } catch (e) {
     res.render('pages/install', {
       title: 'نصب سامانه', layout: false, step: 4, checks: reqCheck(),
